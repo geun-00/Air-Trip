@@ -13,6 +13,8 @@ import project.member.adapter.in.web.response.ChatMembersSearchResponse;
 import project.member.adapter.in.web.response.DefaultProfileResponse;
 import project.member.adapter.in.web.response.EditProfileResponse;
 import project.member.adapter.in.web.response.TripHistoryResponse;
+import project.member.application.in.command.EditMyProfileUseCase;
+import project.member.application.in.command.model.EditMyProfileCommand;
 import project.member.application.service.MemberService;
 
 @RestController
@@ -21,6 +23,7 @@ import project.member.application.service.MemberService;
 public class MemberController {
 
     private final MemberService memberService;
+    private final EditMyProfileUseCase editMyProfileUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<DefaultProfileResponse> getMyProfile(@CurrentMemberId Long memberId) {
@@ -32,7 +35,13 @@ public class MemberController {
     public ResponseEntity<EditProfileResponse> editMyProfile(@CurrentMemberId Long memberId,
                                                              @RequestPart(value = "profileImage", required = false) MultipartFile imageFile,
                                                              @Valid @RequestPart("editProfileRequest") EditProfileRequest profileReqDto) {
-        EditProfileResponse response = memberService.editMyProfile(memberId, imageFile, profileReqDto);
+        EditProfileResponse response = editMyProfileUseCase.editMyProfile(new EditMyProfileCommand(
+                memberId,
+                imageFile,
+                profileReqDto.name(),
+                profileReqDto.aboutMe(),
+                profileReqDto.isProfileImageChanged()
+        ));
         return ResponseEntity.ok(response);
     }
 

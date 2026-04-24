@@ -12,8 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import project.auth.adapter.in.web.support.CurrentMemberId;
 import project.member.adapter.in.web.request.SignupRequest;
 import project.auth.adapter.out.jwt.TokenService;
+import project.member.application.in.command.RegisterMemberUseCase;
+import project.member.application.in.command.model.RegisterMemberCommand;
 import project.member.application.service.command.EmailVerificationService;
-import project.member.application.service.MemberService;
 
 import java.net.URI;
 
@@ -27,7 +28,7 @@ import static project.auth.adapter.out.jwt.JwtProperties.REFRESH_TOKEN_KEY;
 public class AuthController {
 
     private final TokenService tokenService;
-    private final MemberService memberService;
+    private final RegisterMemberUseCase registerMemberUseCase;
     private final EmailVerificationService emailVerificationService;
 
     @PostMapping("/refresh")
@@ -61,7 +62,13 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest) {
-        memberService.register(signupRequest);
+        registerMemberUseCase.register(new RegisterMemberCommand(
+                signupRequest.name(),
+                signupRequest.email(),
+                signupRequest.number(),
+                signupRequest.birthDate(),
+                signupRequest.password()
+        ));
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 

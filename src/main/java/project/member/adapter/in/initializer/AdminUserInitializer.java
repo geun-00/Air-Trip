@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import project.member.domain.Member;
 import project.member.adapter.out.persistence.MemberRepository;
+import project.member.domain.support.AdminMemberCreateSpec;
 
 @Profile("!test")
 @Component
@@ -30,7 +31,7 @@ public class AdminUserInitializer implements ApplicationListener<ContextRefreshe
             return;
         }
 
-        Member admin = Member.createAdmin(adminEmail, passwordEncoder.encode(adminPassword));
+        Member admin = Member.createAdmin(new AdminMemberCreateSpec(adminEmail, passwordEncoder.encode(adminPassword)));
         memberRepository.save(admin);
     }
 }

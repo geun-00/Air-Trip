@@ -16,6 +16,7 @@ import project.member.adapter.in.web.request.EditProfileRequest;
 import project.member.adapter.in.web.response.DefaultProfileResponse;
 import project.member.adapter.in.web.response.EditProfileResponse;
 import project.member.adapter.in.web.response.TripHistoryResponse;
+import project.member.application.in.command.EditMyProfileUseCase;
 import project.member.application.service.MemberService;
 
 import java.time.LocalDate;
@@ -54,6 +55,8 @@ class MemberControllerTest extends RestDocsTestSupport {
 
     @MockitoBean
     MemberService memberService;
+    @MockitoBean
+    EditMyProfileUseCase editMyProfileUseCase;
 
     @Test
     @DisplayName("내 기본 정보 조회")
@@ -120,7 +123,7 @@ class MemberControllerTest extends RestDocsTestSupport {
         MockMultipartFile editProfileRequest = new MockMultipartFile("editProfileRequest", "test-request", MediaType.APPLICATION_JSON_VALUE, creatJson(reqDto).getBytes());
 
         EditProfileResponse response = new EditProfileResponse("Antonio Cui", "https://example.com/a.jpg", "Accumsan luctus fringilla cubilia tempor auctor ullamcorper.");
-        given(memberService.editMyProfile(anyLong(), any(), any())).willReturn(response);
+        given(editMyProfileUseCase.editMyProfile(any())).willReturn(response);
 
         //when
         //then

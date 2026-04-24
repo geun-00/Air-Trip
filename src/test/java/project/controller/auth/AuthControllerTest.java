@@ -12,8 +12,8 @@ import project.security.WithMockMember;
 import project.auth.adapter.in.web.AuthController;
 import project.controller.RestDocsTestSupport;
 import project.member.adapter.in.web.request.SignupRequest;
+import project.member.application.in.command.RegisterMemberUseCase;
 import project.member.application.service.command.EmailVerificationService;
-import project.member.application.service.MemberService;
 
 import java.time.LocalDate;
 
@@ -38,7 +38,7 @@ class AuthControllerTest extends RestDocsTestSupport {
 
     public static final String AUTH_API_TAG = "Auth API";
 
-    @MockitoBean MemberService memberService;
+    @MockitoBean RegisterMemberUseCase registerMemberUseCase;
     @MockitoBean EmailVerificationService emailVerificationService;
 
     @Test

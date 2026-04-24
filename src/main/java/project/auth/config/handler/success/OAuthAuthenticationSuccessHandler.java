@@ -17,7 +17,8 @@ import project.auth.domain.response.TokenResponse;
 import project.auth.adapter.out.oauth.model.PrincipalUser;
 import project.auth.adapter.out.oauth.model.ProviderUser;
 import project.auth.adapter.out.jwt.TokenService;
-import project.member.application.service.MemberService;
+import project.member.application.in.command.RegisterSocialMemberUseCase;
+import project.member.application.in.command.model.RegisterSocialMemberCommand;
 
 import java.io.IOException;
 
@@ -29,8 +30,8 @@ public class OAuthAuthenticationSuccessHandler extends SimpleUrlAuthenticationSu
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frondEndUrl;
 
-    private final MemberService memberService;
     private final TokenService tokenService;
+    private final RegisterSocialMemberUseCase registerSocialMemberUseCase;
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
     @Override
@@ -39,7 +40,15 @@ public class OAuthAuthenticationSuccessHandler extends SimpleUrlAuthenticationSu
             PrincipalUser principal = (PrincipalUser) authentication.getPrincipal();
             ProviderUser providerUser = principal.providerUser();
 
-            memberService.register(providerUser);
+            registerSocialMemberUseCase.registerSocial(new RegisterSocialMemberCommand(
+                    providerUser.getUsername(),
+                    providerUser.getEmail(),
+                    providerUser.getProvider(),
+                    providerUser.getPassword(),
+                    providerUser.getNumber(),
+                    providerUser.getBirthDate(),
+                    providerUser.getImageUrl()
+            ));
             TokenResponse tokenResponse = tokenService.generateAndSendToken(providerUser.getEmail(), providerUser.getPrincipalName(), response);
 
             log.debug("OAuth 인증 성공, 토큰 발급");

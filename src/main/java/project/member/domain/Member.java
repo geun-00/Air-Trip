@@ -5,6 +5,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.common.adapter.out.persistence.BaseEntity;
+import project.member.domain.support.AdminMemberCreateSpec;
+import project.member.domain.support.RestMemberCreateSpec;
+import project.member.domain.support.SocialMemberCreateSpec;
 
 import java.time.LocalDate;
 
@@ -51,20 +54,28 @@ public class Member extends BaseEntity {
     @Column(name = "role", nullable = false)
     private Role role = Role.GUEST;
 
-    public static Member createAdmin(String adminEmail, String password) {
-        return new Member("ADMIN-USER", null, null, adminEmail, password, SocialType.NONE, Role.ADMIN, true);
+    public static Member createAdmin(AdminMemberCreateSpec spec) {
+        return new Member("ADMIN-USER", null, null, spec.email(), spec.password(), SocialType.NONE, Role.ADMIN, true);
     }
 
-    public static Member createForRest(String name, String email, String number, LocalDate birthDate, String password) {
-        return new Member(name, birthDate, number, email, password, SocialType.NONE, Role.GUEST, false);
+    public static Member createForRest(RestMemberCreateSpec spec) {
+        return new Member(spec.name(), spec.birthDate(), spec.number(), spec.email(), spec.password(), SocialType.NONE, Role.GUEST, false);
     }
 
-    public static Member createForSocial(String name, String email, String number, LocalDate birthDate, String password, SocialType socialType) {
-        return new Member(name, birthDate, number, email, password, socialType, Role.GUEST, false);
+    public static Member createForSocial(SocialMemberCreateSpec spec) {
+        return new Member(spec.name(), spec.birthDate(), spec.number(), spec.email(), spec.password(), spec.socialType(), Role.GUEST, false);
     }
 
-    private Member(String name, LocalDate birthDate, String number, String email, String password,
-                   SocialType socialType, Role role, boolean isEmailVerified) {
+    private Member(
+            String name,
+            LocalDate birthDate,
+            String number,
+            String email,
+            String password,
+            SocialType socialType,
+            Role role,
+            boolean isEmailVerified
+    ) {
         this.name = name;
         this.birthDate = birthDate;
         this.number = number;
