@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSE 알림 예시</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .notification {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .notification.unread {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.connected {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+        .status.disconnected {
+            background-color: #ffcdd2;
+            color: #c62828;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>SSE 실시간 알림 예시</h1>
+    
+    <div id="status" class="status disconnected">연결 안됨</div>
+    
+    <div>
+        <button onclick="connect()">연결</button>
+        <button onclick="disconnect()">연결 종료</button>
+    </div>
+    
+    <h2>받은 알림</h2>
+    <div id="notifications"></div>
+
+    <script>
+        let eventSource = null;
+        const statusDiv = document.getElementById('status');
+        const notificationsDiv = document.getElementById('notifications');
+
+        function connect() {
+            if (eventSource) {
+                console.log('이미 연결되어 있습니다.');
+                return;
+            }
+
+            // JWT 토큰을 헤더로 전달할 수 없으므로 쿼리 파라미터로 전달하거나
+            // 쿠키 기반 인증을 사용해야 합니다.
+            // 여기서는 쿠키 기반 인증을 사용한다고 가정합니다.
+            eventSource = new EventSource('/api/notifications/stream');
+
+            // 연결 성공 이벤트
+            eventSource.addEventListener('connect', (event) => {
+                console.log('연결 성공:', event.data);
+                updateStatus('connected', '연결됨');
+            });
+
+            // 알림 수신 이벤트
+            eventSource.addEventListener('notification', (event) => {
+                console.log('알림 수신:', event.data);
+                const notification = JSON.parse(event.data);
+                displayNotification(notification);
+                
+                // 브라우저 알림 (권한 필요)
+                if (Notification.permission === 'granted') {
+                    new Notification(notification.title, {
+                        body: notification.content,
+                        icon: '/favicon.ico'
+                    });
+                }
+            });
+
+            // 에러 처리
+            eventSource.onerror = (error) => {
+                console.error('SSE 연결 오류:', error);
+                updateStatus('disconnected', '연결 오류 (자동 재연결 시도 중...)');
+                // EventSource는 자동으로 재연결을 시도합니다.
+            };
+
+            // 브라우저 알림 권한 요청
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        function disconnect() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                updateStatus('disconnected', '연결 종료됨');
+                console.log('연결을 종료했습니다.');
+            }
+        }
+
+        function updateStatus(className, text) {
+            statusDiv.className = `status ${className}`;
+            statusDiv.textContent = text;
+        }
+
+        function displayNotification(notification) {
+            const notificationDiv = document.createElement('div');
+            notificationDiv.className = notification.isRead ? 'notification' : 'notification unread';
+            notificationDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between;">
+                    <strong>${notification.title}</strong>
+                    <span style="color: #666; font-size: 0.9em;">
+                        ${new Date(notification.createdAt).toLocaleString()}
+                    </span>
+                </div>
+                <p>${notification.content}</p>
+                <div style="color: #666; font-size: 0.9em;">
+                    타입: ${notification.type}
+                    ${notification.referenceId ? ` | ID: ${notification.referenceId}` : ''}
+                </div>
+            `;
+            notificationsDiv.insertBefore(notificationDiv, notificationsDiv.firstChild);
+        }
+
+        // 페이지 로드 시 자동 연결 (선택사항)
+        // window.addEventListener('load', connect);
+
+        // 페이지 언로드 시 연결 종료
+        window.addEventListener('beforeunload', disconnect);
+    </script>
+</body>
+</html>

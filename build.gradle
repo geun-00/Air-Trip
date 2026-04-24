@@ -1,0 +1,291 @@
+import org.yaml.snakeyaml.DumperOptions
+import org.yaml.snakeyaml.Yaml
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.8'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.epages.restdocs-api-spec' version '0.18.4'
+    id 'org.hidetake.swagger.generator' version '2.19.2'
+}
+ext {
+    springAiVersion = "1.1.0"
+}
+
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    asciidoctorExt
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+swaggerSources {
+    sample {
+        setInputFile(file("${project.buildDir}/api-spec/openapi3.yaml"))
+    }
+}
+
+dependencies {
+    // starter
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc:1.1.0'
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai:1.1.0'
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-mariadb:1.1.0'
+    implementation 'org.springframework.ai:spring-ai-advisors-vector-store:1.1.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
+    // Database
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+    implementation 'org.flywaydb:flyway-core'
+    runtimeOnly 'org.flywaydb:flyway-mysql'
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+
+    // Querydsl
+    annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
+    // AWS SDK(R2)
+    implementation 'software.amazon.awssdk:s3:2.29.29'
+
+    // jwt
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    // etc
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
+    implementation 'org.yaml:snakeyaml:2.0'
+    implementation 'org.springframework.retry:spring-retry:2.0.12'
+
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml"
+
+    // RestDocs + Swagger
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.18.4'
+    swaggerUI 'org.webjars:swagger-ui:4.15.5'
+
+    // test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.batch:spring-batch-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:mariadb'
+    testImplementation 'org.testcontainers:mongodb'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'com.github.codemonstur:embedded-redis:1.4.3'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+def querydslSrcDir = "src/main/generated"
+
+tasks.clean {
+    delete file(querydslSrcDir)
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.generatedSourceOutputDirectory = file(querydslSrcDir)
+}
+
+// OpenAPI3 설정
+openapi3 {
+    servers = [
+            { url = 'http://localhost:8081' },
+            { url = 'https://airbackend.jgy914.shop'}
+    ]
+    title = "Airbnb-2M 백엔드 API 문서"
+    description = "RestDocsWithSwagger Docs"
+    version = "0.0.1"
+    format = "yaml"
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:$springAiVersion"
+    }
+}
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(tasks.openapi3)) {
+        tasks.test.configure {
+            include 'project/airbnb/clone/controller/**/*Test.class'
+        }
+    }
+}
+
+tasks.register('copyOasToSwagger', Copy) {
+    delete "src/main/resources/static/swagger-ui/openapi3.yaml"
+    from "${buildDir}/api-spec/openapi3.yaml"
+    into "src/main/resources/static/swagger-ui/"
+    dependsOn "openapi3"
+
+    doLast {
+        def swaggerFile = file("src/main/resources/static/swagger-ui/openapi3.yaml")
+
+        // 1. 기존 YAML 로드
+        Yaml yaml = new Yaml()
+        def swaggerContent = swaggerFile.text
+        def swaggerMap = yaml.load(swaggerContent) ?: [:]
+
+        // 2. 로그인 스펙 정의
+        def authSpec = [
+                paths: [
+                        "/api/auth/login": [
+                                post: [
+                                        tags: ["Auth API"],
+                                        summary: "사용자 로그인",
+                                        description: "이메일과 비밀번호로 사용자 인증",
+                                        requestBody: [
+                                                required: true,
+                                                content: [
+                                                        "application/json": [
+                                                                schema: [
+                                                                        $ref: "#/components/schemas/LoginRequest"
+                                                                ]
+                                                        ]
+                                                ]
+                                        ],
+                                        responses: [
+                                                '200': [
+                                                        description: "인증 성공",
+                                                        headers: [
+                                                                authorization: [description: "Bearer {AccessToken}", schema: [type: "string"]],
+                                                                "Set-Cookie": [description: "RefreshToken={RefreshToken} HttpOnly (개발자 도구에서 확인)", schema: [type: "string"]]
+                                                        ]
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ],
+                components: [
+                        securitySchemes: [
+                                BearerAuth: [type: "apiKey", name: "Authorization", in: "header"],
+                                CookieAuth: [type: "apiKey", name: "RefreshToken", in: "cookie"]
+                        ]
+                ],
+                security: [[BearerAuth: []], [CookieAuth: []]]
+        ]
+
+        def schemas = [
+                LoginRequest: [
+                        title: "LoginRequest",
+                        type: "object",
+                        properties: [
+                                email: [type: "string",
+                                        example: "user@example.com",
+                                        description: "이메일"
+                                ],
+                                password: [type: "string",
+                                           example: "Abcd1234!",
+                                           description: "비밀번호"
+                                ]
+                        ],
+                        required: ["email", "password"]
+                ],
+                EditProfileRequest: [
+                        title: "EditProfileRequest",
+                        type: "object",
+                        properties: [
+                                editProfileRequest: [
+                                    type: "object",
+                                    properties: [
+                                            name: [
+                                                    type: "string",
+                                                    description: "새로 저장할 이름"
+                                            ],
+                                            aboutMe: [
+                                                    type: "string",
+                                                    description: "새로 저장할 소개글 (제약사항 : 최대 500자)"
+                                            ],
+                                            isProfileImageChanged: [
+                                                    type: "boolean",
+                                                    description: "이미지 파일 변경 여부"
+                                            ]
+                                    ],
+                                    required: ["name", "isProfileImageChanged"]
+                                ],
+                                profileImage: [
+                                     type: "string",
+                                     format: "binary",
+                                     description: "프로필 이미지 파일"
+                                ]
+                        ],
+                        required: ["editProfileRequest"]
+                ]
+        ]
+
+        def editProfileRequestBody = [
+                required: true,
+                content: [
+                        "multipart/form-data": [
+                                schema: [
+                                        $ref: "#/components/schemas/EditProfileRequest"
+                                ],
+                                encoding: [
+                                        editProfileRequest: [
+                                                contentType: "application/json"
+                                        ]
+                                ]
+                        ]
+                ]
+        ]
+
+        // 3. 병합: paths
+        swaggerMap.paths = swaggerMap.paths ?: [:]
+        swaggerMap.paths.putAll(authSpec.paths)
+        swaggerMap.paths["/api/members/me"].put.requestBody = editProfileRequestBody
+
+        // 4. 병합: components.securitySchemes
+        swaggerMap.components = swaggerMap.components ?: [:]
+        swaggerMap.components.securitySchemes = swaggerMap.components.securitySchemes ?: [:]
+        swaggerMap.components.securitySchemes.putAll(authSpec.components.securitySchemes)
+
+        // 5. 병합: security
+        swaggerMap.security = (swaggerMap.security ?: []) + authSpec.security
+
+        swaggerMap.components.schemas = swaggerMap.components.schemas ?: [:]
+        swaggerMap.components.schemas.putAll(schemas)
+
+        // 6. YAML로 다시 저장
+        DumperOptions options = new DumperOptions()
+        options.defaultFlowStyle = DumperOptions.FlowStyle.BLOCK
+        Yaml yamlDumper = new Yaml(options)
+        swaggerFile.text = yamlDumper.dump(swaggerMap)
+
+        println "Auth spec merged into ${swaggerFile}"
+    }
+}

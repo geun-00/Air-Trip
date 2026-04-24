@@ -1,0 +1,39 @@
+# ===== Java / Spring Boot =====
+/target/
+bin/
+build/
+out/
+*.class
+*.log
+*.jar
+*.war
+
+# ===== Gradle 관련 =====
+.gradle/
+.gradle-user-home/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# ===== IntelliJ 관련 (팀원용) =====
+.idea/
+*.iws
+*.ipr
+*.iml
+
+# ===== 기타 =====
+.DS_Store
+Thumbs.db
+*.swp
+
+# ===== 환경 파일 (보안 및 비공개 정보) =====
+/https/
+/src/main/resources/static/dist/
+/src/main/resources/static/swagger-ui/
+/stress-test/
+/infra/
+/diagrams/
+/k6-scripts/
+/prometheus.yml
+/gradle/
+/.env*
+/src/main/generated
