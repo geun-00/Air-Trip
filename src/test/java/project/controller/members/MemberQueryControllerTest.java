@@ -3,17 +3,21 @@ package project.controller.members;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import project.common.adapter.in.web.response.PageResponse;
 import project.controller.RestDocsTestSupport;
 import project.member.adapter.in.web.MemberQueryController;
-import project.member.adapter.in.web.response.ChatMemberSearchResponse;
-import project.member.adapter.in.web.response.ChatMembersSearchResponse;
 import project.member.adapter.in.web.response.DefaultProfileResponse;
 import project.member.adapter.in.web.response.TripHistoryResponse;
 import project.member.application.in.query.GetMyProfileQueryUseCase;
 import project.member.application.in.query.GetMyTripsHistoryQueryUseCase;
 import project.member.application.in.query.SearchMembersByNameQueryUseCase;
+import project.common.adapter.in.web.response.PageResponse;
+import project.member.application.query.model.ChatMemberSearchView;
+import project.member.application.query.model.ChatMembersSearchView;
+import project.member.application.query.model.DefaultProfileView;
+import project.member.application.query.model.TripHistoryView;
 import project.security.WithMockMember;
 
 import java.time.LocalDate;
@@ -57,8 +61,15 @@ class MemberQueryControllerTest extends RestDocsTestSupport {
     @DisplayName("내 기본 정보 조회")
     @WithMockMember
     void getDefaultProfile() throws Exception {
-        DefaultProfileResponse response = new DefaultProfileResponse("Antonio Cui", "https://example.com/a.jpg", LocalDate.of(2024, 8, 15), "Accumsan luctus fringilla cubilia tempor auctor ullamcorper.", true);
-        given(getMyProfileQueryUseCase.getMyProfile(anyLong())).willReturn(response);
+        DefaultProfileView profile = new DefaultProfileView("Antonio Cui", "https://example.com/a.jpg", LocalDate.of(2024, 8, 15), "Accumsan luctus fringilla cubilia tempor auctor ullamcorper.", true);
+        DefaultProfileResponse response = new DefaultProfileResponse(
+                profile.name(),
+                profile.profileImageUrl(),
+                profile.createdDate(),
+                profile.aboutMe(),
+                profile.isEmailVerified()
+        );
+        given(getMyProfileQueryUseCase.getMyProfile(anyLong())).willReturn(profile);
 
         mockMvc.perform(get("/api/members/me")
                        .header(AUTHORIZATION, "Bearer {access-token}")
@@ -108,13 +119,12 @@ class MemberQueryControllerTest extends RestDocsTestSupport {
     @DisplayName("이름으로 사용자 조회")
     void findMembersByName() throws Exception {
         LocalDateTime now = LocalDateTime.now();
-        List<ChatMemberSearchResponse> memberSearchDtos = List.of(
-                new ChatMemberSearchResponse(1L, "kim-1", now.minusDays(5), "https://example-a.com"),
-                new ChatMemberSearchResponse(2L, "kim-2", now.minusDays(6), "https://example-b.com"),
-                new ChatMemberSearchResponse(3L, "kim-3", now.minusDays(7), "https://example-c.com")
+        List<ChatMemberSearchView> members = List.of(
+                new ChatMemberSearchView(1L, "kim-1", now.minusDays(5), "https://example-a.com"),
+                new ChatMemberSearchView(2L, "kim-2", now.minusDays(6), "https://example-b.com"),
+                new ChatMemberSearchView(3L, "kim-3", now.minusDays(7), "https://example-c.com")
         );
-        ChatMembersSearchResponse response = new ChatMembersSearchResponse(memberSearchDtos);
-        given(searchMembersByNameQueryUseCase.findMembersByName(anyString())).willReturn(response);
+        given(searchMembersByNameQueryUseCase.findMembersByName(anyString())).willReturn(new ChatMembersSearchView(members));
 
         mockMvc.perform(get("/api/members/search")
                        .param("name", "kim"))
@@ -122,7 +132,7 @@ class MemberQueryControllerTest extends RestDocsTestSupport {
                        handler().handlerType(MemberQueryController.class),
                        handler().methodName("findMembersByName"),
                        status().isOk(),
-                       jsonPath("$.members.length()").value(memberSearchDtos.size())
+                       jsonPath("$.members.length()").value(members.size())
                )
                .andDo(document("find-member-by-name",
                        resource(
@@ -157,19 +167,22 @@ class MemberQueryControllerTest extends RestDocsTestSupport {
     @WithMockMember
     void getTripsHistory() throws Exception {
         LocalDate now = LocalDate.now();
+        List<TripHistoryView> tripHistories = List.of(
+                new TripHistoryView(1L, 1L, "https://example-a.com", "title-A", now.minusDays(14), now.minusDays(12), true),
+                new TripHistoryView(2L, 2L, "https://example-b.com", "title-B", now.minusDays(10), now.minusDays(9), false),
+                new TripHistoryView(3L, 3L, "https://example-c.com", "title-C", now.minusDays(7), now.minusDays(4), true)
+        );
         List<TripHistoryResponse> dtos = List.of(
                 new TripHistoryResponse(1L, 1L, "https://example-a.com", "title-A", now.minusDays(14), now.minusDays(12), true),
                 new TripHistoryResponse(2L, 2L, "https://example-b.com", "title-B", now.minusDays(10), now.minusDays(9), false),
                 new TripHistoryResponse(3L, 3L, "https://example-c.com", "title-C", now.minusDays(7), now.minusDays(4), true)
         );
-        PageResponse<TripHistoryResponse> response = PageResponse.<TripHistoryResponse>builder()
-                                                                 .contents(dtos)
-                                                                 .pageNumber(0)
-                                                                 .pageSize(10)
-                                                                 .total(dtos.size())
-                                                                 .build();
-        given(getMyTripsHistoryQueryUseCase.getTripsHistory(anyLong(), any()))
-                .willReturn(response);
+        PageResponse<TripHistoryView> response = PageResponse.from(new PageImpl<>(
+                tripHistories,
+                PageRequest.of(0, 10),
+                dtos.size()
+        ));
+        given(getMyTripsHistoryQueryUseCase.getTripsHistory(anyLong(), any())).willReturn(response);
 
         mockMvc.perform(get("/api/members/me/trips/past")
                        .header(AUTHORIZATION, "Bearer {access-token}")

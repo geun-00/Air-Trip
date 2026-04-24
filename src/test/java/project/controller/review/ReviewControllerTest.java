@@ -5,6 +5,8 @@ import com.epages.restdocs.apispec.SimpleType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -60,12 +62,11 @@ class ReviewControllerTest extends RestDocsTestSupport {
                 new MyReviewResDto(2L, 2L, "https://example-b.com", "title-B", "content-B", 4.0, now.minusDays(10)),
                 new MyReviewResDto(3L, 3L, "https://example-c.com", "title-C", "content-C", 4.5, now.minusDays(7))
         );
-        PageResponse<MyReviewResDto> response = PageResponse.<MyReviewResDto>builder()
-                                                            .contents(dtos)
-                                                            .pageNumber(0)
-                                                            .pageSize(10)
-                                                            .total(dtos.size())
-                                                            .build();
+        PageResponse<MyReviewResDto> response = PageResponse.from(new PageImpl<>(
+                dtos,
+                PageRequest.of(0, 10),
+                dtos.size()
+        ));
         given(reviewService.getMyReviews(anyLong(), any()))
                 .willReturn(response);
 

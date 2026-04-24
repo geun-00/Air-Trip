@@ -9,7 +9,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import project.controller.RestDocsTestSupport;
 import project.member.adapter.in.web.MemberCommandController;
 import project.member.adapter.in.web.request.EditProfileRequest;
-import project.member.adapter.in.web.response.EditProfileResponse;
+import project.member.application.command.model.EditProfileResult;
 import project.member.application.in.command.EditMyProfileUseCase;
 import project.security.WithMockMember;
 
@@ -49,8 +49,8 @@ class MemberCommandControllerTest extends RestDocsTestSupport {
         MockMultipartFile imageFile = new MockMultipartFile("profileImage", "test-file.jpg", MediaType.IMAGE_JPEG_VALUE, "file-content".getBytes());
         MockMultipartFile editProfileRequest = new MockMultipartFile("editProfileRequest", "test-request", MediaType.APPLICATION_JSON_VALUE, creatJson(reqDto).getBytes());
 
-        EditProfileResponse response = new EditProfileResponse("Antonio Cui", "https://example.com/a.jpg", "Accumsan luctus fringilla cubilia tempor auctor ullamcorper.");
-        given(editMyProfileUseCase.editMyProfile(any())).willReturn(response);
+        EditProfileResult result = new EditProfileResult("Antonio Cui", "https://example.com/a.jpg", "Accumsan luctus fringilla cubilia tempor auctor ullamcorper.");
+        given(editMyProfileUseCase.editMyProfile(any())).willReturn(result);
 
         mockMvc.perform(multipart("/api/members/me")
                        .file(imageFile)
@@ -67,9 +67,9 @@ class MemberCommandControllerTest extends RestDocsTestSupport {
                        handler().handlerType(MemberCommandController.class),
                        handler().methodName("editMyProfile"),
                        status().isOk(),
-                       jsonPath("$.name").value(response.name()),
-                       jsonPath("$.profileImageUrl").value(response.profileImageUrl()),
-                       jsonPath("$.aboutMe").value(response.aboutMe())
+                       jsonPath("$.name").value(result.name()),
+                       jsonPath("$.profileImageUrl").value(result.profileImageUrl()),
+                       jsonPath("$.aboutMe").value(result.aboutMe())
                )
                .andDo(document("edit-my-profile",
                        requestParts(
