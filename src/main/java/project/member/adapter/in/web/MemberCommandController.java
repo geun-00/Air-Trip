@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import project.auth.adapter.in.web.support.CurrentMemberId;
 import project.member.adapter.in.web.request.EditProfileRequest;
 import project.member.adapter.in.web.response.EditProfileResponse;
+import project.member.application.command.model.EditProfileResult;
 import project.member.application.in.command.EditMyProfileUseCase;
 import project.member.application.in.command.model.EditMyProfileCommand;
 
@@ -25,13 +26,15 @@ public class MemberCommandController {
     public ResponseEntity<EditProfileResponse> editMyProfile(@CurrentMemberId Long memberId,
                                                              @RequestPart(value = "profileImage", required = false) MultipartFile imageFile,
                                                              @Valid @RequestPart("editProfileRequest") EditProfileRequest profileReqDto) {
-        EditProfileResponse response = editMyProfileUseCase.editMyProfile(new EditMyProfileCommand(
+        EditProfileResult result = editMyProfileUseCase.editMyProfile(new EditMyProfileCommand(
                 memberId,
                 imageFile,
                 profileReqDto.name(),
                 profileReqDto.aboutMe(),
                 profileReqDto.isProfileImageChanged()
         ));
+
+        EditProfileResponse response = new EditProfileResponse(result.name(), result.profileImageUrl(), result.aboutMe());
         return ResponseEntity.ok(response);
     }
 }

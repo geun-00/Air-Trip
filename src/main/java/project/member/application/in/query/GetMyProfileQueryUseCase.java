@@ -1,8 +1,8 @@
 package project.member.application.in.query;
 
-import project.member.adapter.in.web.response.DefaultProfileResponse;
+import project.member.application.query.model.DefaultProfileView;
 
 public interface GetMyProfileQueryUseCase {
 
-    DefaultProfileResponse getMyProfile(Long memberId);
+    DefaultProfileView getMyProfile(Long memberId);
 }

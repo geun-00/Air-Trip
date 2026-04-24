@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
-import project.member.adapter.in.web.response.EditProfileResponse;
+import project.member.application.command.model.EditProfileResult;
 import project.member.application.event.MemberImageUploadEvent;
 import project.member.application.event.MemberProfileImageChangedEvent;
 import project.member.application.in.command.EditMyProfileUseCase;
@@ -90,7 +90,7 @@ public class MemberCommandService implements RegisterMemberUseCase,
     }
 
     @Override
-    public EditProfileResponse editMyProfile(EditMyProfileCommand command) {
+    public EditProfileResult editMyProfile(EditMyProfileCommand command) {
         Member member = loadMemberPort.loadById(command.memberId());
 
         if (command.profileImageChanged()) {
@@ -100,7 +100,7 @@ public class MemberCommandService implements RegisterMemberUseCase,
         member.updateProfile(command.name(), command.aboutMe());
         saveMemberPort.save(member);
 
-        return new EditProfileResponse(member.getName(), member.getProfileUrl(), member.getAboutMe());
+        return new EditProfileResult(member.getName(), member.getProfileUrl(), member.getAboutMe());
     }
 
     private void validateExistsEmail(String email) {

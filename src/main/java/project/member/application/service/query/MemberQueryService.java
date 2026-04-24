@@ -5,19 +5,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.common.adapter.in.web.response.PageResponse;
-import project.member.adapter.in.web.response.ChatMemberSearchResponse;
-import project.member.adapter.in.web.response.ChatMembersSearchResponse;
-import project.member.adapter.in.web.response.DefaultProfileResponse;
-import project.member.adapter.in.web.response.TripHistoryResponse;
-import project.member.adapter.out.persistence.model.DefaultProfileQueryDto;
 import project.member.application.in.query.GetMyProfileQueryUseCase;
 import project.member.application.in.query.GetMyTripsHistoryQueryUseCase;
 import project.member.application.in.query.SearchMembersByNameQueryUseCase;
 import project.member.application.out.query.GetMemberProfilePort;
 import project.member.application.out.query.GetMemberTripsHistoryPort;
 import project.member.application.out.query.SearchMembersPort;
-
-import java.util.List;
+import project.member.application.query.model.ChatMembersSearchView;
+import project.member.application.query.model.DefaultProfileView;
+import project.member.application.query.model.TripHistoryView;
 
 @Service
 @Transactional(readOnly = true)
@@ -31,19 +27,17 @@ public class MemberQueryService implements GetMyProfileQueryUseCase,
     private final GetMemberTripsHistoryPort getMemberTripsHistoryPort;
 
     @Override
-    public DefaultProfileResponse getMyProfile(Long memberId) {
-        DefaultProfileQueryDto profileQueryDto = getMemberProfilePort.getDefaultProfile(memberId);
-        return DefaultProfileResponse.from(profileQueryDto);
+    public DefaultProfileView getMyProfile(Long memberId) {
+        return getMemberProfilePort.getDefaultProfile(memberId);
     }
 
     @Override
-    public ChatMembersSearchResponse findMembersByName(String name) {
-        List<ChatMemberSearchResponse> members = searchMembersPort.findMembersByName(name);
-        return new ChatMembersSearchResponse(members);
+    public ChatMembersSearchView findMembersByName(String name) {
+        return searchMembersPort.findMembersByName(name);
     }
 
     @Override
-    public PageResponse<TripHistoryResponse> getTripsHistory(Long memberId, Pageable pageable) {
+    public PageResponse<TripHistoryView> getTripsHistory(Long memberId, Pageable pageable) {
         return getMemberTripsHistoryPort.getTripsHistory(memberId, pageable);
     }
 }

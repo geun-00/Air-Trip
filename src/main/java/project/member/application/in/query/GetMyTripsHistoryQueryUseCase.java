@@ -2,9 +2,9 @@ package project.member.application.in.query;
 
 import org.springframework.data.domain.Pageable;
 import project.common.adapter.in.web.response.PageResponse;
-import project.member.adapter.in.web.response.TripHistoryResponse;
+import project.member.application.query.model.TripHistoryView;
 
 public interface GetMyTripsHistoryQueryUseCase {
 
-    PageResponse<TripHistoryResponse> getTripsHistory(Long memberId, Pageable pageable);
+    PageResponse<TripHistoryView> getTripsHistory(Long memberId, Pageable pageable);
 }
