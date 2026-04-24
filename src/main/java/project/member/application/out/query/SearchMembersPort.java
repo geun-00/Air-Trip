@@ -1,10 +1,8 @@
 package project.member.application.out.query;
 
-import project.member.adapter.in.web.response.ChatMemberSearchResponse;
-
-import java.util.List;
+import project.member.application.query.model.ChatMembersSearchView;
 
 public interface SearchMembersPort {
 
-    List<ChatMemberSearchResponse> findMembersByName(String name);
+    ChatMembersSearchView findMembersByName(String name);
 }

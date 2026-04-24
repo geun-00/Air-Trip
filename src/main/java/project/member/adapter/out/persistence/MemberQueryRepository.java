@@ -4,9 +4,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
-import project.member.adapter.in.web.response.ChatMemberSearchResponse;
-import project.member.adapter.in.web.response.TripHistoryResponse;
-import project.member.adapter.out.persistence.model.DefaultProfileQueryDto;
+import project.member.adapter.out.persistence.model.ChatMemberSearchRow;
+import project.member.adapter.out.persistence.model.DefaultProfileRow;
+import project.member.adapter.out.persistence.model.TripHistoryRow;
 import project.member.domain.Member;
 
 import java.time.LocalDateTime;
@@ -27,10 +27,10 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
         super(Member.class);
     }
 
-    public Optional<DefaultProfileQueryDto> getDefaultProfile(Long memberId) {
+    public Optional<DefaultProfileRow> getDefaultProfile(Long memberId) {
         return Optional.ofNullable(
                 select(constructor(
-                        DefaultProfileQueryDto.class,
+                        DefaultProfileRow.class,
                         member.name,
                         member.profileUrl,
                         member.createdAt,
@@ -42,9 +42,9 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
         );
     }
 
-    public List<ChatMemberSearchResponse> findMembersByName(String name) {
+    public List<ChatMemberSearchRow> findMembersByName(String name) {
         return select(constructor(
-                ChatMemberSearchResponse.class,
+                ChatMemberSearchRow.class,
                 member.id,
                 member.name,
                 member.createdAt,
@@ -54,11 +54,11 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
                 .fetch();
     }
 
-    public Page<TripHistoryResponse> getTripsHistory(Long memberId, Pageable pageable) {
+    public Page<TripHistoryRow> getTripsHistory(Long memberId, Pageable pageable) {
         return applyPagination(pageable,
                 contentQuery ->
                         contentQuery.select(constructor(
-                                            TripHistoryResponse.class,
+                                            TripHistoryRow.class,
                                             reservation.id,
                                             accommodation.id,
                                             accommodationImage.imageUrl,

@@ -1,8 +1,8 @@
 package project.member.application.out.query;
 
-import project.member.adapter.out.persistence.model.DefaultProfileQueryDto;
+import project.member.application.query.model.DefaultProfileView;
 
 public interface GetMemberProfilePort {
 
-    DefaultProfileQueryDto getDefaultProfile(Long memberId);
+    DefaultProfileView getDefaultProfile(Long memberId);
 }
