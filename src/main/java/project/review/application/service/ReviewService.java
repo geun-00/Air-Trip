@@ -24,12 +24,7 @@ public class ReviewService {
     public PageResponse<MyReviewResDto> getMyReviews(Long memberId, Pageable pageable) {
         Page<MyReviewResDto> result = reviewQueryRepository.getMyReviews(memberId, pageable);
 
-        return PageResponse.<MyReviewResDto>builder()
-                           .contents(result.getContent())
-                           .pageNumber(pageable.getPageNumber())
-                           .pageSize(pageable.getPageSize())
-                           .total(result.getTotalElements())
-                           .build();
+        return PageResponse.from(result);
     }
 
     @Transactional

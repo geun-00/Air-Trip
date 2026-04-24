@@ -1,10 +1,10 @@
 package project.common.adapter.in.web.response;
 
-import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.function.Function;
 
 @Getter
 public class PageResponse<E> {
@@ -13,9 +13,8 @@ public class PageResponse<E> {
     private final boolean hasPrev, hasNext;
     private final int totalCount, prevPage, nextPage, totalPage, current, size;
 
-    @Builder
-    public PageResponse(List<E> contents, int pageSize, int pageNumber, long total) {
-        this.contents = contents;
+    private PageResponse(List<E> contents, int pageSize, int pageNumber, long total) {
+        this.contents = List.copyOf(contents);
         this.totalCount = (int) total;
         this.size = pageSize;
         this.current = pageNumber;
@@ -29,16 +28,15 @@ public class PageResponse<E> {
         this.nextPage = hasNext ? current + 1 : -1;
     }
 
-//    public static <E> PageResponse<E> from(Page<E> page) {
-//        return new PageResponse<>(page.getContent(), page.getSize(), page.getNumber(), page.getTotalElements());
-//    }
-
     public static <E> PageResponse<E> from(Page<E> page) {
-        return PageResponse.<E>builder()
-                           .contents(page.getContent())
-                           .pageNumber(page.getNumber())
-                           .pageSize(page.getSize())
-                           .total(page.getTotalElements())
-                           .build();
+        return new PageResponse<>(page.getContent(), page.getSize(), page.getNumber(), page.getTotalElements());
+    }
+
+    public <R> PageResponse<R> map(Function<E, R> mapper) {
+        List<R> mapped = contents.stream()
+                                 .map(mapper)
+                                 .toList();
+
+        return new PageResponse<>(mapped, size, current, totalCount);
     }
 }
