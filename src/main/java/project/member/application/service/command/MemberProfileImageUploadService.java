@@ -7,42 +7,46 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import project.common.exception.ImageUploadException;
-import project.member.domain.exception.MemberExceptions;
+import project.member.application.in.command.UploadMemberProfileImageUseCase;
+import project.member.application.out.command.LoadMemberPort;
+import project.member.application.out.command.ManageMemberProfileImagePort;
+import project.member.application.out.command.SaveMemberPort;
 import project.member.domain.Member;
-import project.member.adapter.out.persistence.MemberRepository;
-import project.infrastructure.storage.S3Uploader;
 
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MemberProfileImageUploadService {
+public class MemberProfileImageUploadService implements UploadMemberProfileImageUseCase {
 
-    private final S3Uploader s3Uploader;
-    private final MemberRepository memberRepository;
+    private final LoadMemberPort loadMemberPort;
+    private final SaveMemberPort saveMemberPort;
+    private final ManageMemberProfileImagePort manageMemberProfileImagePort;
 
     @Transactional
+    @Override
     public void upload(Long memberId, String imageUrl) {
-        uploadProfileImage(memberId, key -> s3Uploader.uploadImage(imageUrl, key));
+        uploadProfileImage(memberId, key -> manageMemberProfileImagePort.uploadFromUrl(imageUrl, key));
     }
 
     @Transactional
+    @Override
     public void uploadAndDeleteOrigin(Long memberId, String oldImageUrl, MultipartFile newImageFile) {
-        uploadProfileImage(memberId, key -> newImageFile != null ? s3Uploader.uploadImage(newImageFile, key) : null);
+        uploadProfileImage(memberId, key -> newImageFile != null ? manageMemberProfileImagePort.upload(newImageFile, key) : null);
 
         if (StringUtils.hasText(oldImageUrl)) {
-            s3Uploader.deleteFile(oldImageUrl);
+            manageMemberProfileImagePort.delete(oldImageUrl);
         }
     }
 
     private void uploadProfileImage(Long memberId, FileUploadFunction uploadFunction) {
-        Member member = memberRepository.findById(memberId)
-                                        .orElseThrow(() -> MemberExceptions.notFoundById(memberId));
+        Member member = loadMemberPort.loadById(memberId);
         String key = String.format("members/%s", UUID.randomUUID());
 
         try {
             member.updateProfileUrl(uploadFunction.upload(key));
+            saveMemberPort.save(member);
             log.debug("Succeed to upload image to S3: memberId={}", member.getId());
         } catch (ImageUploadException e) {
             log.warn("Failed image upload for memberId={}. Continue without profile image.", member.getId(), e);

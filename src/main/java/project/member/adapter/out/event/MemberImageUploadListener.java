@@ -6,22 +6,22 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import project.member.application.event.MemberImageUploadEvent;
 import project.member.application.event.MemberProfileImageChangedEvent;
-import project.member.application.service.command.MemberProfileImageUploadService;
+import project.member.application.in.command.UploadMemberProfileImageUseCase;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class MemberImageUploadListener {
 
-    private final MemberProfileImageUploadService profileImageUploadService;
+    private final UploadMemberProfileImageUseCase uploadMemberProfileImageUseCase;
 
     @EventListener
     public void handleMemberImageUploadEvent(MemberImageUploadEvent event) {
-        profileImageUploadService.upload(event.memberId(), event.imageUrl());
+        uploadMemberProfileImageUseCase.upload(event.memberId(), event.imageUrl());
     }
 
     @EventListener
     public void handleMemberImageUploadEvent(MemberProfileImageChangedEvent event) {
-        profileImageUploadService.uploadAndDeleteOrigin(event.memberId(), event.oldImageUrl(), event.newImageFile());
+        uploadMemberProfileImageUseCase.uploadAndDeleteOrigin(event.memberId(), event.oldImageUrl(), event.newImageFile());
     }
 }
