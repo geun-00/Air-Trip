@@ -2,6 +2,7 @@ package project.common.adapter.in.web.response;
 
 import lombok.Builder;
 import lombok.Getter;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -26,5 +27,18 @@ public class PageResponse<E> {
 
         this.prevPage = hasPrev ? current - 1 : -1;
         this.nextPage = hasNext ? current + 1 : -1;
+    }
+
+//    public static <E> PageResponse<E> from(Page<E> page) {
+//        return new PageResponse<>(page.getContent(), page.getSize(), page.getNumber(), page.getTotalElements());
+//    }
+
+    public static <E> PageResponse<E> from(Page<E> page) {
+        return PageResponse.<E>builder()
+                           .contents(page.getContent())
+                           .pageNumber(page.getNumber())
+                           .pageSize(page.getSize())
+                           .total(page.getTotalElements())
+                           .build();
     }
 }

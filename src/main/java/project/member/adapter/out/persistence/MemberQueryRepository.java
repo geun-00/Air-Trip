@@ -1,6 +1,5 @@
 package project.member.adapter.out.persistence;
 
-import com.querydsl.core.types.Projections;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -14,13 +13,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.querydsl.core.types.Projections.constructor;
 import static project.accommodation.domain.QAccommodation.accommodation;
 import static project.accommodation.domain.QAccommodationImage.accommodationImage;
 import static project.member.domain.QMember.member;
 import static project.reservation.domain.QReservation.reservation;
 import static project.review.domain.QReview.review;
 
-// TODO : 포트, 어댑터 분리
 @Repository
 public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
 
@@ -30,7 +29,7 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
 
     public Optional<DefaultProfileQueryDto> getDefaultProfile(Long memberId) {
         return Optional.ofNullable(
-                select(Projections.constructor(
+                select(constructor(
                         DefaultProfileQueryDto.class,
                         member.name,
                         member.profileUrl,
@@ -44,7 +43,7 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
     }
 
     public List<ChatMemberSearchResponse> findMembersByName(String name) {
-        return select(Projections.constructor(
+        return select(constructor(
                 ChatMemberSearchResponse.class,
                 member.id,
                 member.name,
@@ -58,7 +57,7 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
     public Page<TripHistoryResponse> getTripsHistory(Long memberId, Pageable pageable) {
         return applyPagination(pageable,
                 contentQuery ->
-                        contentQuery.select(Projections.constructor(
+                        contentQuery.select(constructor(
                                             TripHistoryResponse.class,
                                             reservation.id,
                                             accommodation.id,

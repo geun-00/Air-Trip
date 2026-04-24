@@ -1,7 +1,6 @@
 package project.member.application.service.query;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,12 +9,13 @@ import project.member.adapter.in.web.response.ChatMemberSearchResponse;
 import project.member.adapter.in.web.response.ChatMembersSearchResponse;
 import project.member.adapter.in.web.response.DefaultProfileResponse;
 import project.member.adapter.in.web.response.TripHistoryResponse;
-import project.member.adapter.out.persistence.MemberQueryRepository;
 import project.member.adapter.out.persistence.model.DefaultProfileQueryDto;
 import project.member.application.in.query.GetMyProfileQueryUseCase;
 import project.member.application.in.query.GetMyTripsHistoryQueryUseCase;
 import project.member.application.in.query.SearchMembersByNameQueryUseCase;
-import project.member.domain.exception.MemberExceptions;
+import project.member.application.out.query.GetMemberProfilePort;
+import project.member.application.out.query.GetMemberTripsHistoryPort;
+import project.member.application.out.query.SearchMembersPort;
 
 import java.util.List;
 
@@ -26,30 +26,24 @@ public class MemberQueryService implements GetMyProfileQueryUseCase,
                                            SearchMembersByNameQueryUseCase,
                                            GetMyTripsHistoryQueryUseCase {
 
-    private final MemberQueryRepository memberQueryRepository;
+    private final SearchMembersPort searchMembersPort;
+    private final GetMemberProfilePort getMemberProfilePort;
+    private final GetMemberTripsHistoryPort getMemberTripsHistoryPort;
 
     @Override
     public DefaultProfileResponse getMyProfile(Long memberId) {
-        DefaultProfileQueryDto profileQueryDto = memberQueryRepository.getDefaultProfile(memberId)
-                                                                      .orElseThrow(() -> MemberExceptions.notFoundById(memberId));
+        DefaultProfileQueryDto profileQueryDto = getMemberProfilePort.getDefaultProfile(memberId);
         return DefaultProfileResponse.from(profileQueryDto);
     }
 
     @Override
     public ChatMembersSearchResponse findMembersByName(String name) {
-        List<ChatMemberSearchResponse> members = memberQueryRepository.findMembersByName(name);
+        List<ChatMemberSearchResponse> members = searchMembersPort.findMembersByName(name);
         return new ChatMembersSearchResponse(members);
     }
 
     @Override
     public PageResponse<TripHistoryResponse> getTripsHistory(Long memberId, Pageable pageable) {
-        Page<TripHistoryResponse> result = memberQueryRepository.getTripsHistory(memberId, pageable);
-
-        return PageResponse.<TripHistoryResponse>builder()
-                           .contents(result.getContent())
-                           .pageNumber(pageable.getPageNumber())
-                           .pageSize(pageable.getPageSize())
-                           .total(result.getTotalElements())
-                           .build();
+        return getMemberTripsHistoryPort.getTripsHistory(memberId, pageable);
     }
 }
