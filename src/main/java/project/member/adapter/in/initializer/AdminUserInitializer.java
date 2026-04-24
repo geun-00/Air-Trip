@@ -5,19 +5,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import project.member.domain.Member;
-import project.member.adapter.out.persistence.MemberRepository;
-import project.member.domain.support.AdminMemberCreateSpec;
+import project.member.application.in.command.RegisterAdminMemberUseCase;
 
 @Profile("!test")
 @Component
 @RequiredArgsConstructor
 public class AdminUserInitializer implements ApplicationListener<ContextRefreshedEvent> {
 
-    private final MemberRepository memberRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final RegisterAdminMemberUseCase registerAdminMemberUseCase;
 
     @Value("${app.admin.email}")
     private String adminEmail;
@@ -27,11 +23,6 @@ public class AdminUserInitializer implements ApplicationListener<ContextRefreshe
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        if (memberRepository.existsByEmail(adminEmail)) {
-            return;
-        }
-
-        Member admin = Member.createAdmin(new AdminMemberCreateSpec(adminEmail, passwordEncoder.encode(adminPassword)));
-        memberRepository.save(admin);
+        registerAdminMemberUseCase.registerAdmin(adminEmail, adminPassword);
     }
 }

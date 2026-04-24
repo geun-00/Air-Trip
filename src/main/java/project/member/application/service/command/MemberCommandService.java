@@ -11,6 +11,7 @@ import project.member.adapter.in.web.response.EditProfileResponse;
 import project.member.application.event.MemberImageUploadEvent;
 import project.member.application.event.MemberProfileImageChangedEvent;
 import project.member.application.in.command.EditMyProfileUseCase;
+import project.member.application.in.command.RegisterAdminMemberUseCase;
 import project.member.application.in.command.RegisterMemberUseCase;
 import project.member.application.in.command.RegisterSocialMemberUseCase;
 import project.member.application.in.command.model.EditMyProfileCommand;
@@ -20,6 +21,7 @@ import project.member.application.out.command.LoadMemberPort;
 import project.member.application.out.command.SaveMemberPort;
 import project.member.domain.Member;
 import project.member.domain.SocialType;
+import project.member.domain.support.AdminMemberCreateSpec;
 import project.member.domain.support.RestMemberCreateSpec;
 import project.member.domain.support.SocialMemberCreateSpec;
 
@@ -27,6 +29,7 @@ import project.member.domain.support.SocialMemberCreateSpec;
 @Transactional
 @RequiredArgsConstructor
 public class MemberCommandService implements RegisterMemberUseCase,
+                                             RegisterAdminMemberUseCase,
                                              RegisterSocialMemberUseCase,
                                              EditMyProfileUseCase {
 
@@ -74,6 +77,16 @@ public class MemberCommandService implements RegisterMemberUseCase,
         if (command.imageUrl() != null) {
             eventPublisher.publishEvent(new MemberImageUploadEvent(member.getId(), command.imageUrl()));
         }
+    }
+
+    @Override
+    public void registerAdmin(String email, String password) {
+        if (loadMemberPort.existsByEmail(email)) {
+            return;
+        }
+
+        Member admin = Member.createAdmin(new AdminMemberCreateSpec(email, encodePassword(password)));
+        saveMemberPort.save(admin);
     }
 
     @Override
