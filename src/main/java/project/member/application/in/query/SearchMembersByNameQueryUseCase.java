@@ -1,6 +1,6 @@
 package project.member.application.in.query;
 
-import project.member.application.query.model.ChatMembersSearchView;
+import project.member.application.in.query.model.ChatMembersSearchView;
 
 public interface SearchMembersByNameQueryUseCase {
 

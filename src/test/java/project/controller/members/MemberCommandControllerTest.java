@@ -9,7 +9,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import project.controller.RestDocsTestSupport;
 import project.member.adapter.in.web.MemberCommandController;
 import project.member.adapter.in.web.request.EditProfileRequest;
-import project.member.application.command.model.EditProfileResult;
+import project.member.application.in.command.model.EditProfileResult;
 import project.member.application.in.command.EditMyProfileUseCase;
 import project.security.WithMockMember;
 

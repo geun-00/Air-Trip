@@ -11,9 +11,9 @@ import org.springframework.web.multipart.MultipartFile;
 import project.auth.adapter.in.web.support.CurrentMemberId;
 import project.member.adapter.in.web.request.EditProfileRequest;
 import project.member.adapter.in.web.response.EditProfileResponse;
-import project.member.application.command.model.EditProfileResult;
 import project.member.application.in.command.EditMyProfileUseCase;
 import project.member.application.in.command.model.EditMyProfileCommand;
+import project.member.application.in.command.model.EditProfileResult;
 
 @RestController
 @RequiredArgsConstructor

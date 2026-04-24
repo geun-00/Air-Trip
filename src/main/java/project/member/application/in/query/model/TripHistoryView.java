@@ -1,4 +1,4 @@
-package project.member.application.query.model;
+package project.member.application.in.query.model;
 
 import java.time.LocalDate;
 

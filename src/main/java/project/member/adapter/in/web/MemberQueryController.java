@@ -16,10 +16,10 @@ import project.member.adapter.in.web.response.TripHistoryResponse;
 import project.member.application.in.query.GetMyProfileQueryUseCase;
 import project.member.application.in.query.GetMyTripsHistoryQueryUseCase;
 import project.member.application.in.query.SearchMembersByNameQueryUseCase;
-import project.member.application.query.model.ChatMemberSearchView;
-import project.member.application.query.model.ChatMembersSearchView;
-import project.member.application.query.model.DefaultProfileView;
-import project.member.application.query.model.TripHistoryView;
+import project.member.application.in.query.model.ChatMemberSearchView;
+import project.member.application.in.query.model.ChatMembersSearchView;
+import project.member.application.in.query.model.DefaultProfileView;
+import project.member.application.in.query.model.TripHistoryView;
 
 import java.util.List;
 

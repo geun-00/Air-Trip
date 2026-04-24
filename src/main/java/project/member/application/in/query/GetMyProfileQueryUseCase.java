@@ -1,6 +1,6 @@
 package project.member.application.in.query;
 
-import project.member.application.query.model.DefaultProfileView;
+import project.member.application.in.query.model.DefaultProfileView;
 
 public interface GetMyProfileQueryUseCase {
 

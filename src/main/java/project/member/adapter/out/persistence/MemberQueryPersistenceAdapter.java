@@ -8,13 +8,13 @@ import project.common.adapter.in.web.response.PageResponse;
 import project.member.adapter.out.persistence.model.ChatMemberSearchRow;
 import project.member.adapter.out.persistence.model.DefaultProfileRow;
 import project.member.adapter.out.persistence.model.TripHistoryRow;
+import project.member.application.in.query.model.ChatMemberSearchView;
+import project.member.application.in.query.model.ChatMembersSearchView;
+import project.member.application.in.query.model.DefaultProfileView;
+import project.member.application.in.query.model.TripHistoryView;
 import project.member.application.out.query.GetMemberProfilePort;
 import project.member.application.out.query.GetMemberTripsHistoryPort;
 import project.member.application.out.query.SearchMembersPort;
-import project.member.application.query.model.ChatMemberSearchView;
-import project.member.application.query.model.ChatMembersSearchView;
-import project.member.application.query.model.DefaultProfileView;
-import project.member.application.query.model.TripHistoryView;
 import project.member.domain.exception.MemberExceptions;
 
 import java.util.List;
