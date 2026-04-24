@@ -13,8 +13,9 @@ import project.auth.adapter.in.web.support.CurrentMemberId;
 import project.member.adapter.in.web.request.SignupRequest;
 import project.auth.adapter.out.jwt.TokenService;
 import project.member.application.in.command.RegisterMemberUseCase;
+import project.member.application.in.command.SendEmailVerificationUseCase;
+import project.member.application.in.command.VerifyEmailUseCase;
 import project.member.application.in.command.model.RegisterMemberCommand;
-import project.member.application.service.command.EmailVerificationService;
 
 import java.net.URI;
 
@@ -28,8 +29,9 @@ import static project.auth.adapter.out.jwt.JwtProperties.REFRESH_TOKEN_KEY;
 public class AuthController {
 
     private final TokenService tokenService;
+    private final VerifyEmailUseCase verifyEmailUseCase;
     private final RegisterMemberUseCase registerMemberUseCase;
-    private final EmailVerificationService emailVerificationService;
+    private final SendEmailVerificationUseCase sendEmailVerificationUseCase;
 
     @PostMapping("/refresh")
     public void refreshAccessToken(@CookieValue(REFRESH_TOKEN_KEY) String refreshToken,
@@ -74,13 +76,13 @@ public class AuthController {
 
     @PostMapping("/email/verify")
     public ResponseEntity<?> sendEmail(@CurrentMemberId Long memberId) {
-        emailVerificationService.sendEmail(memberId);
+        sendEmailVerificationUseCase.sendEmail(memberId);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/email/verify")
     public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
-        String redirectUrl = emailVerificationService.verifyToken(token);
+        String redirectUrl = verifyEmailUseCase.verifyToken(token);
 
         return ResponseEntity.status(HttpStatus.FOUND)
                              .location(URI.create(redirectUrl))
