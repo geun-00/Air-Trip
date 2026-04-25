@@ -107,7 +107,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                 .on(accommodationPrice.accommodation.eq(accommodation)
                                                     .and(accommodationPrice.season.eq(season))
                                                     .and(accommodationPrice.dayType.eq(dayType)))
-                .join(accommodation.sigunguCode, sigunguCode)
+                .join(sigunguCode).on(sigunguCode.code.eq(accommodation.sigunguCode))
                 .join(sigunguCode.areaCode, areaCode)
                 .where(
                         eqAreaCode(searchDto.areaCode()),

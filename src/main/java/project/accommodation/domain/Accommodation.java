@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.accommodation.sync.application.model.AccommodationProcessorDto;
 import project.common.adapter.out.persistence.BaseEntity;
-import project.area.domain.SigunguCode;
 
 import java.time.LocalDateTime;
 
@@ -36,9 +35,8 @@ public class Accommodation extends BaseEntity {
     @Column(name = "modified_time", nullable = false)
     private LocalDateTime modifiedTime;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sigungu_code", nullable = false)
-    private SigunguCode sigunguCode;
+    @Column(name = "sigungu_code", nullable = false)
+    private String sigunguCode;
 
     @OneToOne(mappedBy = "accommodation", cascade = CascadeType.ALL, optional = false)
     private AccommodationDetail detail;
@@ -56,13 +54,13 @@ public class Accommodation extends BaseEntity {
         return new Accommodation();
     }
 
-    public void updateOrInit(AccommodationProcessorDto dto, SigunguCode sigunguCode) {
+    public void updateOrInit(AccommodationProcessorDto dto) {
         this.geoPoint = new GeoPoint(dto.getMapX(), dto.getMapY());
         this.address = dto.getAddress();
         this.title = dto.getTitle();
         this.modifiedTime = dto.getModifiedTime();
         this.contentId = dto.getContentId();
-        this.sigunguCode = sigunguCode;
+        this.sigunguCode = dto.getSigunguCode();
 
         if (this.detail == null) {
             this.detail = new AccommodationDetail(this);

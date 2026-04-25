@@ -17,7 +17,6 @@ import project.accommodation.domain.AccommodationPrice;
 import project.amenity.adapter.out.persistence.AmenityRepository;
 import project.amenity.domain.Amenity;
 import project.area.adapter.out.persistence.SigunguCodeRepository;
-import project.area.domain.SigunguCode;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -45,9 +44,10 @@ public class TourRepositoryFacadeManager {
         return accommodationRepository.findByContentId(contentId);
     }
 
-    public SigunguCode findSigunguCode(String code) {
-        return sigunguCodeRepository.findById(code)
-                                    .orElseThrow(() -> new EntityNotFoundException("Cannot found SigunguCode: " + code));
+    public void validateSigunguCode(String code) {
+        if (!sigunguCodeRepository.existsById(code)) {
+            throw new EntityNotFoundException("Cannot found SigunguCode: " + code);
+        }
     }
 
     public Amenity findAmenityByName(String amenityName) {

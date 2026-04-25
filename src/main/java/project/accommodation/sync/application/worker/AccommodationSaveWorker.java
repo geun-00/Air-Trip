@@ -8,7 +8,6 @@ import project.amenity.domain.Amenity;
 import project.common.domain.DayType;
 import project.common.domain.Season;
 import project.accommodation.sync.application.model.AccommodationProcessorDto;
-import project.area.domain.SigunguCode;
 import project.accommodation.sync.adapter.out.persistence.TourRepositoryFacadeManager;
 
 import java.util.ArrayList;
@@ -34,9 +33,9 @@ public record AccommodationSaveWorker(
             if (!validator.test(dto)) continue;
 
             Accommodation acc = tourRepositoryFacadeManager.findAccByContentId(dto.getContentId()).orElseGet(Accommodation::createEmpty);
-            SigunguCode sigunguCode = tourRepositoryFacadeManager.findSigunguCode(dto.getSigunguCode());
+            tourRepositoryFacadeManager.validateSigunguCode(dto.getSigunguCode());
 
-            acc.updateOrInit(dto, sigunguCode);
+            acc.updateOrInit(dto);
 
             accommodations.add(acc);
             addAccommodationAmenity(dto, acc, allAmenities);

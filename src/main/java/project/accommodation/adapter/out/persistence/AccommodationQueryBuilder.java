@@ -138,7 +138,7 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
     public JPAQuery<?> buildFilteredBaseQuery() {
         return baseQuery()
                 .join(accommodationImage).on(accommodationImage.accommodation.eq(accommodation))
-                .join(accommodation.sigunguCode, sigunguCode)
+                .join(sigunguCode).on(sigunguCode.code.eq(accommodation.sigunguCode))
                 .join(sigunguCode.areaCode, areaCode)
                 .leftJoin(reservation).on(reservation.accommodation.eq(accommodation))
                 .leftJoin(review).on(review.reservation.eq(reservation));

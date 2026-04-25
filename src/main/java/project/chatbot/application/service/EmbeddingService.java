@@ -133,7 +133,7 @@ public class EmbeddingService {
                          )
                          FROM Accommodation AS acc
                          JOIN AccommodationPrice AS p ON p.accommodation = acc
-                         JOIN SigunguCode AS sc ON sc = acc.sigunguCode
+                         JOIN SigunguCode AS sc ON sc.code = acc.sigunguCode
                          JOIN AreaCode AS ac ON ac = sc.areaCode
                          WHERE acc.id IN :ids
                          """, AccommodationEmbeddingDto.class)
