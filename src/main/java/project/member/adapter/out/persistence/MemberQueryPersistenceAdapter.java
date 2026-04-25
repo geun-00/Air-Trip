@@ -36,10 +36,10 @@ public class MemberQueryPersistenceAdapter implements GetMemberProfilePort,
 
     private DefaultProfileView convertToView(DefaultProfileRow row) {
         return new DefaultProfileView(
-                row.name(),
+                row.name().value(),
                 row.profileImageUrl(),
                 row.createdDateTime().toLocalDate(),
-                row.aboutMe(),
+                row.aboutMe() == null ? null : row.aboutMe().value(),
                 row.isEmailVerified()
         );
     }

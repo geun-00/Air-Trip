@@ -35,7 +35,7 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
         return Optional.ofNullable(
                 select(constructor(
                         DefaultProfileRow.class,
-                        MEMBER_NAME,
+                        member.name,
                         member.detail.profileUrl,
                         member.createdAt,
                         member.detail.aboutMe,
