@@ -1,26 +1,27 @@
 package project.member.adapter.out.persistence;
 
-import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
-import project.member.adapter.in.web.response.ChatMemberSearchResponse;
-import project.member.adapter.in.web.response.TripHistoryResponse;
-import project.member.adapter.out.persistence.model.DefaultProfileQueryDto;
+import project.member.adapter.out.persistence.model.ChatMemberSearchRow;
+import project.member.adapter.out.persistence.model.DefaultProfileRow;
+import project.member.adapter.out.persistence.model.TripHistoryRow;
 import project.member.domain.Member;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.querydsl.core.types.Projections.constructor;
 import static project.accommodation.domain.QAccommodation.accommodation;
 import static project.accommodation.domain.QAccommodationImage.accommodationImage;
 import static project.member.domain.QMember.member;
 import static project.reservation.domain.QReservation.reservation;
 import static project.review.domain.QReview.review;
 
-// TODO : 포트, 어댑터 분리
 @Repository
 public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
 
@@ -28,14 +29,14 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
         super(Member.class);
     }
 
-    public Optional<DefaultProfileQueryDto> getDefaultProfile(Long memberId) {
+    public Optional<DefaultProfileRow> getDefaultProfile(Long memberId) {
         return Optional.ofNullable(
-                select(Projections.constructor(
-                        DefaultProfileQueryDto.class,
+                select(constructor(
+                        DefaultProfileRow.class,
                         member.name,
-                        member.profileUrl,
+                        member.detail.profileUrl,
                         member.createdAt,
-                        member.aboutMe,
+                        member.detail.aboutMe,
                         member.isEmailVerified))
                         .from(member)
                         .where(member.id.eq(memberId))
@@ -43,23 +44,29 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
         );
     }
 
-    public List<ChatMemberSearchResponse> findMembersByName(String name) {
-        return select(Projections.constructor(
-                ChatMemberSearchResponse.class,
+    public List<ChatMemberSearchRow> findMembersByName(String name) {
+        return select(constructor(
+                ChatMemberSearchRow.class,
                 member.id,
                 member.name,
                 member.createdAt,
-                member.profileUrl))
+                member.detail.profileUrl))
                 .from(member)
-                .where(member.name.contains(name))
+                .where(memberNameContains(name))
                 .fetch();
     }
 
-    public Page<TripHistoryResponse> getTripsHistory(Long memberId, Pageable pageable) {
+    // TODO : Mybatis 마이그레이션 가능
+    private BooleanExpression memberNameContains(String name) {
+        return Expressions.stringTemplate("cast({0} as string)", member.name)
+                          .contains(name);
+    }
+
+    public Page<TripHistoryRow> getTripsHistory(Long memberId, Pageable pageable) {
         return applyPagination(pageable,
                 contentQuery ->
-                        contentQuery.select(Projections.constructor(
-                                            TripHistoryResponse.class,
+                        contentQuery.select(constructor(
+                                            TripHistoryRow.class,
                                             reservation.id,
                                             accommodation.id,
                                             accommodationImage.imageUrl,

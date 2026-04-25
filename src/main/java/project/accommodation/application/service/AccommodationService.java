@@ -81,12 +81,7 @@ public class AccommodationService {
 
         Page<FilteredAccListResDto> result = accommodationQueryRepository.getFilteredPagingAccommodations(searchDto, memberId, pageable, season, dayType);
 
-        return PageResponse.<FilteredAccListResDto>builder()
-                           .contents(result.getContent())
-                           .pageNumber(pageable.getPageNumber())
-                           .pageSize(pageable.getPageSize())
-                           .total(result.getTotalElements())
-                           .build();
+        return PageResponse.from(result);
     }
 
     public DetailAccommodationResDto getDetailAccommodation(Long accId, Long memberId) {

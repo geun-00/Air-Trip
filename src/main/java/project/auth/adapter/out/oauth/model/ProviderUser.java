@@ -2,8 +2,6 @@ package project.auth.adapter.out.oauth.model;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import project.member.domain.SocialType;
-import project.member.domain.Member;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -38,8 +36,4 @@ public interface ProviderUser {
      * {@link OAuth2AuthorizedClientService}.loadAuthorizedClient()에 사용될 principalName(식별자)
      */
     default String getPrincipalName() { return null; }
-
-    default Member toEntity(String encodePassword) {
-        return Member.createForSocial(getUsername(), getEmail(), getNumber(), getBirthDate(), encodePassword, SocialType.from(getProvider()));
-    }
 }

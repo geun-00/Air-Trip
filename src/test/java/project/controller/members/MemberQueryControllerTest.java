@@ -3,20 +3,22 @@ package project.controller.members;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import project.security.WithMockMember;
 import project.controller.RestDocsTestSupport;
-import project.common.adapter.in.web.response.PageResponse;
-import project.member.adapter.in.web.response.ChatMemberSearchResponse;
-import project.member.adapter.in.web.response.ChatMembersSearchResponse;
-import project.member.adapter.in.web.MemberController;
-import project.member.adapter.in.web.request.EditProfileRequest;
+import project.member.adapter.in.web.MemberQueryController;
 import project.member.adapter.in.web.response.DefaultProfileResponse;
-import project.member.adapter.in.web.response.EditProfileResponse;
 import project.member.adapter.in.web.response.TripHistoryResponse;
-import project.member.application.service.MemberService;
+import project.member.application.in.query.GetMyProfileQueryUseCase;
+import project.member.application.in.query.GetMyTripsHistoryQueryUseCase;
+import project.member.application.in.query.SearchMembersByNameQueryUseCase;
+import project.common.adapter.in.web.response.PageResponse;
+import project.member.application.in.query.model.ChatMemberSearchView;
+import project.member.application.in.query.model.ChatMembersSearchView;
+import project.member.application.in.query.model.DefaultProfileView;
+import project.member.application.in.query.model.TripHistoryView;
+import project.security.WithMockMember;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,43 +35,47 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.multipart;
 import static org.springframework.restdocs.payload.JsonFieldType.ARRAY;
 import static org.springframework.restdocs.payload.JsonFieldType.BOOLEAN;
 import static org.springframework.restdocs.payload.JsonFieldType.NUMBER;
 import static org.springframework.restdocs.payload.JsonFieldType.STRING;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.payload.PayloadDocumentation.requestPartFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.restdocs.request.RequestDocumentation.partWithName;
-import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(MemberController.class)
-class MemberControllerTest extends RestDocsTestSupport {
+@WebMvcTest(MemberQueryController.class)
+class MemberQueryControllerTest extends RestDocsTestSupport {
 
     private static final String MEMBER_API_TAG = "Member API";
 
     @MockitoBean
-    MemberService memberService;
+    GetMyProfileQueryUseCase getMyProfileQueryUseCase;
+    @MockitoBean
+    SearchMembersByNameQueryUseCase searchMembersByNameQueryUseCase;
+    @MockitoBean
+    GetMyTripsHistoryQueryUseCase getMyTripsHistoryQueryUseCase;
 
     @Test
     @DisplayName("내 기본 정보 조회")
     @WithMockMember
     void getDefaultProfile() throws Exception {
-        //given
-        DefaultProfileResponse response = new DefaultProfileResponse("Antonio Cui", "https://example.com/a.jpg", LocalDate.of(2024, 8, 15), "Accumsan luctus fringilla cubilia tempor auctor ullamcorper.", true);
-        given(memberService.getDefaultProfile(anyLong())).willReturn(response);
+        DefaultProfileView profile = new DefaultProfileView("Antonio Cui", "https://example.com/a.jpg", LocalDate.of(2024, 8, 15), "Accumsan luctus fringilla cubilia tempor auctor ullamcorper.", true);
+        DefaultProfileResponse response = new DefaultProfileResponse(
+                profile.name(),
+                profile.profileImageUrl(),
+                profile.createdDate(),
+                profile.aboutMe(),
+                profile.isEmailVerified()
+        );
+        given(getMyProfileQueryUseCase.getMyProfile(anyLong())).willReturn(profile);
 
-        //when
-        //then
         mockMvc.perform(get("/api/members/me")
                        .header(AUTHORIZATION, "Bearer {access-token}")
                )
                .andExpectAll(
-                       handler().handlerType(MemberController.class),
+                       handler().handlerType(MemberQueryController.class),
                        handler().methodName("getMyProfile"),
                        status().isOk(),
                        jsonPath("$.name").value(response.name()),
@@ -110,100 +116,23 @@ class MemberControllerTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("내 기본 정보 수정")
-    @WithMockMember
-    void editMyProfile() throws Exception {
-        //given
-        EditProfileRequest reqDto = new EditProfileRequest("Antonio Cui", "Accumsan luctus fringilla cubilia tempor auctor ullamcorper.", true);
-
-        MockMultipartFile imageFile = new MockMultipartFile("profileImage", "test-file.jpg", MediaType.IMAGE_JPEG_VALUE, "file-content".getBytes());
-        MockMultipartFile editProfileRequest = new MockMultipartFile("editProfileRequest", "test-request", MediaType.APPLICATION_JSON_VALUE, creatJson(reqDto).getBytes());
-
-        EditProfileResponse response = new EditProfileResponse("Antonio Cui", "https://example.com/a.jpg", "Accumsan luctus fringilla cubilia tempor auctor ullamcorper.");
-        given(memberService.editMyProfile(anyLong(), any(), any())).willReturn(response);
-
-        //when
-        //then
-        mockMvc.perform(multipart("/api/members/me")
-                       .file(imageFile)
-                       .file(editProfileRequest)
-                       .accept(MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE)
-                       .header(AUTHORIZATION, "Bearer {access-token}")
-                       .with(request -> {
-                           request.setMethod("PUT");
-                           return request;
-                       })
-                       .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
-               )
-               .andExpectAll(
-                       handler().handlerType(MemberController.class),
-                       handler().methodName("editMyProfile"),
-                       status().isOk(),
-                       jsonPath("$.name").value(response.name()),
-                       jsonPath("$.profileImageUrl").value(response.profileImageUrl()),
-                       jsonPath("$.aboutMe").value(response.aboutMe())
-               )
-               .andDo(document("edit-my-profile",
-                       requestParts(
-                               partWithName("profileImage").optional().description("새로운 프로필 이미지 파일"),
-                               partWithName("editProfileRequest").description("새로운 프로필 정보(JSON)")
-                       ),
-                       requestPartFields("editProfileRequest",
-                               fieldWithPath("name")
-                                       .type(STRING)
-                                       .description("새로 저장할 이름"),
-                               fieldWithPath("aboutMe")
-                                       .type(STRING)
-                                       .description("새로 저장할 소개글"),
-                               fieldWithPath("isProfileImageChanged")
-                                       .type(BOOLEAN)
-                                       .description("이미지 파일 변경 여부")
-                       ),
-                       resource(
-                               builder()
-                                       .tag(MEMBER_API_TAG)
-                                       .summary("내 프로필 정보 수정")
-                                       .requestHeaders(headerWithName(AUTHORIZATION).description("Bearer {액세스 토큰}"))
-                                       .responseFields(
-                                               fieldWithPath("name")
-                                                       .type(STRING)
-                                                       .description("새로 저장된 이름"),
-                                               fieldWithPath("profileImageUrl")
-                                                       .type(STRING)
-                                                       .description("새로 저장된 프로필 이미지 URL"),
-                                               fieldWithPath("aboutMe")
-                                                       .type(STRING)
-                                                       .description("새로 저장된 자기소개글")
-                                       )
-                                       .requestSchema(schema("EditProfileRequest"))
-                                       .responseSchema(schema("EditProfileResponse"))
-                                       .build()
-                       )
-               ));
-    }
-
-    @Test
     @DisplayName("이름으로 사용자 조회")
     void findMembersByName() throws Exception {
-        //given
         LocalDateTime now = LocalDateTime.now();
-        List<ChatMemberSearchResponse> memberSearchDtos = List.of(
-                new ChatMemberSearchResponse(1L, "kim-1", now.minusDays(5), "https://example-a.com"),
-                new ChatMemberSearchResponse(2L, "kim-2", now.minusDays(6), "https://example-b.com"),
-                new ChatMemberSearchResponse(3L, "kim-3", now.minusDays(7), "https://example-c.com")
+        List<ChatMemberSearchView> members = List.of(
+                new ChatMemberSearchView(1L, "kim-1", now.minusDays(5), "https://example-a.com"),
+                new ChatMemberSearchView(2L, "kim-2", now.minusDays(6), "https://example-b.com"),
+                new ChatMemberSearchView(3L, "kim-3", now.minusDays(7), "https://example-c.com")
         );
-        ChatMembersSearchResponse response = new ChatMembersSearchResponse(memberSearchDtos);
-        given(memberService.findMembersByName(anyString())).willReturn(response);
+        given(searchMembersByNameQueryUseCase.findMembersByName(anyString())).willReturn(new ChatMembersSearchView(members));
 
-        //when
-        //then
         mockMvc.perform(get("/api/members/search")
                        .param("name", "kim"))
                .andExpectAll(
-                       handler().handlerType(MemberController.class),
+                       handler().handlerType(MemberQueryController.class),
                        handler().methodName("findMembersByName"),
                        status().isOk(),
-                       jsonPath("$.members.length()").value(memberSearchDtos.size())
+                       jsonPath("$.members.length()").value(members.size())
                )
                .andDo(document("find-member-by-name",
                        resource(
@@ -237,31 +166,31 @@ class MemberControllerTest extends RestDocsTestSupport {
     @DisplayName("여행한 숙소 목록 조회")
     @WithMockMember
     void getTripsHistory() throws Exception {
-        //given
         LocalDate now = LocalDate.now();
+        List<TripHistoryView> tripHistories = List.of(
+                new TripHistoryView(1L, 1L, "https://example-a.com", "title-A", now.minusDays(14), now.minusDays(12), true),
+                new TripHistoryView(2L, 2L, "https://example-b.com", "title-B", now.minusDays(10), now.minusDays(9), false),
+                new TripHistoryView(3L, 3L, "https://example-c.com", "title-C", now.minusDays(7), now.minusDays(4), true)
+        );
         List<TripHistoryResponse> dtos = List.of(
                 new TripHistoryResponse(1L, 1L, "https://example-a.com", "title-A", now.minusDays(14), now.minusDays(12), true),
                 new TripHistoryResponse(2L, 2L, "https://example-b.com", "title-B", now.minusDays(10), now.minusDays(9), false),
                 new TripHistoryResponse(3L, 3L, "https://example-c.com", "title-C", now.minusDays(7), now.minusDays(4), true)
         );
-        PageResponse<TripHistoryResponse> response = PageResponse.<TripHistoryResponse>builder()
-                                                                 .contents(dtos)
-                                                                 .pageNumber(0)
-                                                                 .pageSize(10)
-                                                                 .total(dtos.size())
-                                                                 .build();
-        given(memberService.getTripsHistory(anyLong(), any()))
-                .willReturn(response);
+        PageResponse<TripHistoryView> response = PageResponse.from(new PageImpl<>(
+                tripHistories,
+                PageRequest.of(0, 10),
+                dtos.size()
+        ));
+        given(getMyTripsHistoryQueryUseCase.getTripsHistory(anyLong(), any())).willReturn(response);
 
-        //when
-        //then
         mockMvc.perform(get("/api/members/me/trips/past")
                        .header(AUTHORIZATION, "Bearer {access-token}")
                        .param("page", "0")
                        .param("size", "10")
                )
                .andExpectAll(
-                       handler().handlerType(MemberController.class),
+                       handler().handlerType(MemberQueryController.class),
                        handler().methodName("getTripsHistory"),
                        status().isOk(),
                        jsonPath("$.contents.length()").value(dtos.size())

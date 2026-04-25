@@ -12,9 +12,10 @@ import org.springframework.stereotype.Service;
 import project.auth.application.event.OAuthLogoutEvent;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
-import project.member.domain.exception.MemberExceptions;
 import project.auth.domain.response.TokenResponse;
 import project.member.domain.Member;
+import project.member.domain.Email;
+import project.member.domain.exception.MemberExceptions;
 import project.auth.adapter.out.redis.model.BlacklistedToken;
 import project.auth.adapter.out.redis.model.RefreshToken;
 import project.member.adapter.out.persistence.MemberRepository;
@@ -42,7 +43,7 @@ public class TokenService {
     private final BlacklistedTokenRepository blacklistedTokenRepository;
 
     public TokenResponse generateAndSendToken(String email, String principalName, HttpServletResponse response) {
-        Member member = memberRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(new Email(email))
                                         .orElseThrow(() -> MemberExceptions.notFoundByEmail(email));
 
         return getTokenResponse(response, member, principalName);

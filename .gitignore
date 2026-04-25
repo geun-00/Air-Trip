@@ -2,17 +2,16 @@
 /target/
 bin/
 build/
-out/
+/out/
 *.class
 *.log
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 
 # ===== Gradle 관련 =====
 .gradle/
 .gradle-user-home/
-!gradle/wrapper/gradle-wrapper.jar
-!gradle-wrapper.properties
 
 # ===== IntelliJ 관련 (팀원용) =====
 .idea/
@@ -26,7 +25,7 @@ Thumbs.db
 *.swp
 
 # ===== 환경 파일 (보안 및 비공개 정보) =====
-/https/
+/http/
 /src/main/resources/static/dist/
 /src/main/resources/static/swagger-ui/
 /stress-test/
@@ -34,6 +33,5 @@ Thumbs.db
 /diagrams/
 /k6-scripts/
 /prometheus.yml
-/gradle/
 /.env*
 /src/main/generated

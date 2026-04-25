@@ -7,10 +7,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import project.auth.adapter.out.oauth.converter.ProviderUserConverter;
 import project.auth.adapter.out.oauth.converter.ProviderUserRequest;
-import project.member.domain.Member;
 import project.auth.adapter.out.oauth.model.PrincipalUser;
 import project.auth.adapter.out.oauth.model.ProviderUser;
 import project.member.adapter.out.persistence.MemberRepository;
+import project.member.domain.Email;
+import project.member.domain.Member;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Member member = memberRepository.findByEmail(username)
+        Member member = memberRepository.findByEmail(new Email(username))
                                         .orElseThrow(() -> new UsernameNotFoundException("email=" + username + " 사용자 조회 실패"));
 
         ProviderUserRequest providerUserRequest = new ProviderUserRequest(member);

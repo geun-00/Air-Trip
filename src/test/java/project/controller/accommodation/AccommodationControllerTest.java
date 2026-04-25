@@ -3,6 +3,8 @@ package project.controller.accommodation;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import project.accommodation.adapter.in.web.AccommodationController;
 import project.accommodation.adapter.in.web.request.ViewHistoryDto;
@@ -144,12 +146,11 @@ class AccommodationControllerTest extends RestDocsTestSupport {
                         List.of("https://example.com/c.jpg", "https://example.com/d.jpg"), true, 1L, "my-wishlist-1")
         );
 
-        PageResponse<FilteredAccListResDto> response = PageResponse.<FilteredAccListResDto>builder()
-                                                                   .contents(dtos)
-                                                                   .pageNumber(0)
-                                                                   .pageSize(15)
-                                                                   .total(dtos.size())
-                                                                   .build();
+        PageResponse<FilteredAccListResDto> response = PageResponse.from(new PageImpl<>(
+                dtos,
+                PageRequest.of(0, 15),
+                dtos.size()
+        ));
 
         given(accommodationService.getFilteredPagingAccommodations(any(), any(), any()))
                 .willReturn(response);

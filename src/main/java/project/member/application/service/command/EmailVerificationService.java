@@ -1,14 +1,10 @@
 package project.member.application.service.command;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSendException;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
@@ -16,11 +12,13 @@ import org.springframework.retry.support.RetrySynchronizationManager;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.member.domain.exception.MemberExceptions;
+import project.member.application.in.command.SendEmailVerificationUseCase;
+import project.member.application.in.command.VerifyEmailUseCase;
+import project.member.application.out.command.LoadMemberPort;
+import project.member.application.out.command.ManageEmailVerificationTokenPort;
+import project.member.application.out.command.SaveMemberPort;
+import project.member.application.out.command.SendEmailPort;
 import project.member.domain.Member;
-import project.member.adapter.out.redis.model.EmailVerification;
-import project.member.adapter.out.persistence.MemberRepository;
-import project.member.adapter.out.redis.EmailVerificationRepository;
 
 import java.util.UUID;
 
@@ -28,51 +26,38 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class EmailVerificationService {
+public class EmailVerificationService implements SendEmailVerificationUseCase, VerifyEmailUseCase {
 
     @Value("${app.frontend-url:http://localhost:3000}")
-    private String frondEndUrl;
+    private String frontendUrl;
 
     @Value("${app.base-url:http://localhost:8081}")
     private String baseUrl;
 
-    private final JavaMailSender javaMailSender;
-    private final MemberRepository memberRepository;
-    private final EmailVerificationRepository emailVerificationRepository;
+    private final SendEmailPort sendEmailPort;
+    private final LoadMemberPort loadMemberPort;
+    private final SaveMemberPort saveMemberPort;
+    private final ManageEmailVerificationTokenPort manageEmailVerificationTokenPort;
 
     @Async
     @Retryable(retryFor = MailSendException.class, backoff = @Backoff(delay = 1000))
+    @Override
     public void sendEmail(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                                        .orElseThrow(() -> MemberExceptions.notFoundById(memberId));
+        Member member = loadMemberPort.loadById(memberId);
 
         String token = UUID.randomUUID().toString();
-
-        String link = baseUrl + "/api/auth/email/verify?token=" + token;
-        String subject = "[Airbnb-2M] 이메일 인증을 완료해주세요.";
+        String link = buildVerificationLink(token);
+        String subject = "[Air-Trip] 이메일 인증을 완료해주세요.";
         String html = generateHtml(link);
         String email = member.getEmail();
 
-        try {
-            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            helper.setTo(email);
-            helper.setSubject(subject);
-            helper.setText(html, true);
-            helper.setReplyTo("no-reply@airbnb-2m.com");
+        int retryCount = RetrySynchronizationManager.getContext().getRetryCount();
+        log.debug("이메일 인증 링크 전송: {}, 시도 횟수 {}", email, retryCount);
 
-            int retryCount = RetrySynchronizationManager.getContext().getRetryCount();
-            log.debug("이메일 인증 링크 전송: {}, 시도 횟수 {}", email, retryCount);
+        sendEmailPort.sendHtml(email, subject, html, "no-reply@air-trip.com");
+        manageEmailVerificationTokenPort.save(token, memberId);
 
-            javaMailSender.send(mimeMessage);
-            emailVerificationRepository.save(new EmailVerification(token, memberId));
-
-            log.debug("이메일 인증 링크 전송 성공: {}", email);
-
-        } catch (MessagingException e) {
-            log.warn("이메일 인증 링크 전송 실패: {}", email);
-            throw new MailSendException("메일 전송 과정에서 오류가 발생했습니다, " + e.getMessage(), e);
-        }
+        log.debug("이메일 인증 링크 전송 성공: {}", email);
     }
 
     @Recover
@@ -81,22 +66,28 @@ public class EmailVerificationService {
     }
 
     @Transactional
+    @Override
     public String verifyToken(String token) {
-        EmailVerification verification = emailVerificationRepository.findById(token).orElse(null);
+        Long memberId = manageEmailVerificationTokenPort.findMemberIdByToken(token);
 
-        String redirectUrl = frondEndUrl + "/users/profile?emailVerify=";
-
-        if (verification == null) {
-            return redirectUrl + "failed";
+        if (memberId == null) {
+            return buildVerificationRedirectUrl(false);
         }
 
-        Long memberId = verification.getMemberId();
-        Member member = memberRepository.findById(memberId)
-                                        .orElseThrow(() -> MemberExceptions.notFoundById(memberId));
+        Member member = loadMemberPort.loadById(memberId);
         member.verifyEmail();
-        emailVerificationRepository.delete(verification);
+        saveMemberPort.save(member);
+        manageEmailVerificationTokenPort.deleteByToken(token);
 
-        return redirectUrl + "success";
+        return buildVerificationRedirectUrl(true);
+    }
+
+    private String buildVerificationLink(String token) {
+        return baseUrl + "/api/auth/email/verify?token=" + token;
+    }
+
+    private String buildVerificationRedirectUrl(boolean success) {
+        return frontendUrl + "/users/profile?emailVerify=" + (success ? "success" : "failed");
     }
 
     private String generateHtml(String link) {
@@ -152,7 +143,7 @@ public class EmailVerificationService {
                 </head>
                 <body>
                     <div class="container">
-                        <div class="header">Airbnb-2M</div>
+                        <div class="header">Air-Trip</div>
                         <div class="content">
                             <p>안녕하세요,</p>
                             <p>인증을 완료하시려면 아래 버튼을 클릭해 인증을 진행해주세요.</p>
@@ -162,7 +153,7 @@ public class EmailVerificationService {
                             <p style="color:#555; font-size:13px;">※ 본 메일은 발신 전용으로 회신이 불가합니다.</p>
                         </div>
                         <div class="footer">
-                            &copy; 2025 Airbnb-2M. All rights reserved.
+                            &copy; 2026 Air-Trip. All rights reserved.
                         </div>
                     </div>
                 </body>

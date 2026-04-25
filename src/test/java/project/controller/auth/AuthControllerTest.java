@@ -12,8 +12,9 @@ import project.security.WithMockMember;
 import project.auth.adapter.in.web.AuthController;
 import project.controller.RestDocsTestSupport;
 import project.member.adapter.in.web.request.SignupRequest;
-import project.member.application.service.command.EmailVerificationService;
-import project.member.application.service.MemberService;
+import project.member.application.in.command.RegisterMemberUseCase;
+import project.member.application.in.command.SendEmailVerificationUseCase;
+import project.member.application.in.command.VerifyEmailUseCase;
 
 import java.time.LocalDate;
 
@@ -38,8 +39,9 @@ class AuthControllerTest extends RestDocsTestSupport {
 
     public static final String AUTH_API_TAG = "Auth API";
 
-    @MockitoBean MemberService memberService;
-    @MockitoBean EmailVerificationService emailVerificationService;
+    @MockitoBean VerifyEmailUseCase verifyEmailUseCase;
+    @MockitoBean RegisterMemberUseCase registerMemberUseCase;
+    @MockitoBean SendEmailVerificationUseCase sendEmailVerificationUseCase;
 
     @Test
     @DisplayName("쿠키로 받은 리프레시 토큰으로 액세스 토큰을 갱신한다.")

@@ -4,7 +4,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
-import project.member.domain.Member;
 
 import java.time.LocalDate;
 
@@ -26,8 +25,4 @@ public record SignupRequest(
         @Pattern(regexp = "^.*(?=^.{8,15}$)(?=.*\\d)(?=.*[a-zA-Z])(?=.*[!@#$%^&+=]).*$", message = "올바른 형식의 비밀번호여야 합니다.")
         String password
 ) {
-    // TODO : 메서드 제거
-    public Member toEntity(String encodedPassword) {
-        return Member.createForRest(name, email, number, birthDate, encodedPassword);
-    }
 }
