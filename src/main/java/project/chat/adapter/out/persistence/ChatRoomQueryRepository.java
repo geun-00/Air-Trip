@@ -64,7 +64,7 @@ public class ChatRoomQueryRepository extends CustomQuerydslRepositorySupport {
                 CP1.customRoomName,
                 OTHER_MEMBER.id,
                 OTHER_MEMBER.name,
-                OTHER_MEMBER.profileUrl,
+                OTHER_MEMBER.detail.profileUrl,
                 CP2.isActive,
                 chatMessage.content,
                 chatMessage.createdAt,

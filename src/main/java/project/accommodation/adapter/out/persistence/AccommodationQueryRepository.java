@@ -143,7 +143,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                 DetailReviewDto.class,
                 member.id,
                 member.name,
-                member.profileUrl,
+                member.detail.profileUrl,
                 member.createdAt,
                 review.createdAt,
                 review.rating,

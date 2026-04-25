@@ -32,9 +32,9 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
                 select(constructor(
                         DefaultProfileRow.class,
                         member.name,
-                        member.profileUrl,
+                        member.detail.profileUrl,
                         member.createdAt,
-                        member.aboutMe,
+                        member.detail.aboutMe,
                         member.isEmailVerified))
                         .from(member)
                         .where(member.id.eq(memberId))
@@ -48,7 +48,7 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
                 member.id,
                 member.name,
                 member.createdAt,
-                member.profileUrl))
+                member.detail.profileUrl))
                 .from(member)
                 .where(member.name.contains(name))
                 .fetch();

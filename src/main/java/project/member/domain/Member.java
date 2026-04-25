@@ -61,6 +61,9 @@ public class Member extends BaseEntity {
     @Column(name = "role", nullable = false)
     private Role role = Role.GUEST;
 
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, optional = false)
+    private MemberDetail detail;
+
     public static Member createAdmin(AdminMemberCreateSpec spec) {
         return new Member("ADMIN-USER", null, null, spec.email(), spec.password(), SocialType.NONE, Role.ADMIN, true);
     }
@@ -91,11 +94,12 @@ public class Member extends BaseEntity {
         this.socialType = socialType;
         this.role = role;
         this.isEmailVerified = isEmailVerified;
+        this.detail = new MemberDetail(this, birthDate, number);
     }
 
     public void updateProfile(String name, String aboutMe) {
         this.name = name;
-        this.aboutMe = aboutMe;
+        this.detail.updateProfile(aboutMe);
     }
 
     public void verifyEmail() {
