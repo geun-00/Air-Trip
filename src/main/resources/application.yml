@@ -148,6 +148,11 @@ logging:
     project: debug
     org.springframework.web.filter.CommonsRequestLoggingFilter: debug
 
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true
+
 tourapi:
   key: ${TOUR_API_KEY}
 
@@ -206,6 +211,11 @@ spring:
 
   flyway:
     baseline-on-migrate: false
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: false
 
 app:
   frontend-url: https://www.jgy914.shop

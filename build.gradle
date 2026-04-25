@@ -58,6 +58,7 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-starter-vector-store-mariadb:1.1.0'
     implementation 'org.springframework.ai:spring-ai-advisors-vector-store:1.1.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
 
     // Database
     runtimeOnly 'com.h2database:h2'
