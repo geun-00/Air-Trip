@@ -52,8 +52,8 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
                 wishlist.name,
                 accommodation.title,
                 accommodation.detail.description,
-                accommodation.mapX,
-                accommodation.mapY,
+                accommodation.geoPoint.longitude,
+                accommodation.geoPoint.latitude,
                 review.rating.avg().coalesce(0.0),
                 wishlistAccommodation.memo
         ))
@@ -65,7 +65,7 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
                 .where(wishlist.id.eq(wishlistId),
                         wishlist.member.id.eq(memberId)
                 )
-                .groupBy(accommodation.id, wishlist.name, accommodation.title, accommodation.detail.description, accommodation.mapX, accommodation.mapY, wishlistAccommodation.memo)
+                .groupBy(accommodation.id, wishlist.name, accommodation.title, accommodation.detail.description, accommodation.geoPoint.longitude, accommodation.geoPoint.latitude, wishlistAccommodation.memo)
                 .fetch();
     }
 

@@ -1,6 +1,7 @@
 package project.accommodation.domain;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -13,7 +14,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "accommodation_details")
@@ -32,17 +32,15 @@ class AccommodationDetail {
     private String description;
 
     @Column(name = "max_people")
-    private Integer maxPeople;
+    private Capacity maxPeople;
 
-    @Column(name = "check_in")
-    private String checkIn;
-
-    @Column(name = "check_out")
-    private String checkOut;
+    @Embedded
+    private StayTimePolicy stayTimePolicy;
 
     @Column(name = "number")
     private String number;
 
+    @Getter
     @Column(name = "refund_regulation", columnDefinition = "TEXT")
     private String refundRegulation;
 
@@ -50,11 +48,17 @@ class AccommodationDetail {
         this.accommodation = accommodation;
     }
 
-    void update(String description, Integer maxPeople, String checkIn, String checkOut, String number, String refundRegulation) {
+    void update(
+            String description,
+            Integer maxPeople,
+            String checkIn,
+            String checkOut,
+            String number,
+            String refundRegulation
+    ) {
         this.description = description;
-        this.maxPeople = maxPeople;
-        this.checkIn = checkIn;
-        this.checkOut = checkOut;
+        this.maxPeople = maxPeople == null ? null : new Capacity(maxPeople);
+        this.stayTimePolicy = new StayTimePolicy(checkIn, checkOut);
         this.number = number;
         this.refundRegulation = refundRegulation;
     }

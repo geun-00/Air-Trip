@@ -21,11 +21,8 @@ public class Accommodation extends BaseEntity {
     @Column(name = "accommodation_id", nullable = false)
     private Long id;
 
-    @Column(name = "map_x", nullable = false)
-    private Double mapX;
-
-    @Column(name = "map_y", nullable = false)
-    private Double mapY;
+    @Embedded
+    private GeoPoint geoPoint;
 
     @Column(name = "title", nullable = false)
     private String title;
@@ -50,18 +47,17 @@ public class Accommodation extends BaseEntity {
     private Boolean isEmbedded;
 
     @Column(name = "reservation_count")
-    private int reservationCount;
+    private ReservationCount reservationCount = ReservationCount.ZERO;
 
     @Column(name = "average_rating")
-    private double averageRating;
+    private Rating averageRating = Rating.ZERO;
 
     public static Accommodation createEmpty() {
         return new Accommodation();
     }
 
     public void updateOrInit(AccommodationProcessorDto dto, SigunguCode sigunguCode) {
-        this.mapX = dto.getMapX();
-        this.mapY = dto.getMapY();
+        this.geoPoint = new GeoPoint(dto.getMapX(), dto.getMapY());
         this.address = dto.getAddress();
         this.title = dto.getTitle();
         this.modifiedTime = dto.getModifiedTime();
@@ -76,5 +72,9 @@ public class Accommodation extends BaseEntity {
 
     public String getRefundRegulation() {
         return detail.getRefundRegulation();
+    }
+
+    public int getReservationCount() {
+        return reservationCount.value();
     }
 }
