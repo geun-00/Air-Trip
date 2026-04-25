@@ -119,11 +119,11 @@ public class EmbeddingService {
 
     private List<AccommodationEmbeddingDto> getEmbeddingDtos(List<Long> ids) {
         return em.createQuery("""
-                         SELECT new project.config.ai.embed.AccommodationEmbeddingDto(
+                         SELECT new project.chatbot.adapter.out.ai.embed.AccommodationEmbeddingDto(
                              acc.id,
                              acc.title,
-                             acc.description,
-                             acc.maxPeople,
+                             acc.detail.description,
+                             acc.detail.maxPeople,
                              acc.address,
                              ac.codeName,
                              sc.codeName,

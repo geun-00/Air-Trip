@@ -43,23 +43,8 @@ public class Accommodation extends BaseEntity {
     @JoinColumn(name = "sigungu_code", nullable = false)
     private SigunguCode sigunguCode;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "max_people")
-    private Integer maxPeople;
-
-    @Column(name = "check_in")
-    private String checkIn;
-
-    @Column(name = "check_out")
-    private String checkOut;
-
-    @Column(name = "number")
-    private String number;
-
-    @Column(name = "refund_regulation", columnDefinition = "TEXT")
-    private String refundRegulation;
+    @OneToOne(mappedBy = "accommodation", cascade = CascadeType.ALL, optional = false)
+    private AccommodationDetail detail;
 
     @Column(name = "is_embedded")
     private Boolean isEmbedded;
@@ -77,26 +62,19 @@ public class Accommodation extends BaseEntity {
     public void updateOrInit(AccommodationProcessorDto dto, SigunguCode sigunguCode) {
         this.mapX = dto.getMapX();
         this.mapY = dto.getMapY();
-        this.description = dto.getDescription();
         this.address = dto.getAddress();
-        this.maxPeople = dto.getMaxPeople();
         this.title = dto.getTitle();
-        this.checkIn = dto.getCheckIn();
-        this.checkOut = dto.getCheckOut();
-        this.number = dto.getNumber();
-        this.refundRegulation = dto.getRefundRegulation();
         this.modifiedTime = dto.getModifiedTime();
         this.contentId = dto.getContentId();
         this.sigunguCode = sigunguCode;
+
+        if (this.detail == null) {
+            this.detail = new AccommodationDetail(this);
+        }
+        this.detail.update(dto.getDescription(), dto.getMaxPeople(), dto.getCheckIn(), dto.getCheckOut(), dto.getNumber(), dto.getRefundRegulation());
     }
 
-    private Accommodation(Double mapX, Double mapY, String title, String address, String contentId, LocalDateTime modifiedTime, SigunguCode sigunguCode) {
-        this.mapX = mapX;
-        this.mapY = mapY;
-        this.title = title;
-        this.address = address;
-        this.contentId = contentId;
-        this.modifiedTime = modifiedTime;
-        this.sigunguCode = sigunguCode;
+    public String getRefundRegulation() {
+        return detail.getRefundRegulation();
     }
 }
