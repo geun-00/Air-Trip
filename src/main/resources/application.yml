@@ -13,6 +13,11 @@ management:
           enabled: true                 # /actuator/health/{liveness,readiness} 활성화
         show-details: never             # 프로브 용도면 never 권장(민감정보 차단)
 spring:
+  profiles:
+    default: local
+  docker:
+    compose:
+      lifecycle-management: start_only
   config:
     import: optional:file:.env.local[.properties], classpath:chatbot-prompt.yml
   ai:
@@ -77,8 +82,12 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        format_sql: true
         highlight_sql: true
+        order_updates: true
+        order_inserts: true
+        jdbc:
+          batch_size: 50
+        generate_statistics: true
         default_batch_fetch_size: 100
     open-in-view: false
 
@@ -208,6 +217,10 @@ spring:
 
   jpa:
     show-sql: false
+    properties:
+      hibernate:
+        highlight_sql: false
+        generate_statistics: false
 
   flyway:
     baseline-on-migrate: false
