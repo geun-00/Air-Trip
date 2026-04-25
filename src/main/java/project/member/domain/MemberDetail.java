@@ -31,25 +31,29 @@ class MemberDetail {
     private Member member;
 
     @Column(name = "birth_date")
-    private LocalDate birthDate;
+    private BirthDate birthDate;
 
     @Column(name = "number", length = 11)
-    private String number;
+    private PhoneNumber number;
 
     @Column(name = "profile_url")
     private String profileUrl;
 
-    @Column(name = "about_me")
-    private String aboutMe;
+    @Column(name = "about_me", length = 500)
+    private AboutMe aboutMe;
 
     MemberDetail(Member member, LocalDate birthDate, String number) {
         this.member = member;
-        this.birthDate = birthDate;
-        this.number = number;
+        this.birthDate = birthDate == null ? null : new BirthDate(birthDate);
+        this.number = number == null ? null : new PhoneNumber(number);
     }
 
     void updateProfile(String aboutMe) {
-        this.aboutMe = aboutMe;
+        this.aboutMe = aboutMe == null ? null : new AboutMe(aboutMe);
+    }
+
+    String getAboutMe() {
+        return aboutMe == null ? null : aboutMe.value();
     }
 
     void updateProfileUrl(String profileUrl) {

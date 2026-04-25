@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import project.member.application.out.command.LoadMemberPort;
 import project.member.application.out.command.SaveMemberPort;
+import project.member.domain.Email;
 import project.member.domain.Member;
 import project.member.domain.SocialType;
 import project.member.domain.exception.MemberExceptions;
@@ -23,12 +24,12 @@ public class MemberPersistenceAdapter implements LoadMemberPort, SaveMemberPort 
 
     @Override
     public boolean existsByEmail(String email) {
-        return memberRepository.existsByEmail(email);
+        return memberRepository.existsByEmail(new Email(email));
     }
 
     @Override
     public boolean existsByEmailAndSocialType(String email, SocialType socialType) {
-        return memberRepository.existsByEmailAndSocialType(email, socialType);
+        return memberRepository.existsByEmailAndSocialType(new Email(email), socialType);
     }
 
     @Override

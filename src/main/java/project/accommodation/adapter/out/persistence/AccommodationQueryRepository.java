@@ -1,6 +1,8 @@
 package project.accommodation.adapter.out.persistence;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import org.springframework.data.domain.Page;
@@ -48,6 +50,8 @@ import static project.wishlist.domain.QWishlistAccommodation.wishlistAccommodati
 
 @Repository
 public class AccommodationQueryRepository extends CustomQuerydslRepositorySupport {
+
+    private static final StringPath MEMBER_NAME = Expressions.stringPath(member, "name");
 
     public AccommodationQueryRepository() {
         super(Accommodation.class);
@@ -142,7 +146,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
         return select(constructor(
                 DetailReviewDto.class,
                 member.id,
-                member.name,
+                MEMBER_NAME,
                 member.detail.profileUrl,
                 member.createdAt,
                 review.createdAt,

@@ -1,5 +1,6 @@
 package project.member.domain;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -7,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -30,22 +32,10 @@ public class Member extends BaseEntity {
     private Long id;
 
     @Column(name = "name", nullable = false)
-    private String name;
+    private MemberName name;
 
-    @Column(name = "birth_date")
-    private LocalDate birthDate;
-
-    @Column(name = "number", length = 11)
-    private String number;
-
-    @Column(name = "email", nullable = false, length = 50)
-    private String email;
-
-    @Column(name = "profile_url")
-    private String profileUrl;
-
-    @Column(name = "about_me")
-    private String aboutMe;
+    @Column(name = "email", nullable = false)
+    private Email email;
 
     @Column(name = "password", nullable = false)
     private String password;
@@ -86,10 +76,8 @@ public class Member extends BaseEntity {
             Role role,
             boolean isEmailVerified
     ) {
-        this.name = name;
-        this.birthDate = birthDate;
-        this.number = number;
-        this.email = email;
+        this.name = new MemberName(name);
+        this.email = new Email(email);
         this.password = password;
         this.socialType = socialType;
         this.role = role;
@@ -98,7 +86,7 @@ public class Member extends BaseEntity {
     }
 
     public void updateProfile(String name, String aboutMe) {
-        this.name = name;
+        this.name = new MemberName(name);
         this.detail.updateProfile(aboutMe);
     }
 
@@ -107,6 +95,22 @@ public class Member extends BaseEntity {
     }
 
     public void updateProfileUrl(String profileUrl) {
-        this.profileUrl = profileUrl;
+        this.detail.updateProfileUrl(profileUrl);
+    }
+
+    public String getName() {
+        return name.value();
+    }
+
+    public String getEmail() {
+        return email.address();
+    }
+
+    public String getProfileUrl() {
+        return detail.getProfileUrl();
+    }
+
+    public String getAboutMe() {
+        return detail.getAboutMe();
     }
 }

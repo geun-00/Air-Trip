@@ -1,5 +1,7 @@
 package project.member.adapter.out.persistence;
 
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringPath;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -23,6 +25,8 @@ import static project.review.domain.QReview.review;
 @Repository
 public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
 
+    private static final StringPath MEMBER_NAME = Expressions.stringPath(member, "name");
+
     public MemberQueryRepository() {
         super(Member.class);
     }
@@ -31,7 +35,7 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
         return Optional.ofNullable(
                 select(constructor(
                         DefaultProfileRow.class,
-                        member.name,
+                        MEMBER_NAME,
                         member.detail.profileUrl,
                         member.createdAt,
                         member.detail.aboutMe,
@@ -46,11 +50,11 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
         return select(constructor(
                 ChatMemberSearchRow.class,
                 member.id,
-                member.name,
+                MEMBER_NAME,
                 member.createdAt,
                 member.detail.profileUrl))
                 .from(member)
-                .where(member.name.contains(name))
+                .where(MEMBER_NAME.contains(name))
                 .fetch();
     }
 

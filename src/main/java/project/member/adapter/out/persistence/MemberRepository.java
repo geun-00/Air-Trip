@@ -1,6 +1,7 @@
 package project.member.adapter.out.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import project.member.domain.Email;
 import project.member.domain.Member;
 import project.member.domain.SocialType;
 
@@ -8,9 +9,9 @@ import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
-    Optional<Member> findByEmail(String email);
+    Optional<Member> findByEmail(Email email);
 
-    boolean existsByEmail(String email);
+    boolean existsByEmail(Email email);
 
-    boolean existsByEmailAndSocialType(String email, SocialType socialType);
+    boolean existsByEmailAndSocialType(Email email, SocialType socialType);
 }
