@@ -1,7 +1,7 @@
 package project.member.adapter.out.persistence;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.StringPath;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -24,8 +24,6 @@ import static project.review.domain.QReview.review;
 
 @Repository
 public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
-
-    private static final StringPath MEMBER_NAME = Expressions.stringPath(member, "name");
 
     public MemberQueryRepository() {
         super(Member.class);
@@ -50,12 +48,18 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
         return select(constructor(
                 ChatMemberSearchRow.class,
                 member.id,
-                MEMBER_NAME,
+                member.name,
                 member.createdAt,
                 member.detail.profileUrl))
                 .from(member)
-                .where(MEMBER_NAME.contains(name))
+                .where(memberNameContains(name))
                 .fetch();
+    }
+
+    // TODO : Mybatis 마이그레이션 가능
+    private BooleanExpression memberNameContains(String name) {
+        return Expressions.stringTemplate("cast({0} as string)", member.name)
+                          .contains(name);
     }
 
     public Page<TripHistoryRow> getTripsHistory(Long memberId, Pageable pageable) {

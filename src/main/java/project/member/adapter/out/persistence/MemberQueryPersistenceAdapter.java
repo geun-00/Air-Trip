@@ -56,7 +56,7 @@ public class MemberQueryPersistenceAdapter implements GetMemberProfilePort,
     private ChatMemberSearchView convertToView(ChatMemberSearchRow row) {
         return new ChatMemberSearchView(
                 row.id(),
-                row.name(),
+                row.name().value(),
                 row.createdDateTime(),
                 row.profileImageUrl()
         );
