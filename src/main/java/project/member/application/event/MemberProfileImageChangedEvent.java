@@ -1,9 +1,9 @@
 package project.member.application.event;
 
-import org.springframework.web.multipart.MultipartFile;
+import project.common.application.model.UploadFile;
 
 public record MemberProfileImageChangedEvent(
         Long memberId,
         String oldImageUrl,
-        MultipartFile newImageFile) {
+        UploadFile newImageFile) {
 }

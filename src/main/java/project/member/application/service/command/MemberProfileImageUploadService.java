@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 import project.common.exception.ImageUploadException;
 import project.member.application.in.command.UploadMemberProfileImageUseCase;
+import project.common.application.model.UploadFile;
 import project.member.application.out.command.LoadMemberPort;
 import project.member.application.out.command.ManageMemberProfileImagePort;
 import project.member.application.out.command.SaveMemberPort;
@@ -32,7 +32,7 @@ public class MemberProfileImageUploadService implements UploadMemberProfileImage
 
     @Transactional
     @Override
-    public void uploadAndDeleteOrigin(Long memberId, String oldImageUrl, MultipartFile newImageFile) {
+    public void uploadAndDeleteOrigin(Long memberId, String oldImageUrl, UploadFile newImageFile) {
         uploadProfileImage(memberId, key -> newImageFile != null ? manageMemberProfileImagePort.upload(newImageFile, key) : null);
 
         if (StringUtils.hasText(oldImageUrl)) {

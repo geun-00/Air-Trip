@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
+import project.common.application.model.UploadFile;
 import project.common.exception.ImageUploadException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -12,7 +12,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.BufferedInputStream;
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -56,15 +56,8 @@ public class S3Uploader {
         }
     }
 
-    public String uploadImage(MultipartFile file, String key) {
-        try (InputStream inputStream = file.getInputStream()) {
-            long contentLength = file.getSize();
-            String contentType = file.getContentType();
-            return uploadToS3(inputStream, contentLength, contentType, key);
-        } catch (IOException e) {
-            log.error("Failed to upload MultipartFile to S3: key={}", key, e);
-            throw new ImageUploadException("Failed to upload image to S3", e);
-        }
+    public String uploadImage(UploadFile file, String key) {
+        return uploadToS3(new ByteArrayInputStream(file.bytes()), file.size(), file.contentType(), key);
     }
 
     public void deleteFile(String oldImageUrl) {

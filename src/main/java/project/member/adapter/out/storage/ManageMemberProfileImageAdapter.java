@@ -2,7 +2,7 @@ package project.member.adapter.out.storage;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
+import project.common.application.model.UploadFile;
 import project.infrastructure.storage.S3Uploader;
 import project.member.application.out.command.ManageMemberProfileImagePort;
 
@@ -18,7 +18,7 @@ public class ManageMemberProfileImageAdapter implements ManageMemberProfileImage
     }
 
     @Override
-    public String upload(MultipartFile file, String key) {
+    public String upload(UploadFile file, String key) {
         return s3Uploader.uploadImage(file, key);
     }
 

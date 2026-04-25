@@ -1,10 +1,10 @@
 package project.member.application.in.command;
 
-import org.springframework.web.multipart.MultipartFile;
+import project.common.application.model.UploadFile;
 
 public interface UploadMemberProfileImageUseCase {
 
     void upload(Long memberId, String imageUrl);
 
-    void uploadAndDeleteOrigin(Long memberId, String oldImageUrl, MultipartFile newImageFile);
+    void uploadAndDeleteOrigin(Long memberId, String oldImageUrl, UploadFile newImageFile);
 }

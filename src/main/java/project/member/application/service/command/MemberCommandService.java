@@ -8,13 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
 import project.member.application.event.MemberImageUploadEvent;
-import project.member.application.event.MemberProfileImageChangedEvent;
 import project.member.application.in.command.EditMyProfileUseCase;
 import project.member.application.in.command.RegisterAdminMemberUseCase;
 import project.member.application.in.command.RegisterMemberUseCase;
 import project.member.application.in.command.RegisterSocialMemberUseCase;
 import project.member.application.in.command.model.EditMyProfileCommand;
 import project.member.application.in.command.model.EditProfileResult;
+import project.member.application.in.command.model.ProfileImageChange;
 import project.member.application.in.command.model.RegisterMemberCommand;
 import project.member.application.in.command.model.RegisterSocialMemberCommand;
 import project.member.application.out.command.LoadMemberPort;
@@ -37,6 +37,7 @@ public class MemberCommandService implements RegisterMemberUseCase,
     private final LoadMemberPort loadMemberPort;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final ProfileImageChange.Handler profileImageChangeHandler;
 
     @Override
     public void register(RegisterMemberCommand command) {
@@ -93,9 +94,8 @@ public class MemberCommandService implements RegisterMemberUseCase,
     public EditProfileResult editMyProfile(EditMyProfileCommand command) {
         Member member = loadMemberPort.loadById(command.memberId());
 
-        if (command.profileImageChanged()) {
-            eventPublisher.publishEvent(new MemberProfileImageChangedEvent(command.memberId(), member.getProfileUrl(), command.imageFile()));
-        }
+        command.profileImageChange()
+               .handleWith(command.memberId(), member.getProfileUrl(), profileImageChangeHandler);
 
         member.updateProfile(command.name(), command.aboutMe());
         saveMemberPort.save(member);
