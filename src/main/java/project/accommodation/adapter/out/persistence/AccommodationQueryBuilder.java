@@ -21,7 +21,7 @@ import static com.querydsl.core.types.Projections.constructor;
 import static project.accommodation.domain.QAccommodation.accommodation;
 import static project.accommodation.domain.QAccommodationImage.accommodationImage;
 import static project.accommodation.domain.QAccommodationPrice.accommodationPrice;
-import static project.accommodation.domain.QAccommodationStats.accommodationStats;
+import static project.accommodation.adapter.out.persistence.QAccommodationStats.accommodationStats;
 import static project.area.domain.QAreaCode.areaCode;
 import static project.area.domain.QSigunguCode.sigunguCode;
 import static project.reservation.domain.QReservation.reservation;

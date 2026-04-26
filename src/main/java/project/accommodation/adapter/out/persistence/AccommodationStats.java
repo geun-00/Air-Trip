@@ -1,4 +1,4 @@
-package project.accommodation.domain;
+package project.accommodation.adapter.out.persistence;
 
 import jakarta.persistence.*;
 import lombok.Getter;
