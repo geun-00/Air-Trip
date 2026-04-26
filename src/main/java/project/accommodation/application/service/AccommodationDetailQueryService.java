@@ -9,13 +9,13 @@ import project.accommodation.application.in.query.model.AccommodationCommonInfoV
 import project.accommodation.application.in.query.model.AccommodationDetailView;
 import project.accommodation.application.out.query.LoadAccommodationWishlistPort;
 import project.accommodation.application.out.query.LoadReservedDatesPort;
-import project.accommodation.application.out.query.model.ReservedDateView;
 import project.accommodation.application.out.query.model.WishlistInfoView;
 import project.history.application.event.ViewHistoryEvent;
 import project.infrastructure.cache.CacheService;
 
 import java.util.List;
-import java.util.Optional;
+
+import static project.accommodation.application.in.query.model.AccommodationDetailView.ReservedDateView;
 
 @Service
 @RequiredArgsConstructor
@@ -30,22 +30,12 @@ public class AccommodationDetailQueryService implements GetAccommodationDetailQu
     @Override
     public AccommodationDetailView getDetailAccommodation(Long accommodationId, Long memberId) {
         AccommodationCommonInfoView commonInfo = cacheService.getAccommodationCommonInfo(accommodationId);
+        WishlistState wishlistState = loadWishlistState(accommodationId, memberId);
+        List<ReservedDateView> reservedDates = loadReservedDates(accommodationId);
 
-        boolean isInWishlist = false;
-        Long wishlistId = null;
-        String wishlistName = null;
-        List<ReservedDateView> reservedDates = loadReservedDatesPort.loadReservedDates(accommodationId);
+        publishViewHistory(accommodationId, memberId);
 
-        if (memberId != null) {
-            eventPublisher.publishEvent(new ViewHistoryEvent(accommodationId, memberId));
-            Optional<WishlistInfoView> wishlistInfo = loadAccommodationWishlistPort.loadWishlistInfo(accommodationId, memberId);
-            if (wishlistInfo.isPresent()) {
-                isInWishlist = wishlistInfo.get().isInWishlist();
-                wishlistId = wishlistInfo.get().wishlistId();
-                wishlistName = wishlistInfo.get().wishlistName();
-            }
-        }
-
+        // TODO : 조립 매퍼 클래스 사용
         return new AccommodationDetailView(
                 commonInfo.getAccommodationId(),
                 commonInfo.getTitle(),
@@ -59,16 +49,57 @@ public class AccommodationDetailQueryService implements GetAccommodationDetailQu
                 commonInfo.getNumber(),
                 commonInfo.getRefundRegulation(),
                 commonInfo.getPrice(),
-                isInWishlist,
-                wishlistId,
-                wishlistName,
+                wishlistState.isInWishlist(),
+                wishlistState.wishlistId(),
+                wishlistState.wishlistName(),
                 commonInfo.getAvgRate(),
                 commonInfo.getImages(),
                 commonInfo.getAmenities(),
                 commonInfo.getReviews(),
-                reservedDates.stream()
-                             .map(date -> new AccommodationDetailView.ReservedDateView(date.startDate(), date.endDate()))
-                             .toList()
+                reservedDates
         );
+    }
+
+    private WishlistState loadWishlistState(Long accommodationId, Long memberId) {
+        if (memberId == null) {
+            return WishlistState.empty();
+        }
+
+        return loadAccommodationWishlistPort.loadWishlistInfo(accommodationId, memberId)
+                                            .map(WishlistState::from)
+                                            .orElseGet(WishlistState::empty);
+    }
+
+    private List<ReservedDateView> loadReservedDates(Long accommodationId) {
+        return loadReservedDatesPort.loadReservedDates(accommodationId)
+                                    .stream()
+                                    .map(date -> new ReservedDateView(date.startDate(), date.endDate()))
+                                    .toList();
+    }
+
+    private void publishViewHistory(Long accommodationId, Long memberId) {
+        if (memberId == null) {
+            return;
+        }
+
+        eventPublisher.publishEvent(new ViewHistoryEvent(accommodationId, memberId));
+    }
+
+    private record WishlistState(
+            boolean isInWishlist,
+            Long wishlistId,
+            String wishlistName
+    ) {
+        private static WishlistState empty() {
+            return new WishlistState(false, null, null);
+        }
+
+        private static WishlistState from(WishlistInfoView wishlistInfo) {
+            return new WishlistState(
+                    wishlistInfo.isInWishlist(),
+                    wishlistInfo.wishlistId(),
+                    wishlistInfo.wishlistName()
+            );
+        }
     }
 }

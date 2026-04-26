@@ -1,10 +1,10 @@
 package project.accommodation.application.out.query;
 
-import project.accommodation.application.out.query.model.ReservedDateView;
+import project.accommodation.application.out.query.model.ReservedDateRangeView;
 
 import java.util.List;
 
 public interface LoadReservedDatesPort {
 
-    List<ReservedDateView> loadReservedDates(Long accommodationId);
+    List<ReservedDateRangeView> loadReservedDates(Long accommodationId);
 }
