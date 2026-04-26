@@ -1,16 +1,22 @@
 package project.accommodation.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.common.adapter.out.persistence.BaseEntity;
 
-@Getter
+// TODO : package-private 수정
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "accommodation_images")
-public class AccommodationImage extends BaseEntity {
+public class AccommodationImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,11 +33,11 @@ public class AccommodationImage extends BaseEntity {
     @JoinColumn(name = "accommodation_id", nullable = false)
     private Accommodation accommodation;
 
-    public static AccommodationImage thumbnailOf(Accommodation accommodation, String thumbnailUrl) {
+    static AccommodationImage thumbnailOf(Accommodation accommodation, String thumbnailUrl) {
         return new AccommodationImage(thumbnailUrl, true, accommodation);
     }
 
-    public static AccommodationImage normalOf(Accommodation accommodation, String thumbnailUrl) {
+    static AccommodationImage normalOf(Accommodation accommodation, String thumbnailUrl) {
         return new AccommodationImage(thumbnailUrl, false, accommodation);
     }
 

@@ -6,8 +6,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.accommodation.sync.application.model.AccommodationProcessorDto;
 import project.common.adapter.out.persistence.BaseEntity;
+import project.common.domain.DayType;
+import project.common.domain.Season;
 
+import java.util.ArrayList;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Getter
 @Entity
@@ -50,6 +57,15 @@ public class Accommodation extends BaseEntity {
     @Column(name = "average_rating")
     private Rating averageRating = Rating.ZERO;
 
+    @OneToMany(mappedBy = "accommodation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AccommodationImage> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "accommodation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<AccommodationPrice> prices = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "accommodation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<AccommodationAmenity> amenities = new LinkedHashSet<>();
+
     public static Accommodation createEmpty() {
         return new Accommodation();
     }
@@ -72,7 +88,44 @@ public class Accommodation extends BaseEntity {
         return detail.getRefundRegulation();
     }
 
-    public int getReservationCount() {
-        return reservationCount.value();
+    public void replaceImages(
+            String thumbnailUrl,
+            List<String> originImageUrls,
+            List<String> roomImageUrls
+    ) {
+        this.images.clear();
+        this.images.add(AccommodationImage.thumbnailOf(this, thumbnailUrl));
+        addNormalImages(originImageUrls, thumbnailUrl);
+        addNormalImages(roomImageUrls, thumbnailUrl);
+    }
+
+    private void addNormalImages(List<String> imageUrls, String thumbnailUrl) {
+        imageUrls.stream()
+                 .filter(imageUrl -> !imageUrl.equals(thumbnailUrl))
+                 .forEach(imageUrl -> this.images.add(AccommodationImage.normalOf(this, imageUrl)));
+    }
+
+    public void replacePrices(Map<Season, Map<DayType, Integer>> prices) {
+        this.prices.clear();
+
+        for (Season season : Season.values()) {
+            for (DayType dayType : DayType.values()) {
+                this.prices.add(
+                        AccommodationPrice.create(
+                                this,
+                                season,
+                                dayType,
+                                prices.get(season).get(dayType)
+                        ));
+            }
+        }
+    }
+
+    public void replaceAmenities(List<Long> amenityIds) {
+        this.amenities.clear();
+        amenityIds.stream()
+                  .distinct()
+                  .map(amenityId -> AccommodationAmenity.create(this, amenityId))
+                  .forEach(this.amenities::add);
     }
 }

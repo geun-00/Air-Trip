@@ -137,7 +137,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
     public List<String> findAmenities(Long accId) {
         return select(amenity.description)
                 .from(accommodationAmenity)
-                .join(accommodationAmenity.amenity, amenity)
+                .join(amenity).on(amenity.id.eq(accommodationAmenity.amenityId))
                 .where(accommodationAmenity.accommodation.id.eq(accId))
                 .fetch();
     }
@@ -218,9 +218,9 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
         }
 
         return JPAExpressions
-                .select(accommodationAmenity.amenity.countDistinct())
+                .select(accommodationAmenity.amenityId.countDistinct())
                 .from(accommodationAmenity)
-                .join(accommodationAmenity.amenity, amenity)
+                .join(amenity).on(amenity.id.eq(accommodationAmenity.amenityId))
                 .where(accommodationAmenity.accommodation.eq(accommodation),
                         amenity.name.in(amenities))
                 .eq((long) amenities.size());

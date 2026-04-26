@@ -174,7 +174,7 @@ public class EmbeddingService {
                          )
                          FROM Accommodation AS acc
                          LEFT JOIN AccommodationAmenity AS aa ON aa.accommodation = acc
-                         JOIN Amenity AS am ON aa.amenity = am
+                         JOIN Amenity AS am ON aa.amenityId = am.id
                          WHERE acc.id IN :ids
                          """, AmenitiesDto.class)
                  .setParameter("ids", ids)

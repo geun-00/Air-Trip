@@ -1,12 +1,7 @@
 package project.accommodation.sync.application.worker;
 
 import project.accommodation.domain.Accommodation;
-import project.accommodation.domain.AccommodationAmenity;
-import project.accommodation.domain.AccommodationImage;
-import project.accommodation.domain.AccommodationPrice;
 import project.amenity.domain.Amenity;
-import project.common.domain.DayType;
-import project.common.domain.Season;
 import project.accommodation.sync.application.model.AccommodationProcessorDto;
 import project.accommodation.sync.adapter.out.persistence.TourRepositoryFacadeManager;
 
@@ -25,9 +20,6 @@ public record AccommodationSaveWorker(
     @Override
     public void run() {
         List<Accommodation> accommodations = new ArrayList<>();
-        List<AccommodationAmenity> allAmenities = new ArrayList<>();
-        List<AccommodationImage> allImages = new ArrayList<>();
-        List<AccommodationPrice> allPrices = new ArrayList<>();
 
         for (AccommodationProcessorDto dto : dtoList) {
             if (!validator.test(dto)) continue;
@@ -38,29 +30,31 @@ public record AccommodationSaveWorker(
             acc.updateOrInit(dto);
 
             accommodations.add(acc);
-            addAccommodationAmenity(dto, acc, allAmenities);
-            addAccommodationImage(dto, acc, allImages);
-            addAccommodationPrice(dto, acc, allPrices);
+            acc.replaceAmenities(getAmenityIds(dto));
+            acc.replaceImages(findThumbnailUrl(dto), dto.getOriginImgUrls(), dto.getRoomImgUrls());
+            acc.replacePrices(dto.getPrices());
         }
 
-        tourRepositoryFacadeManager.saveEntities(accommodations, allPrices, allAmenities, allImages);
+        tourRepositoryFacadeManager.saveEntities(accommodations);
     }
 
-    private void addAccommodationAmenity(AccommodationProcessorDto dto, Accommodation acc, List<AccommodationAmenity> allAmenities) {
-        addEntityIfAvailable(allAmenities, acc, dto.getIntroAmenities());
-        addEntityIfAvailable(allAmenities, acc, dto.getInfoAmenities());
+    private List<Long> getAmenityIds(AccommodationProcessorDto dto) {
+        List<Long> amenityIds = new ArrayList<>();
+        addEntityIfAvailable(amenityIds, dto.getIntroAmenities());
+        addEntityIfAvailable(amenityIds, dto.getInfoAmenities());
+        return amenityIds;
     }
 
-    private void addEntityIfAvailable(List<AccommodationAmenity> allAmenities, Accommodation acc, Map<String, Boolean> amenities) {
+    private void addEntityIfAvailable(List<Long> amenityIds, Map<String, Boolean> amenities) {
         amenities.forEach((amenityName, available) -> {
             if (Boolean.TRUE.equals(available)) {
                 Amenity amenity = tourRepositoryFacadeManager.findAmenityByName(amenityName);
-                allAmenities.add(AccommodationAmenity.create(acc, amenity));
+                amenityIds.add(amenity.getId());
             }
         });
     }
 
-    private void addAccommodationImage(AccommodationProcessorDto item, Accommodation acc, List<AccommodationImage> allImages) {
+    private String findThumbnailUrl(AccommodationProcessorDto item) {
         String thumbnailUrl = item.getThumbnailUrl();
 
         if (!hasText(thumbnailUrl)) {
@@ -71,26 +65,7 @@ public record AccommodationSaveWorker(
             }
         }
 
-        allImages.add(AccommodationImage.thumbnailOf(acc, thumbnailUrl));
-
-        addImageEntity(item.getOriginImgUrls(), thumbnailUrl, allImages, acc);
-        addImageEntity(item.getRoomImgUrls(), thumbnailUrl, allImages, acc);
+        return thumbnailUrl;
     }
 
-    private void addImageEntity(List<String> item, String thumbnail, List<AccommodationImage> allImages, Accommodation acc) {
-        for (String imageUrl : item) {
-            if (imageUrl.equals(thumbnail)) {
-                continue;
-            }
-            allImages.add(AccommodationImage.normalOf(acc, imageUrl));
-        }
-    }
-
-    private void addAccommodationPrice(AccommodationProcessorDto dto, Accommodation acc, List<AccommodationPrice> allPrices) {
-        for (Season season : Season.values()) {
-            for (DayType dayType : DayType.values()) {
-                allPrices.add(AccommodationPrice.create(acc, season, dayType, dto.getPrice(season, dayType)));
-            }
-        }
-    }
 }
