@@ -10,10 +10,9 @@ import project.accommodation.adapter.out.persistence.model.ImageDataRow;
 import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
 import project.accommodation.domain.exception.AccommodationExceptions;
 import project.common.domain.StayDatePolicy;
-import project.infrastructure.time.DateManager;
+import project.infrastructure.time.StayDatePolicyProvider;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -22,8 +21,8 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class CacheService {
 
-    private final DateManager dateManager;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final StayDatePolicyProvider stayDatePolicyProvider;
     private final AccommodationQueryRepository accommodationQueryRepository;
 
     public AccommodationCommonInfoView getAccommodationCommonInfo(Long accId) {
@@ -34,7 +33,7 @@ public class CacheService {
             return commonInfo;
         }
 
-        StayDatePolicy stayDatePolicy = dateManager.getStayDatePolicy(LocalDate.now());
+        StayDatePolicy stayDatePolicy = stayDatePolicyProvider.todayStayDatePolicy();
 
         DetailAccommodationRow detail = accommodationQueryRepository.findAccommodation(accId, null, stayDatePolicy)
                                                                     .orElseThrow(() -> AccommodationExceptions.notFoundById(accId));

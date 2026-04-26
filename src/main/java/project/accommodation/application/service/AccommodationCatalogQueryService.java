@@ -17,7 +17,7 @@ import project.accommodation.application.out.query.model.MainAccommodationsCondi
 import project.accommodation.application.out.query.model.SearchAccommodationsCondition;
 import project.common.adapter.in.web.response.PageResponse;
 import project.common.domain.StayDatePolicy;
-import project.infrastructure.time.DateManager;
+import project.infrastructure.time.StayDatePolicyProvider;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -29,14 +29,14 @@ public class AccommodationCatalogQueryService implements GetMainAccommodationsQu
                                                          SearchAccommodationsQueryUseCase,
                                                          GetAccommodationPriceQueryUseCase {
 
-    private final DateManager dateManager;
+    private final StayDatePolicyProvider stayDatePolicyProvider;
     private final SearchAccommodationsPort searchAccommodationsPort;
     private final GetMainAccommodationsPort getMainAccommodationsPort;
     private final GetAccommodationPricePort getAccommodationPricePort;
 
     @Override
     public List<MainAccommodationView> getAccommodations(Long memberId) {
-        StayDatePolicy stayDatePolicy = dateManager.getStayDatePolicy(LocalDate.now());
+        StayDatePolicy stayDatePolicy = stayDatePolicyProvider.todayStayDatePolicy();
         MainAccommodationsCondition condition = new MainAccommodationsCondition(stayDatePolicy, memberId);
 
         return getMainAccommodationsPort.getAreaAccommodations(condition);
@@ -47,7 +47,7 @@ public class AccommodationCatalogQueryService implements GetMainAccommodationsQu
             AccommodationSearchQuery searchQuery,
             Long memberId
     ) {
-        StayDatePolicy stayDatePolicy = dateManager.getStayDatePolicy(LocalDate.now());
+        StayDatePolicy stayDatePolicy = stayDatePolicyProvider.todayStayDatePolicy();
 
         SearchAccommodationsCondition condition = new SearchAccommodationsCondition(
                 searchQuery.areaCode(),
@@ -64,7 +64,7 @@ public class AccommodationCatalogQueryService implements GetMainAccommodationsQu
 
     @Override
     public AccommodationPriceView getAccommodationPrice(Long accommodationId, LocalDate date) {
-        StayDatePolicy stayDatePolicy = dateManager.getStayDatePolicy(date);
+        StayDatePolicy stayDatePolicy = stayDatePolicyProvider.getStayDatePolicy(date);
         int price = getAccommodationPricePort.getAccommodationPrice(accommodationId, stayDatePolicy);
 
         return new AccommodationPriceView(accommodationId, date, price);
