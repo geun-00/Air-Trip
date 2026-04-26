@@ -7,6 +7,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import project.accommodation.adapter.in.web.AccommodationQueryController;
+import project.accommodation.application.in.query.GetAccommodationDetailQueryUseCase;
+import project.accommodation.application.in.query.GetAccommodationPriceQueryUseCase;
+import project.accommodation.application.in.query.GetMainAccommodationsQueryUseCase;
+import project.accommodation.application.in.query.GetRecentViewAccommodationsQueryUseCase;
+import project.accommodation.application.in.query.SearchAccommodationsQueryUseCase;
 import project.accommodation.application.in.query.model.AccommodationDetailView;
 import project.accommodation.application.in.query.model.AccommodationPriceView;
 import project.accommodation.application.in.query.model.FilteredAccommodationView;
@@ -14,7 +19,6 @@ import project.accommodation.application.in.query.model.MainAccommodationItemVie
 import project.accommodation.application.in.query.model.MainAccommodationView;
 import project.accommodation.application.in.query.model.ViewHistoryAccommodationView;
 import project.accommodation.application.in.query.model.ViewHistoryGroupView;
-import project.accommodation.application.service.AccommodationQueryService;
 import project.common.adapter.in.web.response.PageResponse;
 import project.controller.RestDocsTestSupport;
 import project.security.WithMockMember;
@@ -50,7 +54,19 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
     private static final String ACCOMMODATION_API_TAG = "Accommodation API";
 
     @MockitoBean
-    AccommodationQueryService accommodationQueryService;
+    GetMainAccommodationsQueryUseCase getMainAccommodationsQueryUseCase;
+
+    @MockitoBean
+    SearchAccommodationsQueryUseCase searchAccommodationsQueryUseCase;
+
+    @MockitoBean
+    GetAccommodationDetailQueryUseCase getAccommodationDetailQueryUseCase;
+
+    @MockitoBean
+    GetRecentViewAccommodationsQueryUseCase getRecentViewAccommodationsQueryUseCase;
+
+    @MockitoBean
+    GetAccommodationPriceQueryUseCase getAccommodationPriceQueryUseCase;
 
     @Test
     @DisplayName("메인 페이지 숙소 목록 조회")
@@ -71,7 +87,7 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
                 new MainAccommodationView("경기도", "code-2", gyeonggiAcc)
         );
 
-        given(accommodationQueryService.getAccommodations(any())).willReturn(result);
+        given(getMainAccommodationsQueryUseCase.getAccommodations(any())).willReturn(result);
 
         //when
         //then
@@ -150,7 +166,7 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
                 dtos.size()
         ));
 
-        given(accommodationQueryService.getFilteredPagingAccommodations(any(), any()))
+        given(searchAccommodationsQueryUseCase.getFilteredPagingAccommodations(any(), any()))
                 .willReturn(response);
 
         //when
@@ -271,7 +287,7 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
                                                                        55000, true, 1L, "my-wishlist-1", 4.8, detailImageDto, amenities, reviewDtos, reservedDates
         );
 
-        given(accommodationQueryService.getDetailAccommodation(any(), any())).willReturn(response);
+        given(getAccommodationDetailQueryUseCase.getDetailAccommodation(any(), any())).willReturn(response);
 
         //when
         //then
@@ -428,7 +444,7 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
         );
 
         List<ViewHistoryGroupView> result = List.of(new ViewHistoryGroupView(today.toLocalDate(), todays), new ViewHistoryGroupView(yesterday.toLocalDate(), yesterdays));
-        given(accommodationQueryService.getRecentViewAccommodations(any())).willReturn(result);
+        given(getRecentViewAccommodationsQueryUseCase.getRecentViewAccommodations(any())).willReturn(result);
 
         //when
         //then
@@ -495,7 +511,7 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
         LocalDate date = LocalDate.now();
 
         AccommodationPriceView result = new AccommodationPriceView(accommodationId, date, 130000);
-        given(accommodationQueryService.getAccommodationPrice(any(), any())).willReturn(result);
+        given(getAccommodationPriceQueryUseCase.getAccommodationPrice(any(), any())).willReturn(result);
 
         //when
         //then
