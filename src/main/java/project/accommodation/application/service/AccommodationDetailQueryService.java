@@ -9,7 +9,7 @@ import project.accommodation.application.in.query.model.AccommodationCommonInfoV
 import project.accommodation.application.in.query.model.AccommodationDetailView;
 import project.accommodation.application.out.query.LoadAccommodationWishlistPort;
 import project.accommodation.application.out.query.LoadReservedDatesPort;
-import project.accommodation.application.out.query.model.WishlistInfoView;
+import project.accommodation.application.service.model.AccommodationWishlistState;
 import project.history.application.event.ViewHistoryEvent;
 import project.infrastructure.cache.CacheService;
 
@@ -30,7 +30,7 @@ public class AccommodationDetailQueryService implements GetAccommodationDetailQu
     @Override
     public AccommodationDetailView getDetailAccommodation(Long accommodationId, Long memberId) {
         AccommodationCommonInfoView commonInfo = cacheService.getAccommodationCommonInfo(accommodationId);
-        WishlistState wishlistState = loadWishlistState(accommodationId, memberId);
+        AccommodationWishlistState wishlistState = loadWishlistState(accommodationId, memberId);
         List<ReservedDateView> reservedDates = loadReservedDates(accommodationId);
 
         publishViewHistory(accommodationId, memberId);
@@ -60,14 +60,14 @@ public class AccommodationDetailQueryService implements GetAccommodationDetailQu
         );
     }
 
-    private WishlistState loadWishlistState(Long accommodationId, Long memberId) {
+    private AccommodationWishlistState loadWishlistState(Long accommodationId, Long memberId) {
         if (memberId == null) {
-            return WishlistState.empty();
+            return AccommodationWishlistState.empty();
         }
 
         return loadAccommodationWishlistPort.loadWishlistInfo(accommodationId, memberId)
-                                            .map(WishlistState::from)
-                                            .orElseGet(WishlistState::empty);
+                                            .map(AccommodationWishlistState::from)
+                                            .orElseGet(AccommodationWishlistState::empty);
     }
 
     private List<ReservedDateView> loadReservedDates(Long accommodationId) {
@@ -83,23 +83,5 @@ public class AccommodationDetailQueryService implements GetAccommodationDetailQu
         }
 
         eventPublisher.publishEvent(new ViewHistoryEvent(accommodationId, memberId));
-    }
-
-    private record WishlistState(
-            boolean isInWishlist,
-            Long wishlistId,
-            String wishlistName
-    ) {
-        private static WishlistState empty() {
-            return new WishlistState(false, null, null);
-        }
-
-        private static WishlistState from(WishlistInfoView wishlistInfo) {
-            return new WishlistState(
-                    wishlistInfo.isInWishlist(),
-                    wishlistInfo.wishlistId(),
-                    wishlistInfo.wishlistName()
-            );
-        }
     }
 }

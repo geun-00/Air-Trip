@@ -8,6 +8,8 @@ import project.accommodation.application.in.query.model.AccommodationCommonInfoV
 import project.accommodation.application.in.query.model.ViewHistoryAccommodationView;
 import project.accommodation.application.in.query.model.ViewHistoryGroupView;
 import project.accommodation.application.out.query.LoadAccommodationWishlistPort;
+import project.accommodation.application.out.query.model.WishlistInfoView;
+import project.accommodation.application.service.model.AccommodationWishlistState;
 import project.history.application.in.query.GetRecentViewHistoryUseCase;
 import project.history.application.in.query.model.RecentViewHistoryView;
 import project.infrastructure.cache.CacheService;
@@ -39,42 +41,65 @@ public class RecentViewAccommodationQueryService implements GetRecentViewAccommo
             return Collections.emptyList();
         }
 
-        Map<Long, LocalDateTime> viewInfoMap = recentViewHistories.stream()
-                                                                  .collect(toMap(
-                                                                          RecentViewHistoryView::accommodationId,
-                                                                          RecentViewHistoryView::viewedAt,
-                                                                          (first, second) -> first,
-                                                                          LinkedHashMap::new
-                                                                  ));
+        List<Long> accommodationIds = extractIds(recentViewHistories);
+        Map<Long, LocalDateTime> viewedAtMap = toViewedAtMap(recentViewHistories);
+        Map<Long, WishlistInfoView> wishlistMap = loadAccommodationWishlistPort.loadWishlistInfos(accommodationIds, memberId);
 
-        List<Long> accommodationIds = recentViewHistories.stream()
-                                                         .map(RecentViewHistoryView::accommodationId)
-                                                         .toList();
-        var wishlistMap = loadAccommodationWishlistPort.loadWishlistInfos(accommodationIds, memberId);
+        List<ViewHistoryAccommodationView> recentViewAccommodations = accommodationIds.stream()
+                                                                                      .map(accommodationId -> toRecentViewAccommodation(
+                                                                                              accommodationId,
+                                                                                              viewedAtMap.get(accommodationId),
+                                                                                              wishlistMap.get(accommodationId)
+                                                                                      ))
+                                                                                      .toList();
+        return groupByViewedDate(recentViewAccommodations);
+    }
 
-        List<ViewHistoryAccommodationView> historyDtos = accommodationIds.stream()
-                                                                         .map(id -> {
-                                                                             AccommodationCommonInfoView commonInfo = cacheService.getAccommodationCommonInfo(id);
-                                                                             var wishInfo = wishlistMap.getOrDefault(id, null);
+    private List<Long> extractIds(List<RecentViewHistoryView> recentViewHistories) {
+        return recentViewHistories.stream()
+                                  .map(RecentViewHistoryView::accommodationId)
+                                  .toList();
+    }
 
-                                                                             return new ViewHistoryAccommodationView(
-                                                                                     viewInfoMap.get(id),
-                                                                                     id,
-                                                                                     commonInfo.getTitle(),
-                                                                                     commonInfo.getAvgRate(),
-                                                                                     commonInfo.getImages().thumbnail(),
-                                                                                     wishInfo != null && wishInfo.isInWishlist(),
-                                                                                     wishInfo == null ? null : wishInfo.wishlistId(),
-                                                                                     wishInfo == null ? null : wishInfo.wishlistName()
-                                                                             );
-                                                                         })
-                                                                         .toList();
+    private Map<Long, LocalDateTime> toViewedAtMap(List<RecentViewHistoryView> recentViewHistories) {
+        return recentViewHistories.stream()
+                                  .collect(toMap(
+                                          RecentViewHistoryView::accommodationId,
+                                          RecentViewHistoryView::viewedAt,
+                                          (first, second) -> first,
+                                          LinkedHashMap::new
+                                  ));
+    }
 
-        return historyDtos.stream()
-                          .collect(groupingBy(dto -> dto.viewDate().toLocalDate(), LinkedHashMap::new, toList()))
-                          .entrySet()
-                          .stream()
-                          .map(entry -> new ViewHistoryGroupView(entry.getKey(), entry.getValue()))
-                          .toList();
+    private ViewHistoryAccommodationView toRecentViewAccommodation(
+            Long accommodationId,
+            LocalDateTime viewedAt, WishlistInfoView wishlistInfoView
+    ) {
+        AccommodationCommonInfoView commonInfo = cacheService.getAccommodationCommonInfo(accommodationId);
+        AccommodationWishlistState wishlistState = AccommodationWishlistState.from(wishlistInfoView);
+
+        return new ViewHistoryAccommodationView(
+                viewedAt,
+                accommodationId,
+                commonInfo.getTitle(),
+                commonInfo.getAvgRate(),
+                commonInfo.getImages().thumbnail(),
+                wishlistState.isInWishlist(),
+                wishlistState.wishlistId(),
+                wishlistState.wishlistName()
+        );
+    }
+
+    private List<ViewHistoryGroupView> groupByViewedDate(List<ViewHistoryAccommodationView> recentViewAccommodations) {
+        return recentViewAccommodations.stream()
+                                       .collect(groupingBy(
+                                               accommodation -> accommodation.viewDate().toLocalDate(),
+                                               LinkedHashMap::new,
+                                               toList()
+                                       ))
+                                       .entrySet()
+                                       .stream()
+                                       .map(entry -> new ViewHistoryGroupView(entry.getKey(), entry.getValue()))
+                                       .toList();
     }
 }
