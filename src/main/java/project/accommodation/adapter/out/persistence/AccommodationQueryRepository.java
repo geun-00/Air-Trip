@@ -9,21 +9,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
-import project.accommodation.adapter.in.web.request.AccommodationSearchCondition;
-import project.accommodation.adapter.in.web.request.ViewHistoryDto;
-import project.accommodation.adapter.in.web.response.AccommodationCommonInfo.DetailReviewDto;
-import project.accommodation.adapter.in.web.response.FilteredAccListResDto;
-import project.accommodation.adapter.out.persistence.model.AccAllImagesQueryDto;
-import project.accommodation.adapter.out.persistence.model.DetailAccommodationQueryDto;
-import project.accommodation.adapter.out.persistence.model.FilteredAccListQueryDto;
-import project.accommodation.adapter.out.persistence.model.ImageDataQueryDto;
-import project.accommodation.adapter.out.persistence.model.MainAccListQueryDto;
+import project.accommodation.adapter.out.persistence.model.AccAllImageRow;
+import project.accommodation.adapter.out.persistence.model.DetailAccommodationRow;
+import project.accommodation.adapter.out.persistence.model.DetailReviewRow;
+import project.accommodation.adapter.out.persistence.model.FilteredAccommodationRow;
+import project.accommodation.adapter.out.persistence.model.ImageDataRow;
+import project.accommodation.adapter.out.persistence.model.MainAccommodationRow;
+import project.accommodation.application.out.query.SearchAccommodationsCondition;
 import project.accommodation.domain.Accommodation;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
-import project.common.domain.DayType;
-import project.common.domain.Season;
+import project.common.domain.StayDatePolicy;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,12 +37,9 @@ import static project.accommodation.domain.QAccommodationPrice.accommodationPric
 import static project.amenity.domain.QAmenity.amenity;
 import static project.area.domain.QAreaCode.areaCode;
 import static project.area.domain.QSigunguCode.sigunguCode;
-import static project.history.domain.QViewHistory.viewHistory;
 import static project.member.domain.QMember.member;
 import static project.reservation.domain.QReservation.reservation;
 import static project.review.domain.QReview.review;
-import static project.wishlist.domain.QWishlist.wishlist;
-import static project.wishlist.domain.QWishlistAccommodation.wishlistAccommodation;
 
 @Repository
 public class AccommodationQueryRepository extends CustomQuerydslRepositorySupport {
@@ -57,76 +50,90 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
         super(Accommodation.class);
     }
 
-    public List<MainAccListQueryDto> getAreaAccommodations(Season season, DayType dayType, Long memberId) {
-        return new AccommodationQueryBuilder(getQueryFactory(), dayType, season, memberId)
-                .fetchMainAccList();
+    public List<MainAccommodationRow> getAreaAccommodations(
+            StayDatePolicy stayDatePolicy,
+            Long memberId
+    ) {
+        return new AccommodationQueryBuilder(getQueryFactory(), stayDatePolicy, memberId)
+                .fetchMainAccommodations();
     }
 
-    public Page<FilteredAccListResDto> getFilteredPagingAccommodations(
-            AccommodationSearchCondition searchDto,
-            Long memberId, Pageable pageable,
-            Season season, DayType dayType) {
+    public Page<FilteredAccommodationRow> getFilteredPagingAccommodations(
+            SearchAccommodationsCondition condition,
+            Pageable pageable
+    ) {
         //이미지 목록 제외 필드 조회
-        List<FilteredAccListQueryDto> queryDtos = new AccommodationQueryBuilder(getQueryFactory(), dayType, season, memberId)
+        List<FilteredAccommodationRow> filteredAccommodations = new AccommodationQueryBuilder(
+                getQueryFactory(),
+                condition.stayDatePolicy(),
+                condition.memberId()
+        )
                 .fetchFilteredAccList(pageable,
-                        eqAreaCode(searchDto.areaCode()),
-                        goePrice(searchDto.priceGoe()),
-                        loePrice(searchDto.priceLoe()),
-                        hasAllAmenities(searchDto.amenities())
+                        eqAreaCode(condition.areaCode()),
+                        goePrice(condition.priceGoe()),
+                        loePrice(condition.priceLoe()),
+                        hasAllAmenities(condition.amenities())
                 );
 
         //in절로 조회된 숙소의 이미지 목록 조회(전체)
-        List<Long> accIds = queryDtos.stream().map(FilteredAccListQueryDto::accommodationId).toList();
-        List<AccAllImagesQueryDto> imagesQueryDtos = select(constructor(AccAllImagesQueryDto.class,
-                                                                        accommodationImage.accommodation.id, accommodationImage.imageUrl))
+        List<Long> accIds = filteredAccommodations.stream().map(FilteredAccommodationRow::accommodationId).toList();
+        List<AccAllImageRow> imageRows = select(constructor(AccAllImageRow.class,
+                                                            accommodationImage.accommodation.id, accommodationImage.imageUrl))
                 .from(accommodationImage)
                 .where(accommodationImage.accommodation.id.in(accIds))
                 .orderBy(accommodationImage.id.desc())
                 .fetch();
 
         //직접 숙소당 최대 10개 이미지 목록 매핑
-        Map<Long, List<String>> imagesMap = imagesQueryDtos.stream()
-                                                           .collect(groupingBy(
-                                                                   AccAllImagesQueryDto::accommodationId,
-                                                                   mapping(
-                                                                           AccAllImagesQueryDto::imageUrl,
-                                                                           collectingAndThen(toList(), list -> list.stream()
-                                                                                                                   .limit(10)
-                                                                                                                   .toList())
-                                                                   )
-                                                           ));
-        //응답 DTO 매핑
-        List<FilteredAccListResDto> content = queryDtos.stream()
-                                                       .map(dto -> FilteredAccListResDto.from(dto, imagesMap.getOrDefault(dto.accommodationId(), List.of())))
-                                                       .toList();
+        Map<Long, List<String>> imagesMap = imageRows.stream()
+                                                     .collect(
+                                                             groupingBy(
+                                                             AccAllImageRow::accommodationId,
+                                                             mapping(
+                                                                     AccAllImageRow::imageUrl,
+                                                                     collectingAndThen(toList(), list -> list.stream().limit(10).toList())
+                                                             )
+                                                     ));
+        List<FilteredAccommodationRow> content = filteredAccommodations.stream()
+                                                     .map(row -> new FilteredAccommodationRow(
+                                                             row.accommodationId(),
+                                                             row.title(),
+                                                             row.price(),
+                                                             row.avgRate(),
+                                                             row.reviewCount(),
+                                                             imagesMap.getOrDefault(row.accommodationId(), List.of()),
+                                                             row.isInWishlist(),
+                                                             row.wishlistId(),
+                                                             row.wishlistName()
+                                                     ))
+                                                     .toList();
 
-        //카운트쿼리
         JPAQuery<Long> countQuery = select(accommodation.count())
                 .from(accommodation)
                 .join(accommodationPrice)
                 .on(accommodationPrice.accommodation.eq(accommodation)
-                                                    .and(accommodationPrice.season.eq(season))
-                                                    .and(accommodationPrice.dayType.eq(dayType)))
+                                                    .and(accommodationPrice.season.eq(condition.stayDatePolicy().season()))
+                                                    .and(accommodationPrice.dayType.eq(condition.stayDatePolicy().dayType())))
                 .join(sigunguCode).on(sigunguCode.code.eq(accommodation.sigunguCode))
                 .join(sigunguCode.areaCode, areaCode)
                 .where(
-                        eqAreaCode(searchDto.areaCode()),
-                        goePrice(searchDto.priceGoe()),
-                        loePrice(searchDto.priceLoe()),
-                        hasAllAmenities(searchDto.amenities())
+                        eqAreaCode(condition.areaCode()),
+                        goePrice(condition.priceGoe()),
+                        loePrice(condition.priceLoe()),
+                        hasAllAmenities(condition.amenities())
                 );
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
 
-    public Optional<DetailAccommodationQueryDto> findAccommodation(Long accId, Long memberId, Season season, DayType dayType) {
-        return new AccommodationQueryBuilder(getQueryFactory(), dayType, season, memberId)
+    public Optional<DetailAccommodationRow> findAccommodation(Long accId, Long memberId, StayDatePolicy stayDatePolicy) {
+        return new AccommodationQueryBuilder(getQueryFactory(), stayDatePolicy, memberId)
                 .fetchDetailAcc(accId);
     }
 
-    public List<ImageDataQueryDto> findImages(Long accId) {
+    public List<ImageDataRow> findImages(Long accId) {
         return select(constructor(
-                ImageDataQueryDto.class,
+                ImageDataRow.class,
                 accommodationImage.thumbnail,
                 accommodationImage.imageUrl))
                 .from(accommodationImage)
@@ -142,9 +149,9 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                 .fetch();
     }
 
-    public List<DetailReviewDto> findReviews(Long accId) {
+    public List<DetailReviewRow> findReviews(Long accId) {
         return select(constructor(
-                DetailReviewDto.class,
+                DetailReviewRow.class,
                 member.id,
                 MEMBER_NAME,
                 member.detail.profileUrl,
@@ -160,43 +167,12 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                 .fetch();
     }
 
-    public List<ViewHistoryDto> findViewHistories(Long memberId) {
-        return select(constructor(
-                ViewHistoryDto.class,
-                viewHistory.viewedAt,
-                accommodation.id,
-                accommodation.title,
-                review.rating.avg().coalesce(0.0),
-                accommodationImage.imageUrl,
-                wishlist.isNotNull(),
-                wishlist.id,
-                wishlist.name))
-                .from(viewHistory)
-                .join(viewHistory.accommodation, accommodation)
-
-                .join(accommodationImage).on(accommodationImage.accommodation.eq(accommodation)
-                                                                             .and(accommodationImage.thumbnail.isTrue()))
-
-                .leftJoin(wishlistAccommodation).on(wishlistAccommodation.accommodation.eq(accommodation))
-                .leftJoin(wishlistAccommodation.wishlist, wishlist).on(wishlist.member.id.eq(memberId))
-
-                .leftJoin(reservation).on(reservation.accommodation.eq(accommodation))
-                .leftJoin(review).on(review.reservation.eq(reservation))
-
-                .where(viewHistory.member.id.eq(memberId)
-                                           .and(viewHistory.viewedAt.after(LocalDateTime.now().minusDays(30))))
-
-                .groupBy(viewHistory.viewedAt, accommodation.id, accommodation.title, accommodationImage.imageUrl, wishlist.id, wishlist.name)
-                .orderBy(viewHistory.viewedAt.desc())
-                .fetch();
-    }
-
-    public Integer getAccommodationPrice(Long accId, Season season, DayType dayType) {
+    public Integer getAccommodationPrice(Long accommodationId, StayDatePolicy stayDatePolicy) {
         return select(accommodationPrice.price)
                 .from(accommodationPrice)
-                .where(accommodationPrice.accommodation.id.eq(accId)
-                                                          .and(accommodationPrice.season.eq(season))
-                                                          .and(accommodationPrice.dayType.eq(dayType)))
+                .where(accommodationPrice.accommodation.id.eq(accommodationId)
+                                                          .and(accommodationPrice.season.eq(stayDatePolicy.season()))
+                                                          .and(accommodationPrice.dayType.eq(stayDatePolicy.dayType())))
                 .fetchOne();
     }
 

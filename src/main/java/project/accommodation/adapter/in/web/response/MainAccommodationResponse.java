@@ -2,11 +2,8 @@ package project.accommodation.adapter.in.web.response;
 
 import java.util.List;
 
-/**
- * 메인 화면 숙소 조회 DTO
- */
-public record MainAccResDto(
+public record MainAccommodationResponse(
         String areaName,
         String areaCode,
-        List<MainAccListResponse> accommodations) {
+        List<MainAccommodationsResponse> accommodations) {
 }

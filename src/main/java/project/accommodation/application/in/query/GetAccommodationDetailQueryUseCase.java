@@ -1,8 +1,8 @@
 package project.accommodation.application.in.query;
 
-import project.accommodation.adapter.in.web.response.DetailAccommodationResDto;
+import project.accommodation.application.in.query.model.AccommodationDetailView;
 
 public interface GetAccommodationDetailQueryUseCase {
 
-    DetailAccommodationResDto getDetailAccommodation(Long accId, Long memberId);
+    AccommodationDetailView getDetailAccommodation(Long accommodationId, Long memberId);
 }

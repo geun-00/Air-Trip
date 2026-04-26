@@ -38,6 +38,7 @@ public class MemberQueryService implements GetMyProfileQueryUseCase,
 
     @Override
     public PageResponse<TripHistoryView> getTripsHistory(Long memberId, Pageable pageable) {
+        // TODO : Pageable 의존성 제거
         return getMemberTripsHistoryPort.getTripsHistory(memberId, pageable);
     }
 }

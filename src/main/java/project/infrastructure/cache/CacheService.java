@@ -3,14 +3,13 @@ package project.infrastructure.cache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import project.accommodation.domain.exception.AccommodationExceptions;
-import project.common.domain.DayType;
-import project.common.domain.Season;
-import project.accommodation.adapter.in.web.response.AccommodationCommonInfo;
-import project.accommodation.adapter.in.web.response.AccommodationCommonInfo.DetailReviewDto;
-import project.accommodation.adapter.out.persistence.model.DetailAccommodationQueryDto;
-import project.accommodation.adapter.out.persistence.model.ImageDataQueryDto;
 import project.accommodation.adapter.out.persistence.AccommodationQueryRepository;
+import project.accommodation.adapter.out.persistence.model.DetailAccommodationRow;
+import project.accommodation.adapter.out.persistence.model.DetailReviewRow;
+import project.accommodation.adapter.out.persistence.model.ImageDataRow;
+import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
+import project.accommodation.domain.exception.AccommodationExceptions;
+import project.common.domain.StayDatePolicy;
 import project.infrastructure.time.DateManager;
 
 import java.time.Duration;
@@ -27,25 +26,23 @@ public class CacheService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final AccommodationQueryRepository accommodationQueryRepository;
 
-    public AccommodationCommonInfo getAccCommonInfo(Long accId) {
+    public AccommodationCommonInfoView getAccommodationCommonInfo(Long accId) {
         String key = "accommodation:commonInfo:" + accId;
 
         Object cached = redisTemplate.opsForValue().get(key);
-        if (cached instanceof AccommodationCommonInfo commonInfo) {
+        if (cached instanceof AccommodationCommonInfoView commonInfo) {
             return commonInfo;
         }
 
-        LocalDate now = LocalDate.now();
-        Season season = dateManager.getSeason(now);
-        DayType dayType = dateManager.getDayType(now);
+        StayDatePolicy stayDatePolicy = dateManager.getStayDatePolicy(LocalDate.now());
 
-        DetailAccommodationQueryDto detail = accommodationQueryRepository.findAccommodation(accId, null, season, dayType)
-                                                                         .orElseThrow(() -> AccommodationExceptions.notFoundById(accId));
+        DetailAccommodationRow detail = accommodationQueryRepository.findAccommodation(accId, null, stayDatePolicy)
+                                                                    .orElseThrow(() -> AccommodationExceptions.notFoundById(accId));
         List<String> amenities = accommodationQueryRepository.findAmenities(accId);
-        List<DetailReviewDto> reviews = accommodationQueryRepository.findReviews(accId);
-        List<ImageDataQueryDto> images = accommodationQueryRepository.findImages(accId);
+        List<DetailReviewRow> reviews = accommodationQueryRepository.findReviews(accId);
+        List<ImageDataRow> images = accommodationQueryRepository.findImages(accId);
 
-        AccommodationCommonInfo result = AccommodationCommonInfo.from(detail, amenities, reviews, images);
+        AccommodationCommonInfoView result = AccommodationCommonInfoView.from(detail, amenities, reviews, images);
 
         long baseTtlMs = Duration.ofHours(1).toMillis();
         long jitterRange = Duration.ofMinutes(1).toMillis() + 1;

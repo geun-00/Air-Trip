@@ -1,6 +1,6 @@
 package project.accommodation.adapter.out.persistence.model;
 
-public record MainAccListQueryDto(
+public record MainAccommodationRow(
         Long accommodationId,
         String title,
         int price,
@@ -11,16 +11,20 @@ public record MainAccListQueryDto(
         String wishlistName,
         int reservationCount,
         String areaName,
-        String areaCode) {
+        String areaCode
+) {
 
-    public AreaKey getAreaKey() {
-        return new AreaKey(areaName, areaCode);
-    }
-
-    public record AreaKey(String areaName, String areaCode) {
-    }
-
-    public MainAccListQueryDto(Long accommodationId, String title, int price, double avgRate, String thumbnailUrl, int reservationCount, String areaName, String areaCode) {
+    // TODO : 모델 분리 or @QueryProjection 등 개선하기
+    public MainAccommodationRow(
+            Long accommodationId,
+            String title,
+            int price,
+            double avgRate,
+            String thumbnailUrl,
+            int reservationCount,
+            String areaName,
+            String areaCode
+    ) {
         this(accommodationId, title, price, avgRate, thumbnailUrl, false, null, null, reservationCount, areaName, areaCode);
     }
 }

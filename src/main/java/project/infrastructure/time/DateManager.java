@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import project.common.domain.DayType;
 import project.common.domain.Season;
+import project.common.domain.StayDatePolicy;
 import project.auth.adapter.out.redis.RedisRepository;
 
 import java.time.DayOfWeek;
@@ -45,5 +46,9 @@ public class DateManager {
             return WEEKEND;
         }
         return WEEKDAY;
+    }
+
+    public StayDatePolicy getStayDatePolicy(LocalDate date) {
+        return new StayDatePolicy(getSeason(date), getDayType(date));
     }
 }

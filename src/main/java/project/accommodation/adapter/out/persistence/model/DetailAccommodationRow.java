@@ -1,6 +1,6 @@
 package project.accommodation.adapter.out.persistence.model;
 
-public record DetailAccommodationQueryDto(
+public record DetailAccommodationRow(
         Long accommodationId,
         String title,
         int maxPeople,
@@ -16,9 +16,24 @@ public record DetailAccommodationQueryDto(
         boolean isInWishlist,
         Long wishlistId,
         String wishlistName,
-        Double avgRate) {
+        Double avgRate
+) {
 
-    public DetailAccommodationQueryDto(Long accommodationId, String title, int maxPeople, String address, double mapX, double mapY, String checkIn, String checkOut, String description, String number, String refundRegulation, int price, Double avgRate) {
+    public DetailAccommodationRow(
+            Long accommodationId,
+            String title,
+            int maxPeople,
+            String address,
+            double mapX,
+            double mapY,
+            String checkIn,
+            String checkOut,
+            String description,
+            String number,
+            String refundRegulation,
+            int price,
+            Double avgRate
+    ) {
         this(accommodationId, title, maxPeople, address, mapX, mapY, checkIn, checkOut, description, number, refundRegulation, price, false, null, null, avgRate);
     }
 }

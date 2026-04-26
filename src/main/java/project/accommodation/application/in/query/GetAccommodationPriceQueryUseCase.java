@@ -1,10 +1,10 @@
 package project.accommodation.application.in.query;
 
-import project.accommodation.adapter.in.web.response.AccommodationPriceResDto;
+import project.accommodation.application.in.query.model.AccommodationPriceView;
 
 import java.time.LocalDate;
 
 public interface GetAccommodationPriceQueryUseCase {
 
-    AccommodationPriceResDto getAccommodationPrice(Long accId, LocalDate date);
+    AccommodationPriceView getAccommodationPrice(Long accommodationId, LocalDate date);
 }

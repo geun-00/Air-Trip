@@ -1,11 +1,8 @@
-package project.accommodation.adapter.in.web.request;
-
-import lombok.Builder;
+package project.accommodation.application.in.query.model;
 
 import java.time.LocalDateTime;
 
-@Builder
-public record ViewHistoryDto(
+public record ViewHistoryAccommodationView(
         LocalDateTime viewDate,
         Long accommodationId,
         String title,
@@ -13,5 +10,6 @@ public record ViewHistoryDto(
         String thumbnailUrl,
         boolean isInWishlist,
         Long wishlistId,
-        String wishlistName) {
+        String wishlistName
+) {
 }

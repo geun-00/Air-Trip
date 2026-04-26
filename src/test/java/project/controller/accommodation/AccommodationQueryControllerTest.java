@@ -6,19 +6,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import project.accommodation.adapter.in.web.AccommodationController;
-import project.accommodation.adapter.in.web.request.ViewHistoryDto;
-import project.accommodation.adapter.in.web.response.AccommodationPriceResDto;
-import project.accommodation.adapter.in.web.response.DetailAccommodationResDto;
-import project.accommodation.adapter.in.web.response.FilteredAccListResDto;
-import project.accommodation.adapter.in.web.response.MainAccListResponse;
-import project.accommodation.adapter.in.web.response.MainAccResDto;
-import project.accommodation.adapter.in.web.response.ViewHistoryResDto;
-import project.security.WithMockMember;
-import project.controller.RestDocsTestSupport;
-import project.common.adapter.in.web.response.PageResponse;
-import project.accommodation.adapter.in.web.response.AccommodationCommonInfo.DetailReviewDto;
+import project.accommodation.adapter.in.web.AccommodationQueryController;
+import project.accommodation.application.in.query.model.AccommodationDetailView;
+import project.accommodation.application.in.query.model.AccommodationPriceView;
+import project.accommodation.application.in.query.model.FilteredAccommodationView;
+import project.accommodation.application.in.query.model.MainAccommodationItemView;
+import project.accommodation.application.in.query.model.MainAccommodationView;
+import project.accommodation.application.in.query.model.ViewHistoryAccommodationView;
+import project.accommodation.application.in.query.model.ViewHistoryGroupView;
 import project.accommodation.application.service.AccommodationQueryService;
+import project.common.adapter.in.web.response.PageResponse;
+import project.controller.RestDocsTestSupport;
+import project.security.WithMockMember;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,11 +43,9 @@ import static org.springframework.restdocs.snippet.Attributes.key;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static project.accommodation.adapter.in.web.response.AccommodationCommonInfo.DetailImageDto;
-import static project.accommodation.adapter.in.web.response.DetailAccommodationResDto.*;
 
-@WebMvcTest(AccommodationController.class)
-class AccommodationControllerTest extends RestDocsTestSupport {
+@WebMvcTest(AccommodationQueryController.class)
+class AccommodationQueryControllerTest extends RestDocsTestSupport {
 
     private static final String ACCOMMODATION_API_TAG = "Accommodation API";
 
@@ -59,19 +56,19 @@ class AccommodationControllerTest extends RestDocsTestSupport {
     @DisplayName("메인 페이지 숙소 목록 조회")
     void getAccommodations() throws Exception {
         // given
-        List<MainAccListResponse> seoulAcc = List.of(
-                new MainAccListResponse(1L, "호텔A", 100000, 4.5, "https://example.com/a.jpg", true, "my-wishlist-1", 1L),
-                new MainAccListResponse(2L, "호텔B", 200000, 3.8, "https://example.com/b.jpg", false, null, null)
+        List<MainAccommodationItemView> seoulAcc = List.of(
+                new MainAccommodationItemView(1L, "호텔A", 100000, 4.5, "https://example.com/a.jpg", true, "my-wishlist-1", 1L, "서울", "code-1"),
+                new MainAccommodationItemView(2L, "호텔B", 200000, 3.8, "https://example.com/b.jpg", false, null, null, "서울", "code-1")
         );
-        List<MainAccListResponse> gyeonggiAcc = List.of(
-                new MainAccListResponse(3L, "호텔C", 150000, 4.3, "https://example.com/c.jpg", false, null, null),
-                new MainAccListResponse(4L, "호텔D", 250000, 4.7, "https://example.com/d.jpg", true, "my-wishlist-2", 2L),
-                new MainAccListResponse(5L, "호텔E", 300000, 3.3, "https://example.com/e.jpg", true, "my-wishlist-2", 2L)
+        List<MainAccommodationItemView> gyeonggiAcc = List.of(
+                new MainAccommodationItemView(3L, "호텔C", 150000, 4.3, "https://example.com/c.jpg", false, null, null, "경기도", "code-2"),
+                new MainAccommodationItemView(4L, "호텔D", 250000, 4.7, "https://example.com/d.jpg", true, "my-wishlist-2", 2L, "경기도", "code-2"),
+                new MainAccommodationItemView(5L, "호텔E", 300000, 3.3, "https://example.com/e.jpg", true, "my-wishlist-2", 2L, "경기도", "code-2")
         );
 
-        List<MainAccResDto> result = List.of(
-                new MainAccResDto("서울", "code-1", seoulAcc),
-                new MainAccResDto("경기도", "code-2", gyeonggiAcc)
+        List<MainAccommodationView> result = List.of(
+                new MainAccommodationView("서울", "code-1", seoulAcc),
+                new MainAccommodationView("경기도", "code-2", gyeonggiAcc)
         );
 
         given(accommodationQueryService.getAccommodations(any())).willReturn(result);
@@ -80,7 +77,7 @@ class AccommodationControllerTest extends RestDocsTestSupport {
         //then
         mockMvc.perform(get("/api/accommodations"))
                .andExpectAll(
-                       handler().handlerType(AccommodationController.class),
+                       handler().handlerType(AccommodationQueryController.class),
                        handler().methodName("getAccommodations"),
                        status().isOk(),
                        jsonPath("$", hasSize(result.size())),
@@ -140,20 +137,20 @@ class AccommodationControllerTest extends RestDocsTestSupport {
     @DisplayName("숙소 검색 조회 (페이징)")
     void getFilteredPagingAccommodations() throws Exception {
         //given
-        List<FilteredAccListResDto> dtos = List.of(
-                new FilteredAccListResDto(1L, "title-1", 50000, 4.3, 10,
+        List<FilteredAccommodationView> dtos = List.of(
+                new FilteredAccommodationView(1L, "title-1", 50000, 4.3, 10,
                         List.of("https://example.com/a.jpg", "https://example.com/b.jpg"), false, null, null),
-                new FilteredAccListResDto(2L, "title-2", 80000, 4.5, 23,
+                new FilteredAccommodationView(2L, "title-2", 80000, 4.5, 23,
                         List.of("https://example.com/c.jpg", "https://example.com/d.jpg"), true, 1L, "my-wishlist-1")
         );
 
-        PageResponse<FilteredAccListResDto> response = PageResponse.from(new PageImpl<>(
+        PageResponse<FilteredAccommodationView> response = PageResponse.from(new PageImpl<>(
                 dtos,
                 PageRequest.of(0, 15),
                 dtos.size()
         ));
 
-        given(accommodationQueryService.getFilteredPagingAccommodations(any(), any(), any()))
+        given(accommodationQueryService.getFilteredPagingAccommodations(any(), any()))
                 .willReturn(response);
 
         //when
@@ -167,7 +164,7 @@ class AccommodationControllerTest extends RestDocsTestSupport {
                        .param("page", "0")
                        .param("size", "15"))
                .andExpectAll(
-                       handler().handlerType(AccommodationController.class),
+                       handler().handlerType(AccommodationQueryController.class),
                        handler().methodName("getFilteredPagingAccommodations"),
                        status().isOk(),
                        jsonPath("$.contents.length()").value(dtos.size())
@@ -256,22 +253,22 @@ class AccommodationControllerTest extends RestDocsTestSupport {
     void getAccommodation() throws Exception {
         //given
         Long accommodationId = 1L;
-        DetailImageDto detailImageDto = new DetailImageDto(
+        AccommodationDetailView.DetailImageView detailImageDto = new AccommodationDetailView.DetailImageView(
                 "https://example.com/thumbnail.jpg",
                 List.of("https://example.com/a.jpg", "https://example.com/b.jpg")
         );
         List<String> amenities = List.of("바비큐장", "뷰티시설", "식음료장", "자전거대여");
 
         LocalDateTime now = LocalDateTime.now();
-        List<DetailReviewDto> reviewDtos = List.of(
-                new DetailReviewDto(1L, "member-A", "https://example.com/profile-A.jpg", now, now, 4.5, "review-content-1"),
-                new DetailReviewDto(2L, "member-B", "https://example.com/profile-B.jpg", now, now, 4.7, "review-content-2")
+        List<AccommodationDetailView.DetailReviewView> reviewDtos = List.of(
+                new AccommodationDetailView.DetailReviewView(1L, "member-A", "https://example.com/profile-A.jpg", now, now, 4.5, "review-content-1"),
+                new AccommodationDetailView.DetailReviewView(2L, "member-B", "https://example.com/profile-B.jpg", now, now, 4.7, "review-content-2")
         );
 
-        List<ReservedDateDto> reservedDates = List.of(new ReservedDateDto(now.minusDays(7).toLocalDate(), now.minusDays(5).toLocalDate()));
-        DetailAccommodationResDto response = new DetailAccommodationResDto(accommodationId, "acc-title", 5, "경기도 부천시...", 35.3, 40.1,
-                                                                           "10:00", "14:00", "acc-overview", "054-855-8552", "7일 이내 100%",
-                                                                           55000, true, 1L, "my-wishlist-1", 4.8, detailImageDto, amenities, reviewDtos, reservedDates
+        List<AccommodationDetailView.ReservedDateView> reservedDates = List.of(new AccommodationDetailView.ReservedDateView(now.minusDays(7).toLocalDate(), now.minusDays(5).toLocalDate()));
+        AccommodationDetailView response = new AccommodationDetailView(accommodationId, "acc-title", 5, "경기도 부천시...", 35.3, 40.1,
+                                                                       "10:00", "14:00", "acc-overview", "054-855-8552", "7일 이내 100%",
+                                                                       55000, true, 1L, "my-wishlist-1", 4.8, detailImageDto, amenities, reviewDtos, reservedDates
         );
 
         given(accommodationQueryService.getDetailAccommodation(any(), any())).willReturn(response);
@@ -280,7 +277,7 @@ class AccommodationControllerTest extends RestDocsTestSupport {
         //then
         mockMvc.perform(get("/api/accommodations/{id}", accommodationId))
                .andExpectAll(
-                       handler().handlerType(AccommodationController.class),
+                       handler().handlerType(AccommodationQueryController.class),
                        handler().methodName("getAccommodation"),
                        status().isOk(),
                        jsonPath("$.accommodationId").value(response.accommodationId()),
@@ -298,8 +295,8 @@ class AccommodationControllerTest extends RestDocsTestSupport {
                        jsonPath("$.isInWishlist").value(response.isInWishlist()),
                        jsonPath("$.wishlistId").value(response.wishlistId()),
                        jsonPath("$.avgRate").value(response.avgRate()),
-                       jsonPath("$.images.thumbnail").value(detailImageDto.getThumbnail()),
-                       jsonPath("$.images.others.length()").value(detailImageDto.getOthers().size()),
+                       jsonPath("$.images.thumbnail").value(detailImageDto.thumbnail()),
+                       jsonPath("$.images.others.length()").value(detailImageDto.others().size()),
                        jsonPath("$.amenities.length()").value(amenities.size()),
                        jsonPath("$.reviews.length()").value(reviewDtos.size()),
                        jsonPath("$.reservedDates.length()").value(reservedDates.size())
@@ -418,26 +415,26 @@ class AccommodationControllerTest extends RestDocsTestSupport {
     void getRecentViewAccommodations() throws Exception {
         //given
         LocalDateTime today = LocalDateTime.now();
-        List<ViewHistoryDto> todays = List.of(
-                new ViewHistoryDto(today.minusHours(1), 1L, "호텔A", 4.5, "https://example.com/a.jpg", true, 1L, "my-wishlist-1"),
-                new ViewHistoryDto(today.minusHours(2), 2L, "호텔B", 4.8, "https://example.com/b.jpg", false, null, null),
-                new ViewHistoryDto(today.minusHours(3), 3L, "호텔C", 4.3, "https://example.com/c.jpg", true, 3L, "my-wishlist-3")
+        List<ViewHistoryAccommodationView> todays = List.of(
+                new ViewHistoryAccommodationView(today.minusHours(1), 1L, "호텔A", 4.5, "https://example.com/a.jpg", true, 1L, "my-wishlist-1"),
+                new ViewHistoryAccommodationView(today.minusHours(2), 2L, "호텔B", 4.8, "https://example.com/b.jpg", false, null, null),
+                new ViewHistoryAccommodationView(today.minusHours(3), 3L, "호텔C", 4.3, "https://example.com/c.jpg", true, 3L, "my-wishlist-3")
         );
 
         LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
-        List<ViewHistoryDto> yesterdays = List.of(
-                new ViewHistoryDto(yesterday.minusHours(1), 4L, "호텔D", 4.0, "https://example.com/d.jpg", false, null, null),
-                new ViewHistoryDto(yesterday.minusHours(2), 5L, "호텔E", 3.9, "https://example.com/e.jpg", true, 5L, "my-wishlist-5")
+        List<ViewHistoryAccommodationView> yesterdays = List.of(
+                new ViewHistoryAccommodationView(yesterday.minusHours(1), 4L, "호텔D", 4.0, "https://example.com/d.jpg", false, null, null),
+                new ViewHistoryAccommodationView(yesterday.minusHours(2), 5L, "호텔E", 3.9, "https://example.com/e.jpg", true, 5L, "my-wishlist-5")
         );
 
-        List<ViewHistoryResDto> result = List.of(new ViewHistoryResDto(today.toLocalDate(), todays), new ViewHistoryResDto(yesterday.toLocalDate(), yesterdays));
+        List<ViewHistoryGroupView> result = List.of(new ViewHistoryGroupView(today.toLocalDate(), todays), new ViewHistoryGroupView(yesterday.toLocalDate(), yesterdays));
         given(accommodationQueryService.getRecentViewAccommodations(any())).willReturn(result);
 
         //when
         //then
         mockMvc.perform(get("/api/accommodations/recent").header(AUTHORIZATION, "Bearer access-token"))
                .andExpectAll(
-                       handler().handlerType(AccommodationController.class),
+                       handler().handlerType(AccommodationQueryController.class),
                        handler().methodName("getRecentViewAccommodations"),
                        status().isOk(),
                        jsonPath("$.length()").value(result.size()),
@@ -497,7 +494,7 @@ class AccommodationControllerTest extends RestDocsTestSupport {
         Long accommodationId = 1L;
         LocalDate date = LocalDate.now();
 
-        AccommodationPriceResDto result = new AccommodationPriceResDto(accommodationId, date, 130000);
+        AccommodationPriceView result = new AccommodationPriceView(accommodationId, date, 130000);
         given(accommodationQueryService.getAccommodationPrice(any(), any())).willReturn(result);
 
         //when
@@ -506,7 +503,7 @@ class AccommodationControllerTest extends RestDocsTestSupport {
                        .param("date", date.toString())
                )
                .andExpectAll(
-                       handler().handlerType(AccommodationController.class),
+                       handler().handlerType(AccommodationQueryController.class),
                        handler().methodName("getAccommodationPrice"),
                        status().isOk(),
                        jsonPath("$.accommodationId").value(result.accommodationId()),

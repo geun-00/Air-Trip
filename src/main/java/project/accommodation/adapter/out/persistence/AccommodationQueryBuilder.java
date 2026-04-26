@@ -7,11 +7,10 @@ import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Pageable;
-import project.accommodation.adapter.out.persistence.model.DetailAccommodationQueryDto;
-import project.accommodation.adapter.out.persistence.model.FilteredAccListQueryDto;
-import project.accommodation.adapter.out.persistence.model.MainAccListQueryDto;
-import project.common.domain.DayType;
-import project.common.domain.Season;
+import project.accommodation.adapter.out.persistence.model.DetailAccommodationRow;
+import project.accommodation.adapter.out.persistence.model.FilteredAccommodationRow;
+import project.accommodation.adapter.out.persistence.model.MainAccommodationRow;
+import project.common.domain.StayDatePolicy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +28,11 @@ import static project.review.domain.QReview.review;
 import static project.wishlist.domain.QWishlist.wishlist;
 import static project.wishlist.domain.QWishlistAccommodation.wishlistAccommodation;
 
-public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType dayType, Season season, Long memberId) {
+public record AccommodationQueryBuilder(
+        JPAQueryFactory queryFactory,
+        StayDatePolicy stayDatePolicy,
+        Long memberId
+) {
 
     // =====================================================
     // 공통 메서드
@@ -43,8 +46,8 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
                 .from(accommodation)
                 .join(accommodationPrice).on(
                         accommodationPrice.accommodation.eq(accommodation)
-                                                        .and(accommodationPrice.season.eq(season))
-                                                        .and(accommodationPrice.dayType.eq(dayType))
+                                                        .and(accommodationPrice.season.eq(stayDatePolicy.season()))
+                                                        .and(accommodationPrice.dayType.eq(stayDatePolicy.dayType()))
                 );
     }
 
@@ -60,10 +63,10 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
     // =====================================================
     // 메인 페이지용 쿼리
     // =====================================================
-    public List<MainAccListQueryDto> fetchMainAccList() {
+    public List<MainAccommodationRow> fetchMainAccommodations() {
         JPAQuery<?> query = buildAreaAccommodationsBaseQuery();
 
-        return query.select(buildMainAccListProjection())
+        return query.select(buildMainAccommodationsProjection())
                     .fetch();
     }
 
@@ -72,12 +75,10 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
      */
     private JPAQuery<?> buildAreaAccommodationsBaseQuery() {
         JPAQuery<?> query = queryFactory.from(accommodationStats)
-                                        .join(accommodationPrice).on(
-                        accommodationPrice.accommodation.id.eq(accommodationStats.accommodationId)
-                                                           .and(accommodationPrice.season.eq(season))
-                                                           .and(accommodationPrice.dayType.eq(dayType))
-                );
-
+                                        .join(accommodationPrice)
+                                        .on(accommodationPrice.accommodation.id.eq(accommodationStats.accommodationId)
+                                                                               .and(accommodationPrice.season.eq(stayDatePolicy.season()))
+                                                                               .and(accommodationPrice.dayType.eq(stayDatePolicy.dayType())));
         if (!hasMember()) {
             return query;
         }
@@ -89,9 +90,9 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
     /**
      * 메인 페이지용 select
      */
-    private Expression<MainAccListQueryDto> buildMainAccListProjection() {
+    private Expression<MainAccommodationRow> buildMainAccommodationsProjection() {
         if (!hasMember()) {
-            return constructor(MainAccListQueryDto.class,
+            return constructor(MainAccommodationRow.class,
                     accommodationStats.accommodationId,
                     accommodationStats.title,
                     accommodationPrice.price,
@@ -103,7 +104,7 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
             );
         }
 
-        return constructor(MainAccListQueryDto.class,
+        return constructor(MainAccommodationRow.class,
                 accommodationStats.accommodationId,
                 accommodationStats.title,
                 accommodationPrice.price,
@@ -121,7 +122,7 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
     // =====================================================
     // 검색 페이지용 쿼리
     // =====================================================
-    public List<FilteredAccListQueryDto> fetchFilteredAccList(Pageable pageable, BooleanExpression... params) {
+    public List<FilteredAccommodationRow> fetchFilteredAccList(Pageable pageable, BooleanExpression... params) {
         JPAQuery<?> query = withWishlistJoin(buildFilteredBaseQuery());
 
         return query.select(buildFilteredProjection())
@@ -147,9 +148,9 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
     /**
      * 검색 페이지용 Select
      */
-    public Expression<FilteredAccListQueryDto> buildFilteredProjection() {
+    public Expression<FilteredAccommodationRow> buildFilteredProjection() {
         if (!hasMember()) {
-            return constructor(FilteredAccListQueryDto.class,
+            return constructor(FilteredAccommodationRow.class,
                     accommodation.id,
                     accommodation.title,
                     accommodationPrice.price,
@@ -158,7 +159,7 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
             );
         }
 
-        return constructor(FilteredAccListQueryDto.class,
+        return constructor(FilteredAccommodationRow.class,
                 accommodation.id,
                 accommodation.title,
                 accommodationPrice.price,
@@ -191,7 +192,7 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
     // =====================================================
     // 상세 페이지용 쿼리
     // =====================================================
-    public Optional<DetailAccommodationQueryDto> fetchDetailAcc(Long accId) {
+    public Optional<DetailAccommodationRow> fetchDetailAcc(Long accId) {
         JPAQuery<?> query = baseQuery();
 
         if (hasMember()) {
@@ -213,13 +214,13 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
     /**
      * 상세 페이지용 Select절
      */
-    public Expression<DetailAccommodationQueryDto> buildDetailProjection(Long accId) {
+    public Expression<DetailAccommodationRow> buildDetailProjection(Long accId) {
         JPQLQuery<Double> avgRateSubquery = JPAExpressions.select(review.rating.avg().coalesce(0.0))
                                                           .from(review)
                                                           .join(review.reservation, reservation)
                                                           .where(reservation.accommodation.id.eq(accId));
         if (!hasMember()) {
-            return constructor(DetailAccommodationQueryDto.class,
+            return constructor(DetailAccommodationRow.class,
                     accommodation.id,
                     accommodation.title,
                     accommodation.detail.maxPeople,
@@ -236,7 +237,7 @@ public record AccommodationQueryBuilder(JPAQueryFactory queryFactory, DayType da
             );
         }
 
-        return constructor(DetailAccommodationQueryDto.class,
+        return constructor(DetailAccommodationRow.class,
                 accommodation.id,
                 accommodation.title,
                 accommodation.detail.maxPeople,

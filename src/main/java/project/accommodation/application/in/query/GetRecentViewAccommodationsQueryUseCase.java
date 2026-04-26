@@ -1,10 +1,10 @@
 package project.accommodation.application.in.query;
 
-import project.accommodation.adapter.in.web.response.ViewHistoryResDto;
+import project.accommodation.application.in.query.model.ViewHistoryGroupView;
 
 import java.util.List;
 
 public interface GetRecentViewAccommodationsQueryUseCase {
 
-    List<ViewHistoryResDto> getRecentViewAccommodations(Long memberId);
+    List<ViewHistoryGroupView> getRecentViewAccommodations(Long memberId);
 }

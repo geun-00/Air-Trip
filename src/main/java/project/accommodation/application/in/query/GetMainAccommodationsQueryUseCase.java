@@ -1,10 +1,10 @@
 package project.accommodation.application.in.query;
 
-import project.accommodation.adapter.in.web.response.MainAccResDto;
+import project.accommodation.application.in.query.model.MainAccommodationView;
 
 import java.util.List;
 
 public interface GetMainAccommodationsQueryUseCase {
 
-    List<MainAccResDto> getAccommodations(Long memberId);
+    List<MainAccommodationView> getAccommodations(Long memberId);
 }
