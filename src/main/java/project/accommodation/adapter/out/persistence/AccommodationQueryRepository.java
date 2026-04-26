@@ -15,7 +15,7 @@ import project.accommodation.adapter.out.persistence.model.DetailReviewRow;
 import project.accommodation.adapter.out.persistence.model.FilteredAccommodationRow;
 import project.accommodation.adapter.out.persistence.model.ImageDataRow;
 import project.accommodation.adapter.out.persistence.model.MainAccommodationRow;
-import project.accommodation.application.out.query.SearchAccommodationsCondition;
+import project.accommodation.application.out.query.model.SearchAccommodationsCondition;
 import project.accommodation.domain.Accommodation;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
 import project.common.domain.StayDatePolicy;

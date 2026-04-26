@@ -12,8 +12,8 @@ import project.accommodation.application.in.query.model.MainAccommodationItemVie
 import project.accommodation.application.in.query.model.MainAccommodationView;
 import project.accommodation.application.out.query.GetAccommodationPricePort;
 import project.accommodation.application.out.query.GetMainAccommodationsPort;
-import project.accommodation.application.out.query.MainAccommodationsCondition;
-import project.accommodation.application.out.query.SearchAccommodationsCondition;
+import project.accommodation.application.out.query.model.MainAccommodationsCondition;
+import project.accommodation.application.out.query.model.SearchAccommodationsCondition;
 import project.accommodation.application.out.query.SearchAccommodationsPort;
 import project.accommodation.domain.exception.AccommodationExceptions;
 import project.common.adapter.in.web.response.PageResponse;
