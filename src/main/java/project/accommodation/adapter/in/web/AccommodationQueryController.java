@@ -25,6 +25,8 @@ import project.accommodation.application.in.query.SearchAccommodationsQueryUseCa
 import project.accommodation.application.in.query.model.AccommodationDetailView;
 import project.accommodation.application.in.query.model.AccommodationPriceView;
 import project.accommodation.application.in.query.model.AccommodationSearchQuery;
+import project.accommodation.application.in.query.model.DetailImageView;
+import project.accommodation.application.in.query.model.DetailReviewView;
 import project.accommodation.application.in.query.model.FilteredAccommodationView;
 import project.accommodation.application.in.query.model.MainAccommodationItemView;
 import project.accommodation.application.in.query.model.MainAccommodationView;
@@ -40,8 +42,6 @@ import java.util.List;
 import static project.accommodation.adapter.in.web.response.DetailAccommodationResponse.DetailImageResponse;
 import static project.accommodation.adapter.in.web.response.DetailAccommodationResponse.DetailReviewResponse;
 import static project.accommodation.adapter.in.web.response.DetailAccommodationResponse.ReservedDateResponse;
-import static project.accommodation.application.in.query.model.AccommodationDetailView.DetailImageView;
-import static project.accommodation.application.in.query.model.AccommodationDetailView.DetailReviewView;
 import static project.accommodation.application.in.query.model.AccommodationDetailView.ReservedDateView;
 
 @RestController

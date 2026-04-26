@@ -7,11 +7,11 @@ import org.springframework.transaction.annotation.Transactional;
 import project.accommodation.application.in.query.GetAccommodationDetailQueryUseCase;
 import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
 import project.accommodation.application.in.query.model.AccommodationDetailView;
+import project.accommodation.application.out.query.LoadAccommodationCommonInfoPort;
 import project.accommodation.application.out.query.LoadAccommodationWishlistPort;
 import project.accommodation.application.out.query.LoadReservedDatesPort;
 import project.accommodation.application.service.model.AccommodationWishlistState;
 import project.history.application.event.ViewHistoryEvent;
-import project.infrastructure.cache.CacheService;
 
 import java.util.List;
 
@@ -22,14 +22,14 @@ import static project.accommodation.application.in.query.model.AccommodationDeta
 @Transactional(readOnly = true)
 public class AccommodationDetailQueryService implements GetAccommodationDetailQueryUseCase {
 
-    private final CacheService cacheService;
     private final ApplicationEventPublisher eventPublisher;
     private final LoadReservedDatesPort loadReservedDatesPort;
     private final LoadAccommodationWishlistPort loadAccommodationWishlistPort;
+    private final LoadAccommodationCommonInfoPort loadAccommodationCommonInfoPort;
 
     @Override
     public AccommodationDetailView getDetailAccommodation(Long accommodationId, Long memberId) {
-        AccommodationCommonInfoView commonInfo = cacheService.getAccommodationCommonInfo(accommodationId);
+        AccommodationCommonInfoView commonInfo = loadAccommodationCommonInfoPort.loadAccommodationCommonInfo(accommodationId);
         AccommodationWishlistState wishlistState = loadWishlistState(accommodationId, memberId);
         List<ReservedDateView> reservedDates = loadReservedDates(accommodationId);
 

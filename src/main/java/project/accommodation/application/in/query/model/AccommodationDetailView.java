@@ -1,7 +1,6 @@
 package project.accommodation.application.in.query.model;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public record AccommodationDetailView(
@@ -26,20 +25,6 @@ public record AccommodationDetailView(
         List<DetailReviewView> reviews,
         List<ReservedDateView> reservedDates
 ) {
-
-    public record DetailImageView(String thumbnail, List<String> others) {
-    }
-
-    public record DetailReviewView(
-            Long memberId,
-            String memberName,
-            String profileUrl,
-            LocalDateTime memberCreatedDate,
-            LocalDateTime reviewCreatedDate,
-            double rating,
-            String content
-    ) {
-    }
 
     public record ReservedDateView(LocalDate start, LocalDate end) {
     }

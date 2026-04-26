@@ -14,6 +14,8 @@ import project.accommodation.application.in.query.GetRecentViewAccommodationsQue
 import project.accommodation.application.in.query.SearchAccommodationsQueryUseCase;
 import project.accommodation.application.in.query.model.AccommodationDetailView;
 import project.accommodation.application.in.query.model.AccommodationPriceView;
+import project.accommodation.application.in.query.model.DetailImageView;
+import project.accommodation.application.in.query.model.DetailReviewView;
 import project.accommodation.application.in.query.model.FilteredAccommodationView;
 import project.accommodation.application.in.query.model.MainAccommodationItemView;
 import project.accommodation.application.in.query.model.MainAccommodationView;
@@ -269,16 +271,16 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
     void getAccommodation() throws Exception {
         //given
         Long accommodationId = 1L;
-        AccommodationDetailView.DetailImageView detailImageDto = new AccommodationDetailView.DetailImageView(
+        DetailImageView detailImageDto = new DetailImageView(
                 "https://example.com/thumbnail.jpg",
                 List.of("https://example.com/a.jpg", "https://example.com/b.jpg")
         );
         List<String> amenities = List.of("바비큐장", "뷰티시설", "식음료장", "자전거대여");
 
         LocalDateTime now = LocalDateTime.now();
-        List<AccommodationDetailView.DetailReviewView> reviewDtos = List.of(
-                new AccommodationDetailView.DetailReviewView(1L, "member-A", "https://example.com/profile-A.jpg", now, now, 4.5, "review-content-1"),
-                new AccommodationDetailView.DetailReviewView(2L, "member-B", "https://example.com/profile-B.jpg", now, now, 4.7, "review-content-2")
+        List<DetailReviewView> reviewDtos = List.of(
+                new DetailReviewView(1L, "member-A", "https://example.com/profile-A.jpg", now, now, 4.5, "review-content-1"),
+                new DetailReviewView(2L, "member-B", "https://example.com/profile-B.jpg", now, now, 4.7, "review-content-2")
         );
 
         List<AccommodationDetailView.ReservedDateView> reservedDates = List.of(new AccommodationDetailView.ReservedDateView(now.minusDays(7).toLocalDate(), now.minusDays(5).toLocalDate()));

@@ -7,12 +7,12 @@ import project.accommodation.application.in.query.GetRecentViewAccommodationsQue
 import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
 import project.accommodation.application.in.query.model.ViewHistoryAccommodationView;
 import project.accommodation.application.in.query.model.ViewHistoryGroupView;
+import project.accommodation.application.out.query.LoadAccommodationCommonInfoPort;
 import project.accommodation.application.out.query.LoadAccommodationWishlistPort;
 import project.accommodation.application.out.query.model.WishlistInfoView;
 import project.accommodation.application.service.model.AccommodationWishlistState;
 import project.history.application.in.query.GetRecentViewHistoryUseCase;
 import project.history.application.in.query.model.RecentViewHistoryView;
-import project.infrastructure.cache.CacheService;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -29,9 +29,9 @@ import static java.util.stream.Collectors.toMap;
 @Transactional(readOnly = true)
 public class RecentViewAccommodationQueryService implements GetRecentViewAccommodationsQueryUseCase {
 
-    private final CacheService cacheService;
     private final GetRecentViewHistoryUseCase getRecentViewHistoryUseCase;
     private final LoadAccommodationWishlistPort loadAccommodationWishlistPort;
+    private final LoadAccommodationCommonInfoPort loadAccommodationCommonInfoPort;
 
     @Override
     public List<ViewHistoryGroupView> getRecentViewAccommodations(Long memberId) {
@@ -75,7 +75,7 @@ public class RecentViewAccommodationQueryService implements GetRecentViewAccommo
             Long accommodationId,
             LocalDateTime viewedAt, WishlistInfoView wishlistInfoView
     ) {
-        AccommodationCommonInfoView commonInfo = cacheService.getAccommodationCommonInfo(accommodationId);
+        AccommodationCommonInfoView commonInfo = loadAccommodationCommonInfoPort.loadAccommodationCommonInfo(accommodationId);
         AccommodationWishlistState wishlistState = AccommodationWishlistState.from(wishlistInfoView);
 
         return new ViewHistoryAccommodationView(
