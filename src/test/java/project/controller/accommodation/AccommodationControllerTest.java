@@ -18,7 +18,7 @@ import project.security.WithMockMember;
 import project.controller.RestDocsTestSupport;
 import project.common.adapter.in.web.response.PageResponse;
 import project.accommodation.adapter.in.web.response.AccommodationCommonInfo.DetailReviewDto;
-import project.accommodation.application.service.AccommodationService;
+import project.accommodation.application.service.AccommodationQueryService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -52,7 +52,8 @@ class AccommodationControllerTest extends RestDocsTestSupport {
 
     private static final String ACCOMMODATION_API_TAG = "Accommodation API";
 
-    @MockitoBean AccommodationService accommodationService;
+    @MockitoBean
+    AccommodationQueryService accommodationQueryService;
 
     @Test
     @DisplayName("메인 페이지 숙소 목록 조회")
@@ -73,7 +74,7 @@ class AccommodationControllerTest extends RestDocsTestSupport {
                 new MainAccResDto("경기도", "code-2", gyeonggiAcc)
         );
 
-        given(accommodationService.getAccommodations(any())).willReturn(result);
+        given(accommodationQueryService.getAccommodations(any())).willReturn(result);
 
         //when
         //then
@@ -152,7 +153,7 @@ class AccommodationControllerTest extends RestDocsTestSupport {
                 dtos.size()
         ));
 
-        given(accommodationService.getFilteredPagingAccommodations(any(), any(), any()))
+        given(accommodationQueryService.getFilteredPagingAccommodations(any(), any(), any()))
                 .willReturn(response);
 
         //when
@@ -273,7 +274,7 @@ class AccommodationControllerTest extends RestDocsTestSupport {
                                                                            55000, true, 1L, "my-wishlist-1", 4.8, detailImageDto, amenities, reviewDtos, reservedDates
         );
 
-        given(accommodationService.getDetailAccommodation(any(), any())).willReturn(response);
+        given(accommodationQueryService.getDetailAccommodation(any(), any())).willReturn(response);
 
         //when
         //then
@@ -430,7 +431,7 @@ class AccommodationControllerTest extends RestDocsTestSupport {
         );
 
         List<ViewHistoryResDto> result = List.of(new ViewHistoryResDto(today.toLocalDate(), todays), new ViewHistoryResDto(yesterday.toLocalDate(), yesterdays));
-        given(accommodationService.getRecentViewAccommodations(any())).willReturn(result);
+        given(accommodationQueryService.getRecentViewAccommodations(any())).willReturn(result);
 
         //when
         //then
@@ -497,7 +498,7 @@ class AccommodationControllerTest extends RestDocsTestSupport {
         LocalDate date = LocalDate.now();
 
         AccommodationPriceResDto result = new AccommodationPriceResDto(accommodationId, date, 130000);
-        given(accommodationService.getAccommodationPrice(any(), any())).willReturn(result);
+        given(accommodationQueryService.getAccommodationPrice(any(), any())).willReturn(result);
 
         //when
         //then

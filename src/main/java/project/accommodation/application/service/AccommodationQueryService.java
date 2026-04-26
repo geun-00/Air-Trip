@@ -15,6 +15,11 @@ import project.accommodation.adapter.in.web.response.FilteredAccListResDto;
 import project.accommodation.adapter.in.web.response.MainAccListResponse;
 import project.accommodation.adapter.in.web.response.MainAccResDto;
 import project.accommodation.adapter.in.web.response.ViewHistoryResDto;
+import project.accommodation.application.in.query.GetAccommodationDetailQueryUseCase;
+import project.accommodation.application.in.query.GetAccommodationPriceQueryUseCase;
+import project.accommodation.application.in.query.GetMainAccommodationsQueryUseCase;
+import project.accommodation.application.in.query.GetRecentViewAccommodationsQueryUseCase;
+import project.accommodation.application.in.query.SearchAccommodationsQueryUseCase;
 import project.history.application.event.ViewHistoryEvent;
 import project.common.domain.DayType;
 import project.common.domain.Season;
@@ -41,7 +46,11 @@ import static project.accommodation.adapter.in.web.response.DetailAccommodationR
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AccommodationService {
+public class AccommodationQueryService implements GetMainAccommodationsQueryUseCase,
+                                                  SearchAccommodationsQueryUseCase,
+                                                  GetAccommodationDetailQueryUseCase,
+                                                  GetRecentViewAccommodationsQueryUseCase,
+                                                  GetAccommodationPriceQueryUseCase {
 
     private final DateManager dateManager;
     private final CacheService cacheService;
@@ -51,6 +60,7 @@ public class AccommodationService {
     private final ReservationQueryRepository reservationQueryRepository;
     private final AccommodationQueryRepository accommodationQueryRepository;
 
+    @Override
     public List<MainAccResDto> getAccommodations(Long memberId) {
         LocalDate now = LocalDate.now();
         Season season = dateManager.getSeason(now);
@@ -58,22 +68,19 @@ public class AccommodationService {
 
         List<MainAccListQueryDto> accommodations = accommodationQueryRepository.getAreaAccommodations(season, dayType, memberId);
 
-        return accommodations
-                .stream()
-                .collect(groupingBy(
-                        MainAccListQueryDto::getAreaKey,
-                        mapping(MainAccListResponse::from, toList())
-                ))
-                .entrySet()
-                .stream()
-                .map(entry -> new MainAccResDto(
-                        entry.getKey().areaName(),
-                        entry.getKey().areaCode(),
-                        entry.getValue())
-                )
-                .toList();
+        return accommodations.stream()
+                             .collect(groupingBy(MainAccListQueryDto::getAreaKey, mapping(MainAccListResponse::from, toList())))
+                             .entrySet()
+                             .stream()
+                             .map(entry -> new MainAccResDto(
+                                     entry.getKey()
+                                          .areaName(), entry.getKey()
+                                                            .areaCode(), entry.getValue()
+                             ))
+                             .toList();
     }
 
+    @Override
     public PageResponse<FilteredAccListResDto> getFilteredPagingAccommodations(AccommodationSearchCondition searchDto, Long memberId, Pageable pageable) {
         LocalDate now = LocalDate.now();
         Season season = dateManager.getSeason(now);
@@ -84,6 +91,7 @@ public class AccommodationService {
         return PageResponse.from(result);
     }
 
+    @Override
     public DetailAccommodationResDto getDetailAccommodation(Long accId, Long memberId) {
         AccommodationCommonInfo commonInfo = cacheService.getAccCommonInfo(accId);
 
@@ -99,13 +107,16 @@ public class AccommodationService {
         return DetailAccommodationResDto.from(commonInfo, wishlistInfo, reservedDates);
     }
 
+    @Override
     public List<ViewHistoryResDto> getRecentViewAccommodations(Long memberId) {
         Map<Long, LocalDateTime> viewInfoMap = viewHistoryService.getRecentViewIdsWithTime(memberId);
         if (viewInfoMap.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<Long> accIds = viewInfoMap.keySet().stream().toList();
+        List<Long> accIds = viewInfoMap.keySet()
+                                       .stream()
+                                       .toList();
         Map<Long, WishlistInfo> wishlistMap = wishlistQueryRepository.getWishlistInfos(accIds, memberId);
 
         List<ViewHistoryDto> historyDtos = accIds.stream()
@@ -128,9 +139,7 @@ public class AccommodationService {
 
         return historyDtos.stream()
                           .collect(Collectors.groupingBy(
-                                  dto -> dto.viewDate().toLocalDate(),
-                                  LinkedHashMap::new,
-                                  Collectors.toList()
+                                  dto -> dto.viewDate().toLocalDate(), LinkedHashMap::new, Collectors.toList()
                           ))
                           .entrySet()
                           .stream()
@@ -138,6 +147,7 @@ public class AccommodationService {
                           .toList();
     }
 
+    @Override
     public AccommodationPriceResDto getAccommodationPrice(Long accId, LocalDate date) {
         Season season = dateManager.getSeason(date);
         DayType dayType = dateManager.getDayType(date);
