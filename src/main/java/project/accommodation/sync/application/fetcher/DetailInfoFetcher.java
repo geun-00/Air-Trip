@@ -171,8 +171,8 @@ public class DetailInfoFetcher {
         for (Map<String, String> item : items) {
             Integer value = parseNumber(item.get("roommaxcount"));
             if (value != null && (max == null || max < value)) {
-                    max = value;
-                }
+                max = value;
+            }
         }
 
         return max;

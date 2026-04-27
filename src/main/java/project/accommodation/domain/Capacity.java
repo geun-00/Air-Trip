@@ -7,7 +7,7 @@ public record Capacity(Integer value) {
             throw new IllegalArgumentException("capacity must not be null");
         }
 
-        if (value <= 0) {
+        if (value < 0) {
             throw new IllegalArgumentException("capacity must be positive");
         }
     }
