@@ -1,9 +1,11 @@
 package project.accommodation.adapter.out.persistence.model;
 
+import project.accommodation.domain.Capacity;
+
 public record DetailAccommodationRow(
         Long accommodationId,
         String title,
-        int maxPeople,
+        Capacity capacity,
         String address,
         double mapX,
         double mapY,
@@ -22,7 +24,7 @@ public record DetailAccommodationRow(
     public DetailAccommodationRow(
             Long accommodationId,
             String title,
-            int maxPeople,
+            Capacity capacity,
             String address,
             double mapX,
             double mapY,
@@ -34,6 +36,6 @@ public record DetailAccommodationRow(
             int price,
             Double avgRate
     ) {
-        this(accommodationId, title, maxPeople, address, mapX, mapY, checkIn, checkOut, description, number, refundRegulation, price, false, null, null, avgRate);
+        this(accommodationId, title, capacity, address, mapX, mapY, checkIn, checkOut, description, number, refundRegulation, price, false, null, null, avgRate);
     }
 }

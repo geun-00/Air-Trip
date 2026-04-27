@@ -41,7 +41,7 @@ public class AccommodationCommonInfoPersistenceAdapter implements LoadAccommodat
         return new AccommodationCommonInfoView(
                 detail.accommodationId(),
                 detail.title(),
-                detail.maxPeople(),
+                detail.capacity().value(),
                 detail.address(),
                 detail.mapX(),
                 detail.mapY(),
