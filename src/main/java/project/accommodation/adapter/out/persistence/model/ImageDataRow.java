@@ -1,6 +1,6 @@
 package project.accommodation.adapter.out.persistence.model;
 
 public interface ImageDataRow {
-    boolean isThumbnail();
+    Boolean getThumbnail();
     String getImageUrl();
 }

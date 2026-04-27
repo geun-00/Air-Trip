@@ -32,12 +32,12 @@ public class AccommodationCommonInfoPersistenceAdapter implements LoadAccommodat
         List<ImageDataRow> images = accommodationRepository.findImagesByAccommodationId(accommodationId);
 
         String thumbnail = images.stream()
-                                 .filter(ImageDataRow::isThumbnail)
+                                 .filter(ImageDataRow::getThumbnail)
                                  .map(ImageDataRow::getImageUrl)
                                  .findFirst()
                                  .orElse(null);
         List<String> others = images.stream()
-                                    .filter(row -> !row.isThumbnail())
+                                    .filter(row -> !row.getThumbnail())
                                     .map(ImageDataRow::getImageUrl)
                                     .toList();
 
