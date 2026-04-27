@@ -30,4 +30,8 @@ public class AreaCode extends BaseEntity {
         this.code = code;
         this.codeName = codeName;
     }
+
+    public void changeCodeName(String codeName) {
+        this.codeName = codeName;
+    }
 }

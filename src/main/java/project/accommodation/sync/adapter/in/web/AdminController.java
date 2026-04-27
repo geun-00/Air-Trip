@@ -19,6 +19,12 @@ public class AdminController {
     private final TourService tourService;
     private final EmbeddingService embeddingService;
 
+    @PostMapping("/sync-area-codes")
+    public ResponseEntity<Void> syncAreaCodes() {
+        tourService.syncAreaCodes();
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/fetch-acc")
     public ResponseEntity<Void> fetchAccommodations(@RequestParam("pageNo") int pageNo,
                                                     @RequestParam("numOfRows") int numOfRows) {
