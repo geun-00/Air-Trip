@@ -22,12 +22,21 @@ public class AccommodationSyncWriter {
     public void write(List<? extends AccommodationSyncDraft> drafts) {
         List<Accommodation> accommodations = new ArrayList<>();
 
+        List<String> contentIds = drafts.stream()
+                                        .map(d -> d.getSeed().contentId())
+                                        .toList();
+        Map<String, Accommodation> existingMap = accommodationSyncPersistenceAdapter.findAllByContentIdIn(contentIds);
+
         for (AccommodationSyncDraft draft : drafts) {
             if (!draft.hasMandatoryFields()) {
                 continue;
             }
 
-            Accommodation accommodation = accommodationSyncPersistenceAdapter.findByContentIdOrCreate(draft.getSeed().contentId());
+            Accommodation accommodation = existingMap.getOrDefault(
+                    draft.getSeed().contentId(),
+                    Accommodation.createEmpty()
+            );
+
             accommodationSyncPersistenceAdapter.validateAreaCode(draft.getCommon().getAreaCode());
 
             accommodation.updateBasicInfo(

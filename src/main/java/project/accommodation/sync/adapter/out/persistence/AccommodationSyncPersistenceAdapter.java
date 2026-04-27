@@ -15,7 +15,6 @@ import project.area.adapter.out.persistence.AreaCodeRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -28,14 +27,6 @@ public class AccommodationSyncPersistenceAdapter {
     private final AmenityRepository amenityRepository;
     private final AreaCodeRepository areaCodeRepository;
     private final AccommodationRepository accommodationRepository;
-
-    public Optional<Accommodation> findByContentId(String contentId) {
-        return accommodationRepository.findByContentId(contentId);
-    }
-
-    public Accommodation findByContentIdOrCreate(String contentId) {
-        return findByContentId(contentId).orElseGet(Accommodation::createEmpty);
-    }
 
     public void validateAreaCode(String code) {
         if (!areaCodeRepository.existsById(code)) {
@@ -68,5 +59,15 @@ public class AccommodationSyncPersistenceAdapter {
                 accommodations.size(),
                 accommodations.size(),
                 (end - start));
+    }
+
+    public Map<String, Accommodation> findAllByContentIdIn(List<String> contentIds) {
+        List<Accommodation> rows = accommodationRepository.findAllByContentIdIn(contentIds);
+
+        return rows.stream()
+                   .collect(toMap(
+                           Accommodation::getContentId,
+                           accommodation -> accommodation
+                   ));
     }
 }
