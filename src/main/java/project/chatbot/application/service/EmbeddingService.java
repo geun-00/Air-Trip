@@ -125,16 +125,16 @@ public class EmbeddingService {
                              acc.detail.description,
                              acc.detail.maxPeople,
                              acc.address,
-                             ac.codeName,
-                             sc.codeName,
+                             parentArea.codeName,
+                             childArea.codeName,
                              p.season,
                              p.dayType,
                              p.price
                          )
                          FROM Accommodation AS acc
                          JOIN AccommodationPrice AS p ON p.accommodation = acc
-                         JOIN SigunguCode AS sc ON sc.code = acc.sigunguCode
-                         JOIN AreaCode AS ac ON ac = sc.areaCode
+                         JOIN AreaCode AS childArea ON childArea.code = acc.areaCode
+                         LEFT JOIN AreaCode AS parentArea ON parentArea = childArea.parent
                          WHERE acc.id IN :ids
                          """, AccommodationEmbeddingDto.class)
                  .setParameter("ids", ids)

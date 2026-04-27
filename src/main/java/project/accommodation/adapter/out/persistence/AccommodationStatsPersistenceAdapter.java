@@ -20,8 +20,8 @@ public class AccommodationStatsPersistenceAdapter implements RefreshAccommodatio
                 INSERT INTO accommodation_stats (accommodation_id, area_code, area_name, title, average_rating, reservation_count, thumbnail_url)
                 SELECT
                     ranked.accommodation_id,
-                    ac.area_code,
-                    ac.code_name,
+                    parent_area.area_code,
+                    parent_area.code_name,
                     ranked.title,
                     ranked.average_rating,
                     ranked.reservation_count,
@@ -32,15 +32,15 @@ public class AccommodationStatsPersistenceAdapter implements RefreshAccommodatio
                         a.title,
                         a.average_rating,
                         a.reservation_count,
-                        sc.area_code,
+                        child_area.parent_code AS area_code,
                         ROW_NUMBER() OVER (
-                            PARTITION BY sc.area_code
+                            PARTITION BY child_area.parent_code
                             ORDER BY a.reservation_count DESC, a.average_rating DESC
                         ) AS rn
                     FROM accommodations a
-                    JOIN sigungu_codes sc ON sc.sigungu_code = a.sigungu_code
+                    JOIN area_codes child_area ON child_area.area_code = a.area_code
                 ) ranked
-                JOIN area_codes ac ON ac.area_code = ranked.area_code
+                JOIN area_codes parent_area ON parent_area.area_code = ranked.area_code
                 JOIN accommodation_images ai
                 ON ai.accommodation_id = ranked.accommodation_id
                 AND ai.thumbnail = true

@@ -10,7 +10,7 @@ import project.accommodation.domain.Accommodation;
 import project.accommodation.sync.adapter.out.persistence.model.AccommodationModifiedTimeRow;
 import project.amenity.adapter.out.persistence.AmenityRepository;
 import project.amenity.domain.Amenity;
-import project.area.adapter.out.persistence.SigunguCodeRepository;
+import project.area.adapter.out.persistence.AreaCodeRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,7 +26,7 @@ import static java.util.stream.Collectors.toMap;
 public class AccommodationSyncPersistenceAdapter {
 
     private final AmenityRepository amenityRepository;
-    private final SigunguCodeRepository sigunguCodeRepository;
+    private final AreaCodeRepository areaCodeRepository;
     private final AccommodationRepository accommodationRepository;
 
     public Optional<Accommodation> findByContentId(String contentId) {
@@ -37,9 +37,9 @@ public class AccommodationSyncPersistenceAdapter {
         return findByContentId(contentId).orElseGet(Accommodation::createEmpty);
     }
 
-    public void validateSigunguCode(String code) {
-        if (!sigunguCodeRepository.existsById(code)) {
-            throw new EntityNotFoundException("Cannot found SigunguCode: " + code);
+    public void validateAreaCode(String code) {
+        if (!areaCodeRepository.existsById(code)) {
+            throw new EntityNotFoundException("Cannot found AreaCode: " + code);
         }
     }
 

@@ -50,8 +50,8 @@ public class Accommodation extends BaseEntity {
     @Column(name = "modified_time", nullable = false)
     private LocalDateTime modifiedTime;
 
-    @Column(name = "sigungu_code", nullable = false)
-    private String sigunguCode;
+    @Column(name = "area_code", nullable = false)
+    private String areaCode;
 
     @OneToOne(mappedBy = "accommodation", cascade = CascadeType.ALL, optional = false)
     private AccommodationDetail detail;
@@ -85,14 +85,14 @@ public class Accommodation extends BaseEntity {
             String title,
             LocalDateTime modifiedTime,
             String contentId,
-            String sigunguCode
+            String areaCode
     ) {
         this.geoPoint = new  GeoPoint(longitude, latitude);
         this.address = address;
         this.title = title;
         this.modifiedTime = modifiedTime;
         this.contentId = contentId;
-        this.sigunguCode = sigunguCode;
+        this.areaCode = areaCode;
     }
 
     public void updateDetail(

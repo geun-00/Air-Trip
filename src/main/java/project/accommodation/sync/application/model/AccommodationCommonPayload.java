@@ -8,7 +8,7 @@ public class AccommodationCommonPayload {
     private String number;
     private String title;
     private String thumbnailUrl;
-    private String sigunguCode;
+    private String areaCode;
     private String address;
     private String description;
     private Double mapX;

@@ -5,11 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import project.accommodation.sync.application.model.AreaCodeSyncPayload;
-import project.accommodation.sync.application.model.SigunguCodeSyncPayload;
+import project.accommodation.sync.application.model.ChildAreaCodeSyncPayload;
 import project.area.adapter.out.persistence.AreaCodeRepository;
-import project.area.adapter.out.persistence.SigunguCodeRepository;
 import project.area.domain.AreaCode;
-import project.area.domain.SigunguCode;
 
 import java.util.List;
 
@@ -18,10 +16,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AreaCodeSyncPersistenceAdapter {
 
-    private EntityManager entityManager;
-
+    private final EntityManager entityManager;
     private final AreaCodeRepository areaCodeRepository;
-    private final SigunguCodeRepository sigunguCodeRepository;
 
     public AreaCode saveAreaCode(AreaCodeSyncPayload payload) {
         return areaCodeRepository.findById(payload.code())
@@ -34,15 +30,15 @@ public class AreaCodeSyncPersistenceAdapter {
                                  ));
     }
 
-    public void replaceSigunguCodes(AreaCode areaCode, List<SigunguCodeSyncPayload> payloads) {
-        sigunguCodeRepository.deleteByAreaCode_Code(areaCode.getCode());
-        sigunguCodeRepository.flush();
+    public void replaceChildAreaCodes(AreaCode areaCode, List<ChildAreaCodeSyncPayload> payloads) {
+        areaCodeRepository.deleteByParent_Code(areaCode.getCode());
+        areaCodeRepository.flush();
         entityManager.clear();
 
         AreaCode managedAreaCode = entityManager.getReference(AreaCode.class, areaCode.getCode());
-        for (SigunguCodeSyncPayload payload : payloads) {
-            entityManager.persist(SigunguCode.create(
-                    toSigunguCode(areaCode.getCode(), payload.code()),
+        for (ChildAreaCodeSyncPayload payload : payloads) {
+            entityManager.persist(AreaCode.create(
+                    composeChildAreaCode(areaCode.getCode(), payload.code()),
                     payload.codeName(),
                     managedAreaCode
             ));
@@ -50,7 +46,7 @@ public class AreaCodeSyncPersistenceAdapter {
         entityManager.flush();
     }
 
-    private String toSigunguCode(String areaCode, String sigunguCode) {
-        return areaCode + "-" + sigunguCode;
+    private String composeChildAreaCode(String parentAreaCode, String childCode) {
+        return parentAreaCode + "-" + childCode;
     }
 }

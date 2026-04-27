@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import project.accommodation.adapter.out.persistence.model.DetailAccommodationRow;
 import project.accommodation.adapter.out.persistence.model.FilteredAccommodationRow;
 import project.accommodation.adapter.out.persistence.model.MainAccommodationRow;
+import project.area.domain.QAreaCode;
 import project.common.domain.StayDatePolicy;
 
 import java.util.ArrayList;
@@ -17,12 +18,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.querydsl.core.types.Projections.constructor;
+import static project.accommodation.adapter.out.persistence.QAccommodationStats.accommodationStats;
 import static project.accommodation.domain.QAccommodation.accommodation;
 import static project.accommodation.domain.QAccommodationImage.accommodationImage;
 import static project.accommodation.domain.QAccommodationPrice.accommodationPrice;
-import static project.accommodation.adapter.out.persistence.QAccommodationStats.accommodationStats;
-import static project.area.domain.QAreaCode.areaCode;
-import static project.area.domain.QSigunguCode.sigunguCode;
 import static project.reservation.domain.QReservation.reservation;
 import static project.review.domain.QReview.review;
 import static project.wishlist.domain.QWishlist.wishlist;
@@ -33,6 +32,8 @@ public record AccommodationQueryBuilder(
         StayDatePolicy stayDatePolicy,
         Long memberId
 ) {
+    private static final QAreaCode childAreaCode = new QAreaCode("childAreaCode");
+    private static final QAreaCode parentAreaCode = new QAreaCode("parentAreaCode");
 
     // =====================================================
     // 공통 메서드
@@ -139,8 +140,8 @@ public record AccommodationQueryBuilder(
     public JPAQuery<?> buildFilteredBaseQuery() {
         return baseQuery()
                 .join(accommodationImage).on(accommodationImage.accommodation.eq(accommodation))
-                .join(sigunguCode).on(sigunguCode.code.eq(accommodation.sigunguCode))
-                .join(sigunguCode.areaCode, areaCode)
+                .join(childAreaCode).on(childAreaCode.code.eq(accommodation.areaCode))
+                .leftJoin(childAreaCode.parent, parentAreaCode)
                 .leftJoin(reservation).on(reservation.accommodation.eq(accommodation))
                 .leftJoin(review).on(review.reservation.eq(reservation));
     }

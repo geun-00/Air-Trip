@@ -28,7 +28,7 @@ public class AccommodationSyncDraft {
         return hasText(common.getTitle())
                 && hasText(seed.contentId())
                 && seed.modifiedTime() != null
-                && hasText(common.getSigunguCode())
+                && hasText(common.getAreaCode())
                 && hasText(common.getAddress())
                 && common.getMapX() != null
                 && common.getMapY() != null

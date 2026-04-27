@@ -28,7 +28,7 @@ public class AccommodationSyncWriter {
             }
 
             Accommodation accommodation = accommodationSyncPersistenceAdapter.findByContentIdOrCreate(draft.getSeed().contentId());
-            accommodationSyncPersistenceAdapter.validateSigunguCode(draft.getCommon().getSigunguCode());
+            accommodationSyncPersistenceAdapter.validateAreaCode(draft.getCommon().getAreaCode());
 
             accommodation.updateBasicInfo(
                     draft.getCommon().getMapX(),
@@ -37,7 +37,7 @@ public class AccommodationSyncWriter {
                     draft.getCommon().getTitle(),
                     draft.getSeed().modifiedTime(),
                     draft.getSeed().contentId(),
-                    draft.getCommon().getSigunguCode()
+                    draft.getCommon().getAreaCode()
             );
             accommodation.updateDetail(
                     draft.getCommon().getDescription(),

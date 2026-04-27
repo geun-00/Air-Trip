@@ -1,6 +1,6 @@
 package project.accommodation.sync.application.model;
 
-public record SigunguCodeSyncPayload(
+public record ChildAreaCodeSyncPayload(
         String code,
         String codeName
 ) {

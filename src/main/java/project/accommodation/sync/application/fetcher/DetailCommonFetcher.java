@@ -53,9 +53,9 @@ public class DetailCommonFetcher {
             payload.setThumbnailUrl(thumbnailUrl);
         }
 
-        String sigunguCode = toSigunguCode(item);
-        if (hasText(sigunguCode)) {
-            payload.setSigunguCode(sigunguCode);
+        String areaCode = composeAreaCode(item);
+        if (hasText(areaCode)) {
+            payload.setAreaCode(areaCode);
         }
 
         String address = item.get("addr1");
@@ -81,14 +81,14 @@ public class DetailCommonFetcher {
         return payload;
     }
 
-    private String toSigunguCode(Map<String, String> item) {
+    private String composeAreaCode(Map<String, String> item) {
         String areaCode = item.get("areacode");
-        String sigunguCode = item.get("sigungucode");
+        String childCode = item.get("sigungucode");
 
-        if (!hasText(areaCode) || !hasText(sigunguCode)) {
+        if (!hasText(areaCode) || !hasText(childCode)) {
             return null;
         }
 
-        return areaCode + "-" + sigunguCode;
+        return areaCode + "-" + childCode;
     }
 }

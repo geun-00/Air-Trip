@@ -19,6 +19,7 @@ import project.accommodation.application.out.query.model.SearchAccommodationsCon
 import project.accommodation.domain.Accommodation;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
 import project.common.domain.StayDatePolicy;
+import project.area.domain.QAreaCode;
 
 import java.util.List;
 import java.util.Map;
@@ -35,8 +36,6 @@ import static project.accommodation.domain.QAccommodationAmenity.accommodationAm
 import static project.accommodation.domain.QAccommodationImage.accommodationImage;
 import static project.accommodation.domain.QAccommodationPrice.accommodationPrice;
 import static project.amenity.domain.QAmenity.amenity;
-import static project.area.domain.QAreaCode.areaCode;
-import static project.area.domain.QSigunguCode.sigunguCode;
 import static project.member.domain.QMember.member;
 import static project.reservation.domain.QReservation.reservation;
 import static project.review.domain.QReview.review;
@@ -45,6 +44,8 @@ import static project.review.domain.QReview.review;
 public class AccommodationQueryRepository extends CustomQuerydslRepositorySupport {
 
     private static final StringPath MEMBER_NAME = Expressions.stringPath(member, "name");
+    private static final QAreaCode childAreaCode = new QAreaCode("childAreaCode");
+    private static final QAreaCode parentAreaCode = new QAreaCode("parentAreaCode");
 
     public AccommodationQueryRepository() {
         super(Accommodation.class);
@@ -114,8 +115,8 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                 .on(accommodationPrice.accommodation.eq(accommodation)
                                                     .and(accommodationPrice.season.eq(condition.stayDatePolicy().season()))
                                                     .and(accommodationPrice.dayType.eq(condition.stayDatePolicy().dayType())))
-                .join(sigunguCode).on(sigunguCode.code.eq(accommodation.sigunguCode))
-                .join(sigunguCode.areaCode, areaCode)
+                .join(childAreaCode).on(childAreaCode.code.eq(accommodation.areaCode))
+                .leftJoin(childAreaCode.parent, parentAreaCode)
                 .where(
                         eqAreaCode(condition.areaCode()),
                         goePrice(condition.priceGoe()),
@@ -177,7 +178,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
     }
 
     private BooleanExpression eqAreaCode(String code) {
-        return hasText(code) ? areaCode.code.eq(code) : null;
+        return hasText(code) ? parentAreaCode.code.eq(code) : null;
     }
 
     private BooleanExpression goePrice(Integer price) {

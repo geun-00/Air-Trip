@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import project.accommodation.sync.adapter.out.api.HttpClientTemplate;
 import project.accommodation.sync.adapter.out.api.TourApiClient;
-import project.accommodation.sync.application.model.SigunguCodeSyncPayload;
+import project.accommodation.sync.application.model.ChildAreaCodeSyncPayload;
 
 import java.util.List;
 import java.util.Map;
@@ -14,11 +14,11 @@ import static org.springframework.util.StringUtils.hasText;
 
 @Component
 @RequiredArgsConstructor
-public class SigunguCodeFetcher {
+public class ChildAreaCodeFetcher {
 
     private final HttpClientTemplate<TourApiClient> httpClientTemplate;
 
-    public List<SigunguCodeSyncPayload> fetch(String areaCode) {
+    public List<ChildAreaCodeSyncPayload> fetch(String areaCode) {
         return httpClientTemplate.fetchItems(client -> client.areaCode(1, 31, areaCode))
                                  .stream()
                                  .map(this::toPayloadOrNull)
@@ -26,7 +26,7 @@ public class SigunguCodeFetcher {
                                  .toList();
     }
 
-    private SigunguCodeSyncPayload toPayloadOrNull(Map<String, String> item) {
+    private ChildAreaCodeSyncPayload toPayloadOrNull(Map<String, String> item) {
         String code = item.get("code");
         String codeName = item.get("name");
 
@@ -34,6 +34,6 @@ public class SigunguCodeFetcher {
             return null;
         }
 
-        return new SigunguCodeSyncPayload(code, codeName);
+        return new ChildAreaCodeSyncPayload(code, codeName);
     }
 }

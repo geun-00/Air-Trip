@@ -2,7 +2,10 @@ package project.area.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -22,13 +25,26 @@ public class AreaCode extends BaseEntity {
     @Column(name = "code_name", nullable = false)
     private String codeName;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_code")
+    private AreaCode parent;
+
     public static AreaCode create(String code, String codeName) {
         return new AreaCode(code, codeName);
     }
 
     private AreaCode(String code, String codeName) {
+        this(code, codeName, null);
+    }
+
+    public static AreaCode create(String code, String codeName, AreaCode parent) {
+        return new AreaCode(code, codeName, parent);
+    }
+
+    private AreaCode(String code, String codeName, AreaCode parent) {
         this.code = code;
         this.codeName = codeName;
+        this.parent = parent;
     }
 
     public void changeCodeName(String codeName) {

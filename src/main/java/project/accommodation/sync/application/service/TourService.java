@@ -5,11 +5,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.accommodation.sync.application.fetcher.AreaCodeFetcher;
 import project.accommodation.sync.application.fetcher.AreaListFetcher;
+import project.accommodation.sync.application.fetcher.ChildAreaCodeFetcher;
 import project.accommodation.sync.application.fetcher.DetailCommonFetcher;
 import project.accommodation.sync.application.fetcher.DetailImageFetcher;
 import project.accommodation.sync.application.fetcher.DetailInfoFetcher;
 import project.accommodation.sync.application.fetcher.DetailIntroFetcher;
-import project.accommodation.sync.application.fetcher.SigunguCodeFetcher;
 import project.accommodation.sync.application.model.AccommodationSyncDraft;
 import project.accommodation.sync.application.model.AccommodationSyncSeed;
 import project.accommodation.sync.application.model.AreaCodeSyncPayload;
@@ -23,7 +23,7 @@ import java.util.List;
 public class TourService {
 
     private final AreaCodeFetcher areaCodeFetcher;
-    private final SigunguCodeFetcher sigunguCodeFetcher;
+    private final ChildAreaCodeFetcher childAreaCodeFetcher;
     private final AreaCodeSyncWriter areaCodeSyncWriter;
 
     private final AreaListFetcher areaListFetcher;
@@ -38,7 +38,7 @@ public class TourService {
         List<AreaCodeSyncPayload> areaCodes = areaCodeFetcher.fetch();
 
         for (AreaCodeSyncPayload areaCode : areaCodes) {
-            areaCodeSyncWriter.write(areaCode, sigunguCodeFetcher.fetch(areaCode.code()));
+            areaCodeSyncWriter.write(areaCode, childAreaCodeFetcher.fetch(areaCode.code()));
         }
     }
 

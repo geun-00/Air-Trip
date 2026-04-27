@@ -26,7 +26,7 @@ public class DetailCommonProcessor implements ItemProcessor<AccommodationSyncSee
 
     private boolean hasMandatoryFields(AccommodationSyncDraft draft) {
         return hasText(draft.getCommon().getTitle())
-                && hasText(draft.getCommon().getSigunguCode())
+                && hasText(draft.getCommon().getAreaCode())
                 && hasText(draft.getCommon().getAddress())
                 && draft.getCommon().getMapX() != null
                 && draft.getCommon().getMapY() != null
