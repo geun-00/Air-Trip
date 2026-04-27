@@ -12,7 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.client.ResourceAccessException;
-import project.accommodation.sync.application.model.AccommodationProcessorDto;
+import project.accommodation.sync.application.model.AccommodationSyncDraft;
+import project.accommodation.sync.application.model.AccommodationSyncSeed;
 
 import java.util.List;
 
@@ -28,8 +29,8 @@ public class AccommodationBatchConfig {
     private final DetailInfoProcessor infoProcessor;
 
     @Bean
-    public ItemProcessor<AccommodationProcessorDto, AccommodationProcessorDto> compositeProcessor() {
-        CompositeItemProcessor<AccommodationProcessorDto, AccommodationProcessorDto> compositeProcessor = new CompositeItemProcessor<>();
+    public ItemProcessor<AccommodationSyncSeed, AccommodationSyncDraft> compositeProcessor() {
+        CompositeItemProcessor<AccommodationSyncSeed, AccommodationSyncDraft> compositeProcessor = new CompositeItemProcessor<>();
         compositeProcessor.setDelegates(List.of(commonProcessor, introProcessor, infoProcessor));
         return compositeProcessor;
     }
@@ -37,7 +38,7 @@ public class AccommodationBatchConfig {
     @Bean
     public Step accommodationStep(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
         return new StepBuilder("accommodationStep", jobRepository)
-                .<AccommodationProcessorDto, AccommodationProcessorDto>chunk(100, transactionManager)
+                .<AccommodationSyncSeed, AccommodationSyncDraft>chunk(100, transactionManager)
                 .reader(reader)
                 .processor(compositeProcessor())
                 .writer(writer)

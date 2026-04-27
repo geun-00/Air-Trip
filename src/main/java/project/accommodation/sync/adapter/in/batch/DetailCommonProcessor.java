@@ -4,31 +4,33 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
-import project.accommodation.sync.adapter.out.api.TourApiClient;
-import project.accommodation.sync.application.model.AccommodationProcessorDto;
-import project.accommodation.sync.adapter.out.api.HttpClientTemplate;
-import project.accommodation.sync.application.worker.DetailCommonWorker;
+import project.accommodation.sync.application.fetcher.DetailCommonFetcher;
+import project.accommodation.sync.application.model.AccommodationSyncDraft;
+import project.accommodation.sync.application.model.AccommodationSyncSeed;
 
 import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DetailCommonProcessor implements ItemProcessor<AccommodationProcessorDto, AccommodationProcessorDto> {
+public class DetailCommonProcessor implements ItemProcessor<AccommodationSyncSeed, AccommodationSyncDraft> {
 
-    private final HttpClientTemplate<TourApiClient> httpClientTemplate;
+    private final DetailCommonFetcher detailCommonFetcher;
 
     @Override
-    public AccommodationProcessorDto process(AccommodationProcessorDto dto) {
-        DetailCommonWorker worker = new DetailCommonWorker(httpClientTemplate, dto);
-        worker.run();
-
-        return hasMandatoryFields(dto) ? dto : null;
+    public AccommodationSyncDraft process(AccommodationSyncSeed seed) {
+        AccommodationSyncDraft draft = new AccommodationSyncDraft(seed);
+        draft.setCommon(detailCommonFetcher.fetch(seed.contentId()));
+        return hasMandatoryFields(draft) ? draft : null;
     }
 
-    private boolean hasMandatoryFields(AccommodationProcessorDto dto) {
-        return hasText(dto.getTitle()) && hasText(dto.getSigunguCode()) &&
-                hasText(dto.getAddress()) && dto.getMapX() != null && dto.getMapY() != null &&
-                hasText(dto.getContentId()) && dto.getModifiedTime() != null;
+    private boolean hasMandatoryFields(AccommodationSyncDraft draft) {
+        return hasText(draft.getCommon().getTitle())
+                && hasText(draft.getCommon().getSigunguCode())
+                && hasText(draft.getCommon().getAddress())
+                && draft.getCommon().getMapX() != null
+                && draft.getCommon().getMapY() != null
+                && hasText(draft.getSeed().contentId())
+                && draft.getSeed().modifiedTime() != null;
     }
 }

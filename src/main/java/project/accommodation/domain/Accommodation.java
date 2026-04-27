@@ -1,16 +1,24 @@
 package project.accommodation.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.accommodation.sync.application.model.AccommodationProcessorDto;
 import project.common.adapter.out.persistence.BaseEntity;
 import project.common.domain.DayType;
 import project.common.domain.Season;
 
-import java.util.ArrayList;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -70,18 +78,36 @@ public class Accommodation extends BaseEntity {
         return new Accommodation();
     }
 
-    public void updateOrInit(AccommodationProcessorDto dto) {
-        this.geoPoint = new GeoPoint(dto.getMapX(), dto.getMapY());
-        this.address = dto.getAddress();
-        this.title = dto.getTitle();
-        this.modifiedTime = dto.getModifiedTime();
-        this.contentId = dto.getContentId();
-        this.sigunguCode = dto.getSigunguCode();
+    public void updateBasicInfo(
+            Double longitude,
+            Double latitude,
+            String address,
+            String title,
+            LocalDateTime modifiedTime,
+            String contentId,
+            String sigunguCode
+    ) {
+        this.geoPoint = new  GeoPoint(longitude, latitude);
+        this.address = address;
+        this.title = title;
+        this.modifiedTime = modifiedTime;
+        this.contentId = contentId;
+        this.sigunguCode = sigunguCode;
+    }
 
+    public void updateDetail(
+            String description,
+            Integer maxPeople,
+            String checkIn,
+            String checkOut,
+            String number,
+            String refundRegulation
+    ) {
         if (this.detail == null) {
             this.detail = new AccommodationDetail(this);
         }
-        this.detail.update(dto.getDescription(), dto.getMaxPeople(), dto.getCheckIn(), dto.getCheckOut(), dto.getNumber(), dto.getRefundRegulation());
+
+        this.detail.update(description, maxPeople, checkIn, checkOut, number, refundRegulation);
     }
 
     public String getRefundRegulation() {
