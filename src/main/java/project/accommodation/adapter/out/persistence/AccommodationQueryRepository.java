@@ -1,8 +1,6 @@
 package project.accommodation.adapter.out.persistence;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -12,12 +10,10 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 import project.accommodation.adapter.out.persistence.model.AccommodationImagesRow;
 import project.accommodation.adapter.out.persistence.model.DetailAccommodationRow;
-import project.accommodation.adapter.out.persistence.model.DetailReviewRow;
 import project.accommodation.adapter.out.persistence.model.FilteredAccommodationRow;
 import project.accommodation.adapter.out.persistence.model.GuestDetailAccommodationRow;
 import project.accommodation.adapter.out.persistence.model.GuestFilteredAccommodationRow;
 import project.accommodation.adapter.out.persistence.model.GuestMainAccommodationRow;
-import project.accommodation.adapter.out.persistence.model.ImageDataRow;
 import project.accommodation.adapter.out.persistence.model.MainAccommodationRow;
 import project.accommodation.adapter.out.persistence.model.WishlistRow;
 import project.accommodation.application.out.query.model.SearchAccommodationsCondition;
@@ -43,7 +39,6 @@ import static project.accommodation.domain.QAccommodationAmenity.accommodationAm
 import static project.accommodation.domain.QAccommodationImage.accommodationImage;
 import static project.accommodation.domain.QAccommodationPrice.accommodationPrice;
 import static project.amenity.domain.QAmenity.amenity;
-import static project.member.domain.QMember.member;
 import static project.reservation.domain.QReservation.reservation;
 import static project.review.domain.QReview.review;
 import static project.wishlist.domain.QWishlist.wishlist;
@@ -52,7 +47,6 @@ import static project.wishlist.domain.QWishlistAccommodation.wishlistAccommodati
 @Repository
 public class AccommodationQueryRepository extends CustomQuerydslRepositorySupport {
 
-    private static final StringPath MEMBER_NAME = Expressions.stringPath(member, "name");
     private static final QAreaCode childAreaCode = new QAreaCode("childAreaCode");
     private static final QAreaCode parentAreaCode = new QAreaCode("parentAreaCode");
 
@@ -354,50 +348,6 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                            WishlistRow::accommodationId,
                            wishlistRow -> wishlistRow
                    ));
-    }
-
-    public List<ImageDataRow> findImages(Long accommodationId) {
-        return select(constructor(ImageDataRow.class,
-                accommodationImage.thumbnail,
-                accommodationImage.imageUrl
-        ))
-                .from(accommodationImage)
-                .where(accommodationImage.accommodation.id.eq(accommodationId))
-                .fetch();
-    }
-
-    public List<String> findAmenities(Long accommodationId) {
-        return select(amenity.description)
-                .from(accommodationAmenity)
-                .join(amenity).on(amenity.id.eq(accommodationAmenity.amenityId))
-                .where(accommodationAmenity.accommodation.id.eq(accommodationId))
-                .fetch();
-    }
-
-    public List<DetailReviewRow> findReviews(Long accommodationId) {
-        return select(constructor(DetailReviewRow.class,
-                member.id,
-                MEMBER_NAME,
-                member.detail.profileUrl,
-                member.createdAt,
-                review.createdAt,
-                review.rating,
-                review.content))
-                .from(reservation)
-                .join(review).on(review.reservation.eq(reservation))
-                .join(review.member, member)
-                .where(reservation.accommodation.id.eq(accommodationId))
-                .orderBy(review.createdAt.desc())
-                .fetch();
-    }
-
-    public Integer getAccommodationPrice(Long accommodationId, StayDatePolicy stayDatePolicy) {
-        return select(accommodationPrice.price)
-                .from(accommodationPrice)
-                .where(accommodationPrice.accommodation.id.eq(accommodationId)
-                                                          .and(accommodationPrice.season.eq(stayDatePolicy.season()))
-                                                          .and(accommodationPrice.dayType.eq(stayDatePolicy.dayType())))
-                .fetchOne();
     }
 
     private BooleanExpression eqAreaCode(String code) {

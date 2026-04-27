@@ -33,6 +33,7 @@ public class AccommodationQueryPersistenceAdapter implements GetMainAccommodatio
                                                              GetAccommodationPricePort {
 
     private final AccommodationQueryRepository accommodationQueryRepository;
+    private final AccommodationRepository accommodationRepository;
 
     @Override
     public List<MainAccommodationView> getAreaAccommodations(MainAccommodationsCondition condition) {
@@ -85,7 +86,11 @@ public class AccommodationQueryPersistenceAdapter implements GetMainAccommodatio
 
     @Override
     public int getAccommodationPrice(Long accommodationId, StayDatePolicy stayDatePolicy) {
-        Integer price = accommodationQueryRepository.getAccommodationPrice(accommodationId, stayDatePolicy);
+        Integer price = accommodationRepository.findPrice(
+                accommodationId,
+                stayDatePolicy.season(),
+                stayDatePolicy.dayType()
+        );
         if (price == null) {
             throw AccommodationExceptions.priceNotFound(accommodationId, stayDatePolicy);
         }

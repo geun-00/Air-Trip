@@ -1,4 +1,4 @@
-package project.accommodation.adapter.out.persistence.model;
+package project.review.adapter.out.persistence.model;
 
 import java.time.LocalDateTime;
 

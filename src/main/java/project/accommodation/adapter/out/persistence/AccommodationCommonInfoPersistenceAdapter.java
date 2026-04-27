@@ -3,7 +3,7 @@ package project.accommodation.adapter.out.persistence;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import project.accommodation.adapter.out.persistence.model.DetailAccommodationRow;
-import project.accommodation.adapter.out.persistence.model.DetailReviewRow;
+import project.review.adapter.out.persistence.model.DetailReviewRow;
 import project.accommodation.adapter.out.persistence.model.ImageDataRow;
 import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
 import project.accommodation.application.in.query.model.DetailImageView;
@@ -11,6 +11,7 @@ import project.accommodation.application.in.query.model.DetailReviewView;
 import project.accommodation.application.out.query.LoadAccommodationCommonInfoSourcePort;
 import project.accommodation.domain.exception.AccommodationExceptions;
 import project.common.domain.StayDatePolicy;
+import project.review.adapter.out.persistence.ReviewQueryRepository;
 
 import java.util.List;
 
@@ -18,24 +19,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AccommodationCommonInfoPersistenceAdapter implements LoadAccommodationCommonInfoSourcePort {
 
+    private final ReviewQueryRepository reviewQueryRepository;
+    private final AccommodationRepository accommodationRepository;
     private final AccommodationQueryRepository accommodationQueryRepository;
 
     @Override
     public AccommodationCommonInfoView loadAccommodationCommonInfo(Long accommodationId, StayDatePolicy stayDatePolicy) {
         DetailAccommodationRow detail = accommodationQueryRepository.findAccommodation(accommodationId, null, stayDatePolicy)
                                                                     .orElseThrow(() -> AccommodationExceptions.notFoundById(accommodationId));
-        List<String> amenities = accommodationQueryRepository.findAmenities(accommodationId);
-        List<DetailReviewRow> reviews = accommodationQueryRepository.findReviews(accommodationId);
-        List<ImageDataRow> images = accommodationQueryRepository.findImages(accommodationId);
+        List<String> amenities = accommodationRepository.findAmenitiesByAccommodationId(accommodationId);
+        List<DetailReviewRow> reviews = reviewQueryRepository.findReviewsByAccommodationId(accommodationId);
+        List<ImageDataRow> images = accommodationRepository.findImagesByAccommodationId(accommodationId);
 
         String thumbnail = images.stream()
                                  .filter(ImageDataRow::isThumbnail)
-                                 .map(ImageDataRow::imageUrl)
+                                 .map(ImageDataRow::getImageUrl)
                                  .findFirst()
                                  .orElse(null);
         List<String> others = images.stream()
                                     .filter(row -> !row.isThumbnail())
-                                    .map(ImageDataRow::imageUrl)
+                                    .map(ImageDataRow::getImageUrl)
                                     .toList();
 
         return new AccommodationCommonInfoView(
