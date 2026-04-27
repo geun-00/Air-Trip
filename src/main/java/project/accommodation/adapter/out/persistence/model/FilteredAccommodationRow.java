@@ -14,22 +14,4 @@ public record FilteredAccommodationRow(
         String wishlistName
 ) {
 
-    // TODO : 제거 및 개선
-    public FilteredAccommodationRow(Long accommodationId, String title, int price, double avgRate, int reviewCount) {
-        this(accommodationId, title, price, avgRate, reviewCount, List.of(), false, null, null);
-    }
-
-    // TODO : 제거 및 개선
-    public FilteredAccommodationRow(
-            Long accommodationId,
-            String title,
-            int price,
-            double avgRate,
-            int reviewCount,
-            boolean isInWishlist,
-            Long wishlistId,
-            String wishlistName
-    ) {
-        this(accommodationId, title, price, avgRate, reviewCount, List.of(), isInWishlist, wishlistId, wishlistName);
-    }
 }
