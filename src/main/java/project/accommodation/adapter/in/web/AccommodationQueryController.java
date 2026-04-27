@@ -15,12 +15,9 @@ import project.accommodation.adapter.in.web.response.DetailAccommodationResponse
 import project.accommodation.adapter.in.web.response.FilteredAccommodationResponse;
 import project.accommodation.adapter.in.web.response.MainAccommodationResponse;
 import project.accommodation.adapter.in.web.response.MainAccommodationsResponse;
-import project.accommodation.adapter.in.web.response.ViewHistoryAccommodationResponse;
-import project.accommodation.adapter.in.web.response.ViewHistoryResponse;
 import project.accommodation.application.in.query.GetAccommodationDetailQueryUseCase;
 import project.accommodation.application.in.query.GetAccommodationPriceQueryUseCase;
 import project.accommodation.application.in.query.GetMainAccommodationsQueryUseCase;
-import project.accommodation.application.in.query.GetRecentViewAccommodationsQueryUseCase;
 import project.accommodation.application.in.query.SearchAccommodationsQueryUseCase;
 import project.accommodation.application.in.query.model.AccommodationDetailView;
 import project.accommodation.application.in.query.model.AccommodationPriceView;
@@ -30,8 +27,6 @@ import project.accommodation.application.in.query.model.DetailReviewView;
 import project.accommodation.application.in.query.model.FilteredAccommodationView;
 import project.accommodation.application.in.query.model.MainAccommodationItemView;
 import project.accommodation.application.in.query.model.MainAccommodationView;
-import project.accommodation.application.in.query.model.ViewHistoryAccommodationView;
-import project.accommodation.application.in.query.model.ViewHistoryGroupView;
 import project.auth.adapter.in.web.support.CurrentMemberId;
 import project.common.adapter.in.web.response.PageResponse;
 import project.common.application.query.PageQuery;
@@ -53,7 +48,6 @@ public class AccommodationQueryController {
     private final GetMainAccommodationsQueryUseCase getMainAccommodationsQueryUseCase;
     private final GetAccommodationPriceQueryUseCase getAccommodationPriceQueryUseCase;
     private final GetAccommodationDetailQueryUseCase getAccommodationDetailQueryUseCase;
-    private final GetRecentViewAccommodationsQueryUseCase getRecentViewAccommodationsQueryUseCase;
 
     @GetMapping
     public ResponseEntity<List<MainAccommodationResponse>> getAccommodations(@CurrentMemberId(required = false) Long memberId) {
@@ -185,35 +179,5 @@ public class AccommodationQueryController {
 
     private AccommodationPriceResponse toResponse(AccommodationPriceView view) {
         return new AccommodationPriceResponse(view.accommodationId(), view.date(), view.price());
-    }
-
-    // TODO : member or history로 이동
-    @GetMapping("/recent")
-    public ResponseEntity<List<ViewHistoryResponse>> getRecentViewAccommodations(@CurrentMemberId Long memberId) {
-        List<ViewHistoryResponse> result = getRecentViewAccommodationsQueryUseCase.getRecentViewAccommodations(memberId)
-                                                                                  .stream()
-                                                                                  .map(this::toResponse)
-                                                                                  .toList();
-        return ResponseEntity.ok(result);
-    }
-
-    private ViewHistoryResponse toResponse(ViewHistoryGroupView view) {
-        return new ViewHistoryResponse(
-                view.date(),
-                view.accommodations().stream().map(this::toResponse).toList()
-        );
-    }
-
-    private ViewHistoryAccommodationResponse toResponse(ViewHistoryAccommodationView view) {
-        return new ViewHistoryAccommodationResponse(
-                view.viewDate(),
-                view.accommodationId(),
-                view.title(),
-                view.avgRate(),
-                view.thumbnailUrl(),
-                view.isInWishlist(),
-                view.wishlistId(),
-                view.wishlistName()
-        );
     }
 }

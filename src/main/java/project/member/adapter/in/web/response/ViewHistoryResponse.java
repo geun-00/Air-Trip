@@ -1,4 +1,4 @@
-package project.accommodation.adapter.in.web.response;
+package project.member.adapter.in.web.response;
 
 import java.time.LocalDate;
 import java.util.List;

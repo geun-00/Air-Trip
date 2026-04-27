@@ -1,6 +1,6 @@
-package project.accommodation.application.in.query;
+package project.member.application.in.query;
 
-import project.accommodation.application.in.query.model.ViewHistoryGroupView;
+import project.member.application.in.query.model.ViewHistoryGroupView;
 
 import java.util.List;
 

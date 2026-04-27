@@ -1,12 +1,12 @@
-package project.accommodation.application.service;
+package project.member.application.service.query;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.accommodation.application.in.query.GetRecentViewAccommodationsQueryUseCase;
+import project.member.application.in.query.GetRecentViewAccommodationsQueryUseCase;
 import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
-import project.accommodation.application.in.query.model.ViewHistoryAccommodationView;
-import project.accommodation.application.in.query.model.ViewHistoryGroupView;
+import project.member.application.in.query.model.ViewHistoryAccommodationView;
+import project.member.application.in.query.model.ViewHistoryGroupView;
 import project.accommodation.application.out.query.LoadAccommodationCommonInfoPort;
 import project.accommodation.application.out.query.LoadAccommodationWishlistPort;
 import project.accommodation.application.out.query.model.WishlistInfoView;
