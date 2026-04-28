@@ -1,6 +1,7 @@
 package project.history.adapter.out.redis;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Repository;
@@ -24,6 +25,7 @@ public class ViewHistoryRedisAdapter implements SaveViewHistoryPort, LoadRecentV
     private static final String KEY_PREFIX = "member:history:";
     private static final int MAX_HISTORY_SIZE = 50;
     private static final long EXPIRE_DAYS = 30;
+    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Seoul");
 
     private final StringRedisTemplate redisTemplate;
 
@@ -31,23 +33,19 @@ public class ViewHistoryRedisAdapter implements SaveViewHistoryPort, LoadRecentV
     public void save(Long memberId, Long accommodationId) {
         String key = generateKey(memberId);
         double now = System.currentTimeMillis();
-
-        redisTemplate.opsForZSet().add(key, accommodationId.toString(), now);
-        removeExpired(key, now);
-        trim(key);
-        redisTemplate.expire(key, Duration.ofDays(EXPIRE_DAYS));
-    }
-
-    private void removeExpired(String key, double now) {
         long expiredBefore = (long) now - Duration.ofDays(EXPIRE_DAYS).toMillis();
-        redisTemplate.opsForZSet().removeRangeByScore(key, 0, expiredBefore);
-    }
 
-    private void trim(String key) {
-        Long size = redisTemplate.opsForZSet().zCard(key);
-        if (size != null && size > MAX_HISTORY_SIZE) {
-            redisTemplate.opsForZSet().removeRange(key, 0, size - MAX_HISTORY_SIZE - 1);
-        }
+        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            byte[] rawKey = redisTemplate.getStringSerializer().serialize(key);
+            byte[] rawValue = redisTemplate.getStringSerializer().serialize(accommodationId.toString());
+
+            connection.zSetCommands().zAdd(rawKey, now, rawValue);
+            connection.zSetCommands().zRemRangeByScore(rawKey, 0, expiredBefore);
+            connection.zSetCommands().zRemRange(rawKey, 0, -(MAX_HISTORY_SIZE + 1));
+            connection.keyCommands().expire(rawKey, Duration.ofDays(EXPIRE_DAYS).toSeconds());
+
+            return null;
+        });
     }
 
     @Override
@@ -64,7 +62,7 @@ public class ViewHistoryRedisAdapter implements SaveViewHistoryPort, LoadRecentV
                              Long.valueOf(Objects.requireNonNull(tuple.getValue())),
                              LocalDateTime.ofInstant(
                                      Instant.ofEpochMilli(Objects.requireNonNull(tuple.getScore()).longValue()),
-                                     ZoneId.systemDefault()
+                                     ZONE_ID
                              )
                      ))
                      .toList();
