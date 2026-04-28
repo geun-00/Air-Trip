@@ -39,6 +39,7 @@ public enum ErrorCode {
 
     // ========== 예약 & 결제 ==========
     ALREADY_RESERVED(HttpStatus.CONFLICT, "RESERVATION-001", "먼저 처리된 예약이 존재합니다"),
+    ALREADY_CONFIRMED(HttpStatus.CONFLICT, "RESERVATION-002", "이미 확정된 예약입니다"),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT-001", "임시 저장된 결제 정보를 찾을 수 없습니다"),
     NOT_EQUALS_AMOUNT(HttpStatus.BAD_REQUEST, "PAYMENT-001", "임시 저장된 결제 정보와 일치하지 않습니다");
 

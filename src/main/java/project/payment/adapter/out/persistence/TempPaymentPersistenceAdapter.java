@@ -21,10 +21,10 @@ public class TempPaymentPersistenceAdapter implements SaveTempPaymentPort, LoadT
     }
 
     @Override
-    public boolean existsTempPaymentWithAmount(String orderId, Integer amount) {
-        TempPayment tempPayment = tempPaymentRepository.findById(orderId)
-                                                       .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
-        return tempPayment.notEqualsAmount(amount);
+    public boolean existsAndIsAmountMatching(String orderId, Integer amount) {
+        return tempPaymentRepository.findById(orderId)
+                                    .map(tempPayment -> tempPayment.isEqualsAmount(amount))
+                                    .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
     }
 
     @Override

@@ -125,8 +125,8 @@ class PaymentControllerTest extends RestDocsTestSupport {
                                                                .description("영수증 주소")
                                                                .type(STRING)
                                                )
-                                               .requestSchema(schema("PaymentConfirmRequest"))
-                                               .responseSchema(schema("PaymentConfirmResponse"))
+                                               .requestSchema(schema("ConfirmPaymentRequest"))
+                                               .responseSchema(schema("PaymentResponse"))
                                                .build()
                                )
                        ));

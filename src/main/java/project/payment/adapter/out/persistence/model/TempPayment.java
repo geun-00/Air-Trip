@@ -1,11 +1,9 @@
 package project.payment.adapter.out.persistence.model;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
-@Getter
 @AllArgsConstructor
 @RedisHash(value = "payment:temp", timeToLive = 600)
 public class TempPayment {
@@ -19,7 +17,7 @@ public class TempPayment {
         return new TempPayment(orderId, amount);
     }
 
-    public boolean notEqualsAmount(Integer amount) {
-        return !this.amount.equals(amount);
+    public boolean isEqualsAmount(Integer amount) {
+        return this.amount.equals(amount);
     }
 }

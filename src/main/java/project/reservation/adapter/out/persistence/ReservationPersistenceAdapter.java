@@ -18,6 +18,12 @@ public class ReservationPersistenceAdapter implements LoadReservationPort, Exist
     private final ReservationQueryRepository reservationQueryRepository;
 
     @Override
+    public Reservation loadReservation(Long reservationId) {
+        return reservationRepository.findById(reservationId)
+                                    .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
+    }
+
+    @Override
     public Reservation loadReservationWithLock(Long reservationId) {
         return reservationRepository.findByIdWithPessimisticLock(reservationId)
                                     .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));

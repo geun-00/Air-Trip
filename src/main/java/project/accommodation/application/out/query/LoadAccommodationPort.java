@@ -4,5 +4,7 @@ import project.accommodation.domain.Accommodation;
 
 public interface LoadAccommodationPort {
 
+    Accommodation loadAccommodation(Long accommodationId);
+
     Accommodation loadAccommodationWithLock(Long accommodationId);
 }
