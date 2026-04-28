@@ -5,16 +5,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import project.history.application.event.ViewHistoryEvent;
-import project.history.application.service.ViewHistoryService;
+import project.history.application.in.command.SaveViewHistoryUseCase;
 
 @Component
 @RequiredArgsConstructor
 public class RecentViewListener {
 
-    private final ViewHistoryService viewHistoryService;
+    private final SaveViewHistoryUseCase saveViewHistoryUseCase;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleRecentViewEvent(ViewHistoryEvent event) {
-        viewHistoryService.addHistory(event.memberId(), event.accommodationId());
+        saveViewHistoryUseCase.saveViewHistory(event.memberId(), event.accommodationId());
     }
 }
