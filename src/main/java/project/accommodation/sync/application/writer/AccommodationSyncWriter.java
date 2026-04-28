@@ -10,6 +10,10 @@ import project.amenity.domain.Amenity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -27,6 +31,20 @@ public class AccommodationSyncWriter {
                                         .toList();
         Map<String, Accommodation> existingMap = accommodationSyncPersistenceAdapter.findAllByContentIdIn(contentIds);
 
+        Set<String> areaCodes = drafts.stream()
+                                      .map(d -> d.getCommon().getAreaCode())
+                                      .filter(Objects::nonNull)
+                                      .collect(Collectors.toSet());
+        accommodationSyncPersistenceAdapter.validateAreaCodes(areaCodes);
+
+        Set<String> amenityNames = drafts.stream()
+                                         .flatMap(d -> Stream.concat(
+                                                 d.getIntro().getAmenities().keySet().stream(),
+                                                 d.getInfo().getAmenities().keySet().stream()
+                                         ))
+                                         .collect(Collectors.toSet());
+        Map<String, Amenity> amenityMap = accommodationSyncPersistenceAdapter.findAllAmenitiesByNames(amenityNames);
+
         for (AccommodationSyncDraft draft : drafts) {
             if (!draft.hasMandatoryFields()) {
                 continue;
@@ -36,8 +54,6 @@ public class AccommodationSyncWriter {
                     draft.getSeed().contentId(),
                     Accommodation.createEmpty()
             );
-
-            accommodationSyncPersistenceAdapter.validateAreaCode(draft.getCommon().getAreaCode());
 
             accommodation.updateBasicInfo(
                     draft.getCommon().getMapX(),
@@ -58,7 +74,7 @@ public class AccommodationSyncWriter {
             );
 
             accommodations.add(accommodation);
-            accommodation.replaceAmenities(getAmenityIds(draft));
+            accommodation.replaceAmenities(getAmenityIds(draft, amenityMap));
             accommodation.replaceImages(
                     findThumbnailUrl(draft),
                     draft.getImage().getOriginImgUrls(),
@@ -70,18 +86,27 @@ public class AccommodationSyncWriter {
         accommodationSyncPersistenceAdapter.saveAll(accommodations);
     }
 
-    private List<Long> getAmenityIds(AccommodationSyncDraft draft) {
+    private List<Long> getAmenityIds(
+            AccommodationSyncDraft draft,
+            Map<String, Amenity> amenityMap
+    ) {
         List<Long> amenityIds = new ArrayList<>();
-        addEntityIfAvailable(amenityIds, draft.getIntro().getAmenities());
-        addEntityIfAvailable(amenityIds, draft.getInfo().getAmenities());
+        addAmenityIds(amenityIds, draft.getIntro().getAmenities(), amenityMap);
+        addAmenityIds(amenityIds, draft.getInfo().getAmenities(), amenityMap);
         return amenityIds;
     }
 
-    private void addEntityIfAvailable(List<Long> amenityIds, Map<String, Boolean> amenities) {
+    private void addAmenityIds(
+            List<Long> amenityIds,
+            Map<String, Boolean> amenities,
+            Map<String, Amenity> amenityMap
+    ) {
         amenities.forEach((amenityName, available) -> {
             if (Boolean.TRUE.equals(available)) {
-                Amenity amenity = accommodationSyncPersistenceAdapter.findAmenityByName(amenityName);
-                amenityIds.add(amenity.getId());
+                Amenity amenity = amenityMap.get(amenityName);
+                if (amenity != null) {
+                    amenityIds.add(amenity.getId());
+                }
             }
         });
     }
