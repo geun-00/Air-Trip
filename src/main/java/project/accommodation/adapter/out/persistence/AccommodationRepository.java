@@ -28,6 +28,14 @@ public interface AccommodationRepository extends JpaRepository<Accommodation, Lo
     List<Accommodation> findAllByContentIdIn(Collection<String> contentIds);
 
     @Query("""
+            select ai.imageUrl
+            from AccommodationImage ai
+            where ai.accommodation.id = :accommodationId
+              and ai.thumbnail = true
+            """)
+    Optional<String> findThumbnailUrlByAccommodationId(@Param("accommodationId") Long accommodationId);
+
+    @Query("""
             select :accommodationId as accommodationId, ai.thumbnail as thumbnail, ai.imageUrl as imageUrl
             from AccommodationImage ai
             where ai.accommodation.id = :accommodationId

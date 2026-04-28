@@ -6,13 +6,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import project.reservation.application.in.command.CreateReservationUseCase;
+import project.reservation.application.in.command.model.CreateReservationCommand;
 import project.security.WithMockMember;
 import project.controller.RestDocsTestSupport;
-import project.reservation.adapter.in.web.request.PostReservationRequest;
-import project.reservation.adapter.in.web.response.PostReservationResponse;
-import project.review.adapter.in.web.request.PostReviewReqDto;
-import project.reservation.adapter.in.web.ReservationController;
-import project.reservation.application.service.ReservationService;
+import project.reservation.adapter.in.web.request.CreateReservationRequest;
+import project.reservation.application.in.command.model.CreateReservationResult;
+import project.review.adapter.in.web.request.PostReviewRequest;
+import project.reservation.adapter.in.web.ReservationCommandController;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,7 +24,6 @@ import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static com.epages.restdocs.apispec.ResourceSnippetParameters.builder;
 import static com.epages.restdocs.apispec.Schema.schema;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
@@ -35,12 +35,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ReservationController.class)
-class ReservationControllerTest extends RestDocsTestSupport {
+@WebMvcTest(ReservationCommandController.class)
+class ReservationCommandControllerTest extends RestDocsTestSupport {
 
     private static final String RESERVATION_API_TAG = "Reservation API";
 
-    @MockitoBean ReservationService reservationService;
+    @MockitoBean
+    CreateReservationUseCase createReservationUseCase;
 
     @Test
     @DisplayName("예약 등록")
@@ -49,13 +50,20 @@ class ReservationControllerTest extends RestDocsTestSupport {
         //given
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(3);
-        PostReservationRequest request = new PostReservationRequest(startDate, endDate, 3, 1, 1);
+        CreateReservationRequest request = new CreateReservationRequest(startDate, endDate, 3, 1, 1);
 
-        PostReservationResponse response = new PostReservationResponse(
-                1L, "https://example.com", "숙소-A", "일주일 내 50%...",
-                startDate.atStartOfDay(), endDate.atTime(23, 59, 59), 3, 1, 1
+        CreateReservationResult result = new CreateReservationResult(
+                1L,
+                "https://example.com",
+                "숙소-A",
+                "일주일 내 50%...",
+                startDate.atStartOfDay(),
+                endDate.atTime(23, 59, 59),
+                3,
+                1,
+                1
         );
-        given(reservationService.postReservation(anyLong(), anyLong(), any())).willReturn(response);
+        given(createReservationUseCase.createReservation(any(CreateReservationCommand.class))).willReturn(result);
 
         //when
         //then
@@ -64,18 +72,18 @@ class ReservationControllerTest extends RestDocsTestSupport {
                        .contentType(MediaType.APPLICATION_JSON_VALUE)
                        .content(creatJson(request)))
                .andExpectAll(
-                       handler().handlerType(ReservationController.class),
+                       handler().handlerType(ReservationCommandController.class),
                        handler().methodName("postReservation"),
                        status().isOk(),
-                       jsonPath("$.reservationId").value(response.reservationId()),
-                       jsonPath("$.thumbnailUrl").value(response.thumbnailUrl()),
-                       jsonPath("$.title").value(response.title()),
-                       jsonPath("$.refundRegulation").value(response.refundRegulation()),
+                       jsonPath("$.reservationId").value(result.reservationId()),
+                       jsonPath("$.thumbnailUrl").value(result.thumbnailUrl()),
+                       jsonPath("$.title").value(result.title()),
+                       jsonPath("$.refundRegulation").value(result.refundRegulation()),
                        jsonPath("$.startDate").exists(),
                        jsonPath("$.endDate").exists(),
-                       jsonPath("$.adults").value(response.adults()),
-                       jsonPath("$.children").value(response.children()),
-                       jsonPath("$.infants").value(response.infants())
+                       jsonPath("$.adults").value(result.adults()),
+                       jsonPath("$.children").value(result.children()),
+                       jsonPath("$.infants").value(result.infants())
                )
                .andDo(
                        document("post-reservation",
@@ -132,8 +140,8 @@ class ReservationControllerTest extends RestDocsTestSupport {
                                                                .description("예약 영유아 수")
                                                                .type(NUMBER)
                                                )
-                                               .requestSchema(schema("PostReservationRequest"))
-                                               .responseSchema(schema("PostReservationResponse"))
+                                               .requestSchema(schema("CreateReservationRequest"))
+                                               .responseSchema(schema("CreateReservationResponse"))
                                                .build()
                                )
                        ));
@@ -145,7 +153,7 @@ class ReservationControllerTest extends RestDocsTestSupport {
     @WithMockMember
     void postReview() throws Exception {
         //given
-        PostReviewReqDto requestDto = new PostReviewReqDto(BigDecimal.valueOf(4.5), "만족스러운 여행이었어요!");
+        PostReviewRequest requestDto = new PostReviewRequest(BigDecimal.valueOf(4.5), "만족스러운 여행이었어요!");
 
         //when
         //then
@@ -154,7 +162,7 @@ class ReservationControllerTest extends RestDocsTestSupport {
                        .contentType(MediaType.APPLICATION_JSON_VALUE)
                        .content(creatJson(requestDto)))
                .andExpectAll(
-                       handler().handlerType(ReservationController.class),
+                       handler().handlerType(ReservationCommandController.class),
                        handler().methodName("postReview"),
                        status().isCreated()
                )

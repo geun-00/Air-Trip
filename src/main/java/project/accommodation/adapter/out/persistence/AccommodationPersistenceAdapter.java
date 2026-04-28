@@ -23,4 +23,10 @@ public class AccommodationPersistenceAdapter implements LoadAccommodationPort {
         return accommodationRepository.findByIdWithPessimisticLock(accommodationId)
                                       .orElseThrow(() -> AccommodationExceptions.notFoundById(accommodationId));
     }
+
+    @Override
+    public String loadThumbnailUrl(Long accommodationId) {
+        return accommodationRepository.findThumbnailUrlByAccommodationId(accommodationId)
+                                      .orElse(null);
+    }
 }

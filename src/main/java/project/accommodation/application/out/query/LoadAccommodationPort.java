@@ -7,4 +7,6 @@ public interface LoadAccommodationPort {
     Accommodation loadAccommodation(Long accommodationId);
 
     Accommodation loadAccommodationWithLock(Long accommodationId);
+
+    String loadThumbnailUrl(Long accommodationId);
 }

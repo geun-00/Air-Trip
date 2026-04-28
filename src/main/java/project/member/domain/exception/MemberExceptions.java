@@ -5,6 +5,9 @@ import project.common.exception.ErrorCode;
 
 public abstract class MemberExceptions {
 
+    private MemberExceptions() {
+    }
+
     public static BusinessException notFoundByEmail(String email) {
         return new BusinessException(
                 ErrorCode.MEMBER_NOT_FOUND,
@@ -17,5 +20,9 @@ public abstract class MemberExceptions {
                 ErrorCode.MEMBER_NOT_FOUND,
                 "id=" + memberId + " 사용자 조회 실패"
         );
+    }
+
+    public static BusinessException emailNotVerified() {
+        return new BusinessException(ErrorCode.ACCESS_DENIED);
     }
 }
