@@ -24,7 +24,7 @@ public class ReservationQueryRepository extends CustomQuerydslRepositorySupport 
                 .selectOne()
                 .from(reservation)
                 .where(
-                        reservation.accommodation.id.eq(accId),
+                        reservation.accommodationId.eq(accId),
                         reservation.status.eq(CONFIRMED),
                         reservation.stayPeriod.startDate.lt(to),
                         reservation.stayPeriod.endDate.gt(from)
@@ -38,7 +38,7 @@ public class ReservationQueryRepository extends CustomQuerydslRepositorySupport 
                         reservation.stayPeriod.startDate,
                         reservation.stayPeriod.endDate))
                 .from(reservation)
-                .where(reservation.accommodation.id.eq(accommodationId)
+                .where(reservation.accommodationId.eq(accommodationId)
                                                    .and(reservation.status.eq(CONFIRMED))
                                                    .and(reservation.stayPeriod.endDate.after(LocalDateTime.now())))
                 .fetch();

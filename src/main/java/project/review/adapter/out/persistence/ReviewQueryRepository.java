@@ -7,8 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
-import project.review.adapter.in.web.response.MyReviewResDto;
 import project.review.adapter.out.persistence.model.DetailReviewRow;
+import project.review.adapter.out.persistence.model.MyReviewRow;
 import project.review.domain.Review;
 
 import java.util.List;
@@ -40,8 +40,8 @@ public class ReviewQueryRepository extends CustomQuerydslRepositorySupport {
                 review.rating,
                 review.content))
                 .from(review)
-                .join(review.reservation, reservation)
-                .join(review.member, member)
+                .join(reservation).on(review.reservationId.eq(reservation.id))
+                .join(member).on(review.memberId.eq(member.id))
                 .where(reservation.accommodationId.eq(accommodationId))
                 .orderBy(review.createdAt.desc())
                 .fetch();
@@ -58,17 +58,18 @@ public class ReviewQueryRepository extends CustomQuerydslRepositorySupport {
                 review.rating,
                 review.content))
                 .from(review)
-                .join(review.reservation, reservation)
-                .join(review.member, member)
+                .join(reservation).on(review.reservationId.eq(reservation.id))
+                .join(member).on(review.memberId.eq(member.id))
                 .where(reservation.accommodationId.in(accommodationIds))
                 .orderBy(review.createdAt.desc())
                 .fetch();
     }
 
-    public Page<MyReviewResDto> getMyReviews(Long memberId, Pageable pageable) {
+    public Page<MyReviewRow> getMyReviews(Long memberId, Pageable pageable) {
         return applyPagination(pageable,
                 contentQuery -> contentQuery
-                        .select(Projections.constructor(MyReviewResDto.class,
+                        .select(Projections.constructor(
+                                MyReviewRow.class,
                                 review.id,
                                 accommodation.id,
                                 accommodationImage.imageUrl,
@@ -78,15 +79,15 @@ public class ReviewQueryRepository extends CustomQuerydslRepositorySupport {
                                 review.createdAt
                         ))
                         .from(review)
-                        .join(review.reservation, reservation)
+                        .join(reservation).on(review.reservationId.eq(reservation.id))
                         .join(accommodation).on(accommodation.id.eq(reservation.accommodationId))
                         .join(accommodationImage)
                         .on(accommodationImage.accommodation.eq(accommodation)
                                                             .and(accommodationImage.thumbnail.isTrue()))
-                        .where(review.member.id.eq(memberId)),
+                        .where(review.memberId.eq(memberId)),
                 countQuery -> countQuery.select(review.count())
                                         .from(review)
-                                        .where(review.member.id.eq(memberId))
+                                        .where(review.memberId.eq(memberId))
         );
     }
 }

@@ -2,6 +2,7 @@ package project.accommodation.adapter.out.persistence;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -48,6 +49,7 @@ import static project.wishlist.domain.QWishlistAccommodation.wishlistAccommodati
 @Repository
 public class AccommodationQueryRepository extends CustomQuerydslRepositorySupport {
 
+    private static final NumberExpression<Double> REVIEW_RATING = Expressions.numberTemplate(Double.class, "{0}", review.rating);
     private static final QAreaCode childAreaCode = new QAreaCode("childAreaCode");
     private static final QAreaCode parentAreaCode = new QAreaCode("parentAreaCode");
 
@@ -135,7 +137,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                 accommodation.id,
                 accommodation.title,
                 accommodationPrice.price,
-                review.rating.avg().coalesce(0.0),
+                REVIEW_RATING.avg().coalesce(0.0),
                 review.count().intValue().coalesce(0)
         ))
                 .from(accommodation)
@@ -147,7 +149,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                 .join(childAreaCode).on(childAreaCode.code.eq(accommodation.areaCode))
                 .leftJoin(childAreaCode.parent, parentAreaCode)
                 .leftJoin(reservation).on(reservation.accommodationId.eq(accommodation.id))
-                .leftJoin(review).on(review.reservation.eq(reservation))
+                .leftJoin(review).on(review.reservationId.eq(reservation.id))
                 .where(
                         eqAreaCode(condition.areaCode()),
                         goePrice(condition.priceGoe()),
@@ -275,9 +277,9 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                                   Expressions.constant(false),
                                   Expressions.nullExpression(Long.class),
                                   Expressions.nullExpression(String.class),
-                                  JPAExpressions.select(review.rating.avg().coalesce(0.0))
+                                  JPAExpressions.select(REVIEW_RATING.avg().coalesce(0.0))
                               .from(review)
-                              .join(review.reservation, reservation)
+                              .join(reservation).on(review.reservationId.eq(reservation.id))
                               .where(reservation.accommodationId.eq(accommodation.id))
         ))
                 .from(accommodation)
@@ -294,9 +296,9 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
             Long memberId,
             StayDatePolicy stayDatePolicy
     ) {
-        JPQLQuery<Double> avgRateSubquery = JPAExpressions.select(review.rating.avg().coalesce(0.0))
+        JPQLQuery<Double> avgRateSubquery = JPAExpressions.select(REVIEW_RATING.avg().coalesce(0.0))
                                                           .from(review)
-                                                          .join(review.reservation, reservation)
+                                                          .join(reservation).on(review.reservationId.eq(reservation.id))
                                                           .where(reservation.accommodationId.eq(accommodationId));
 
         Optional<GuestDetailAccommodationRow> fetched = Optional.ofNullable(

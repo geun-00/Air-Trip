@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.common.adapter.out.persistence.BaseEntity;
 import project.common.domain.DayType;
+import project.common.domain.Rating;
 import project.common.domain.Season;
 
 import java.time.LocalDateTime;

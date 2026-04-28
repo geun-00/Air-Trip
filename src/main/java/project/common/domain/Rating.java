@@ -1,4 +1,4 @@
-package project.accommodation.domain;
+package project.common.domain;
 
 public record Rating(double value) {
 

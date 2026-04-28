@@ -80,7 +80,7 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
                                                                         .and(accommodationImage.thumbnail.isTrue()))
                                     .leftJoin(reservation)
                                     .on(reservation.accommodationId.eq(accommodation.id))
-                                    .leftJoin(review).on(review.reservation.eq(reservation))
+                                    .leftJoin(review).on(review.reservationId.eq(reservation.id))
                                     .where(
                                             reservation.isNotNull(),
                                             reservation.memberId.eq(memberId),

@@ -130,7 +130,7 @@ public class AccommodationCommonInfoPersistenceAdapter implements LoadAccommodat
                               row.profileUrl(),
                               row.memberCreatedDate(),
                               row.reviewCreatedDate(),
-                              row.rating(),
+                              row.rating().value(),
                               row.content()
                       ))
                       .toList();
