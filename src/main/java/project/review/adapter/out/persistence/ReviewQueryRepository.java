@@ -42,14 +42,14 @@ public class ReviewQueryRepository extends CustomQuerydslRepositorySupport {
                 .from(review)
                 .join(review.reservation, reservation)
                 .join(review.member, member)
-                .where(reservation.accommodation.id.eq(accommodationId))
+                .where(reservation.accommodationId.eq(accommodationId))
                 .orderBy(review.createdAt.desc())
                 .fetch();
     }
 
     public List<DetailReviewRow> findReviewsByAccommodationIdIn(List<Long> accommodationIds) {
         return select(constructor(DetailReviewRow.class,
-                reservation.accommodation.id,
+                reservation.accommodationId,
                 member.id,
                 MEMBER_NAME,
                 member.detail.profileUrl,
@@ -60,7 +60,7 @@ public class ReviewQueryRepository extends CustomQuerydslRepositorySupport {
                 .from(review)
                 .join(review.reservation, reservation)
                 .join(review.member, member)
-                .where(reservation.accommodation.id.in(accommodationIds))
+                .where(reservation.accommodationId.in(accommodationIds))
                 .orderBy(review.createdAt.desc())
                 .fetch();
     }
@@ -79,7 +79,7 @@ public class ReviewQueryRepository extends CustomQuerydslRepositorySupport {
                         ))
                         .from(review)
                         .join(review.reservation, reservation)
-                        .join(reservation.accommodation, accommodation)
+                        .join(accommodation).on(accommodation.id.eq(reservation.accommodationId))
                         .join(accommodationImage)
                         .on(accommodationImage.accommodation.eq(accommodation)
                                                             .and(accommodationImage.thumbnail.isTrue()))

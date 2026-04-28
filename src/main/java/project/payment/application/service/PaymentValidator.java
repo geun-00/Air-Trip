@@ -25,7 +25,7 @@ public class PaymentValidator {
         verifyTempPayment(command.orderId(), command.amount());
 
         Reservation reservation = loadReservationPort.loadReservation(command.reservationId());
-        Accommodation accommodation = loadAccommodationPort.loadAccommodation(reservation.getAccommodation().getId());
+        Accommodation accommodation = loadAccommodationPort.loadAccommodation(reservation.getAccommodationId());
 
         if (!reservation.isOwner(memberId)) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);

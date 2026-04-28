@@ -23,7 +23,7 @@ public class PaymentProcessor {
     @Transactional
     public void process(Long reservationId, PaymentResult paymentResult) {
         Reservation reservation = loadReservationPort.loadReservationWithLock(reservationId);
-        Accommodation accommodation = loadAccommodationPort.loadAccommodationWithLock(reservation.getAccommodation().getId());
+        Accommodation accommodation = loadAccommodationPort.loadAccommodationWithLock(reservation.getAccommodationId());
 
         if (loadReservationPort.existsConfirmedReservation(
                 accommodation.getId(),

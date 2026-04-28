@@ -146,7 +146,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                 .join(accommodationImage).on(accommodationImage.accommodation.eq(accommodation))
                 .join(childAreaCode).on(childAreaCode.code.eq(accommodation.areaCode))
                 .leftJoin(childAreaCode.parent, parentAreaCode)
-                .leftJoin(reservation).on(reservation.accommodation.eq(accommodation))
+                .leftJoin(reservation).on(reservation.accommodationId.eq(accommodation.id))
                 .leftJoin(review).on(review.reservation.eq(reservation))
                 .where(
                         eqAreaCode(condition.areaCode()),
@@ -278,7 +278,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                                   JPAExpressions.select(review.rating.avg().coalesce(0.0))
                               .from(review)
                               .join(review.reservation, reservation)
-                              .where(reservation.accommodation.id.eq(accommodation.id))
+                              .where(reservation.accommodationId.eq(accommodation.id))
         ))
                 .from(accommodation)
                 .join(accommodationPrice).on(
@@ -297,7 +297,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
         JPQLQuery<Double> avgRateSubquery = JPAExpressions.select(review.rating.avg().coalesce(0.0))
                                                           .from(review)
                                                           .join(review.reservation, reservation)
-                                                          .where(reservation.accommodation.id.eq(accommodationId));
+                                                          .where(reservation.accommodationId.eq(accommodationId));
 
         Optional<GuestDetailAccommodationRow> fetched = Optional.ofNullable(
                 select(constructor(GuestDetailAccommodationRow.class,

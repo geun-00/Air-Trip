@@ -71,27 +71,27 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
                                             accommodation.id,
                                             accommodationImage.imageUrl,
                                             accommodation.title,
-                                            reservation.startDate,
-                                            reservation.endDate,
+                                            reservation.stayPeriod.startDate,
+                                            reservation.stayPeriod.endDate,
                                             review.isNotNull()))
                                     .from(accommodation)
                                     .join(accommodationImage)
                                     .on(accommodationImage.accommodation.eq(accommodation)
                                                                         .and(accommodationImage.thumbnail.isTrue()))
                                     .leftJoin(reservation)
-                                    .on(reservation.accommodation.eq(accommodation))
+                                    .on(reservation.accommodationId.eq(accommodation.id))
                                     .leftJoin(review).on(review.reservation.eq(reservation))
                                     .where(
                                             reservation.isNotNull(),
-                                            reservation.member.id.eq(memberId),
-                                            reservation.endDate.before(LocalDateTime.now()))
+                                            reservation.memberId.eq(memberId),
+                                            reservation.stayPeriod.endDate.before(LocalDateTime.now()))
                                     .orderBy(reservation.id.desc())
                 ,
                 countQuery -> countQuery.select(reservation.count())
                                         .from(reservation)
                                         .where(
-                                                reservation.member.id.eq(memberId),
-                                                reservation.endDate.before(LocalDateTime.now())
+                                                reservation.memberId.eq(memberId),
+                                                reservation.stayPeriod.endDate.before(LocalDateTime.now())
                                         )
         );
     }

@@ -57,7 +57,7 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
                 .from(wishlistAccommodation)
                 .join(wishlistAccommodation.wishlist, wishlist)
                 .join(wishlistAccommodation.accommodation, accommodation)
-                .leftJoin(reservation).on(reservation.accommodation.eq(accommodation))
+                .leftJoin(reservation).on(reservation.accommodationId.eq(accommodation.id))
                 .leftJoin(review).on(review.reservation.eq(reservation))
                 .where(wishlist.id.eq(wishlistId),
                         wishlist.member.id.eq(memberId)
