@@ -1,6 +1,7 @@
 package project.accommodation.adapter.out.persistence;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -252,6 +253,40 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                         loePrice(condition.priceLoe()),
                         hasAllAmenities(condition.amenities())
                 );
+    }
+
+    public List<DetailAccommodationRow> findAccommodations(
+            List<Long> accommodationIds,
+            StayDatePolicy stayDatePolicy
+    ) {
+        return select(constructor(DetailAccommodationRow.class,
+                                  accommodation.id,
+                                  accommodation.title,
+                                  accommodation.detail.maxPeople,
+                                  accommodation.address,
+                                  accommodation.geoPoint.longitude,
+                                  accommodation.geoPoint.latitude,
+                                  accommodation.detail.stayTimePolicy.checkIn,
+                                  accommodation.detail.stayTimePolicy.checkOut,
+                                  accommodation.detail.description,
+                                  accommodation.detail.number,
+                                  accommodation.detail.refundRegulation,
+                                  accommodationPrice.price,
+                                  Expressions.constant(false),
+                                  Expressions.nullExpression(Long.class),
+                                  Expressions.nullExpression(String.class),
+                                  JPAExpressions.select(review.rating.avg().coalesce(0.0))
+                              .from(review)
+                              .join(review.reservation, reservation)
+                              .where(reservation.accommodation.id.eq(accommodation.id))
+        ))
+                .from(accommodation)
+                .join(accommodationPrice).on(
+                        accommodationPrice.accommodation.eq(accommodation)
+                                .and(accommodationPrice.season.eq(stayDatePolicy.season()))
+                                .and(accommodationPrice.dayType.eq(stayDatePolicy.dayType())))
+                .where(accommodation.id.in(accommodationIds))
+                .fetch();
     }
 
     public Optional<DetailAccommodationRow> findAccommodation(

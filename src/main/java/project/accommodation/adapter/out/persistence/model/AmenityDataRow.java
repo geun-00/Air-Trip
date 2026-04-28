@@ -1,7 +1,6 @@
 package project.accommodation.adapter.out.persistence.model;
 
-public interface ImageDataRow {
+public interface AmenityDataRow {
     Long getAccommodationId();
-    Boolean getThumbnail();
-    String getImageUrl();
+    String getDescription();
 }

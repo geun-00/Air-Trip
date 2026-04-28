@@ -10,8 +10,14 @@ import project.accommodation.application.out.query.LoadAccommodationCommonInfoSo
 import project.infrastructure.time.StayDatePolicyProvider;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
+
+import static java.util.stream.Collectors.partitioningBy;
+import static java.util.stream.Collectors.toMap;
 
 @Repository
 @RequiredArgsConstructor
@@ -27,8 +33,8 @@ public class AccommodationCommonInfoCacheAdapter implements LoadAccommodationCom
         String key = buildKey(accommodationId);
 
         Object cached = redisTemplate.opsForValue().get(key);
-        if (cached instanceof AccommodationCommonInfoView commonInfo) {
-            return commonInfo;
+        if (cached != null) {
+            return (AccommodationCommonInfoView) cached;
         }
 
         AccommodationCommonInfoView commonInfo = loadAccommodationCommonInfoSourcePort.loadAccommodationCommonInfo(
@@ -40,6 +46,44 @@ public class AccommodationCommonInfoCacheAdapter implements LoadAccommodationCom
         redisTemplate.opsForValue().set(key, commonInfo, ttlMs, TimeUnit.MILLISECONDS);
 
         return commonInfo;
+    }
+
+    @Override
+    public Map<Long, AccommodationCommonInfoView> loadAccommodationCommonInfos(List<Long> accommodationIds) {
+        List<String> keys = accommodationIds.stream()
+                                            .map(this::buildKey)
+                                            .toList();
+
+        List<Object> cached = redisTemplate.opsForValue().multiGet(keys);
+
+        Map<Boolean, List<Integer>> partitioned = IntStream.range(0, accommodationIds.size())
+                                                           .boxed()
+                                                           .collect(partitioningBy(i -> cached.get(i) != null));
+
+        Map<Long, AccommodationCommonInfoView> result = partitioned.get(true).stream()
+                                                                   .collect(toMap(
+                                                                           accommodationIds::get,
+                                                                           i -> (AccommodationCommonInfoView) cached.get(i)
+                                                                   ));
+
+        List<Long> missedIds = partitioned.get(false).stream()
+                                          .map(accommodationIds::get)
+                                          .toList();
+
+        if (!missedIds.isEmpty()) {
+            Map<Long, AccommodationCommonInfoView> fetched =
+                    loadAccommodationCommonInfoSourcePort.loadAccommodationCommonInfos(
+                            missedIds,
+                            stayDatePolicyProvider.todayStayDatePolicy()
+                    );
+
+            fetched.forEach((id, commonInfo) -> {
+                result.put(id, commonInfo);
+                redisTemplate.opsForValue().set(buildKey(id), commonInfo, generateTtlMs(), TimeUnit.MILLISECONDS);
+            });
+        }
+
+        return result;
     }
 
     @Override

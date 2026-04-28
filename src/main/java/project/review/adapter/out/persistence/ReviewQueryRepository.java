@@ -6,9 +6,9 @@ import com.querydsl.core.types.dsl.StringPath;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
-import project.review.adapter.out.persistence.model.DetailReviewRow;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
 import project.review.adapter.in.web.response.MyReviewResDto;
+import project.review.adapter.out.persistence.model.DetailReviewRow;
 import project.review.domain.Review;
 
 import java.util.List;
@@ -31,6 +31,7 @@ public class ReviewQueryRepository extends CustomQuerydslRepositorySupport {
 
     public List<DetailReviewRow> findReviewsByAccommodationId(Long accommodationId) {
         return select(constructor(DetailReviewRow.class,
+                Expressions.constant(accommodationId),
                 member.id,
                 MEMBER_NAME,
                 member.detail.profileUrl,
@@ -42,6 +43,24 @@ public class ReviewQueryRepository extends CustomQuerydslRepositorySupport {
                 .join(review.reservation, reservation)
                 .join(review.member, member)
                 .where(reservation.accommodation.id.eq(accommodationId))
+                .orderBy(review.createdAt.desc())
+                .fetch();
+    }
+
+    public List<DetailReviewRow> findReviewsByAccommodationIdIn(List<Long> accommodationIds) {
+        return select(constructor(DetailReviewRow.class,
+                reservation.accommodation.id,
+                member.id,
+                MEMBER_NAME,
+                member.detail.profileUrl,
+                member.createdAt,
+                review.createdAt,
+                review.rating,
+                review.content))
+                .from(review)
+                .join(review.reservation, reservation)
+                .join(review.member, member)
+                .where(reservation.accommodation.id.in(accommodationIds))
                 .orderBy(review.createdAt.desc())
                 .fetch();
     }

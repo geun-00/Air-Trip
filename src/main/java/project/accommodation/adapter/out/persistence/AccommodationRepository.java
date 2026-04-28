@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import project.accommodation.adapter.out.persistence.model.AmenityDataRow;
 import project.accommodation.adapter.out.persistence.model.ImageDataRow;
 import project.accommodation.domain.Accommodation;
 import project.accommodation.sync.adapter.out.persistence.model.AccommodationModifiedTimeRow;
@@ -27,19 +28,34 @@ public interface AccommodationRepository extends JpaRepository<Accommodation, Lo
     List<Accommodation> findAllByContentIdIn(Collection<String> contentIds);
 
     @Query("""
-            select ai.thumbnail as thumbnail, ai.imageUrl as imageUrl
+            select :accommodationId as accommodationId, ai.thumbnail as thumbnail, ai.imageUrl as imageUrl
             from AccommodationImage ai
             where ai.accommodation.id = :accommodationId
             """)
     List<ImageDataRow> findImagesByAccommodationId(@Param("accommodationId") Long accommodationId);
 
     @Query("""
-            select am.description
+            select ai.accommodation.id as accommodationId, ai.thumbnail as thumbnail, ai.imageUrl as imageUrl
+            from AccommodationImage ai
+            where ai.accommodation.id in :accommodationIds
+            """)
+    List<ImageDataRow> findImagesByAccommodationIdIn(@Param("accommodationIds") List<Long> accommodationIds);
+
+    @Query("""
+            select :accommodationId as accommodationId, am.description
             from AccommodationAmenity aa
             join Amenity am on am.id = aa.amenityId
             where aa.accommodation.id = :accommodationId
             """)
-    List<String> findAmenitiesByAccommodationId(@Param("accommodationId") Long accommodationId);
+    List<AmenityDataRow> findAmenitiesByAccommodationId(@Param("accommodationId") Long accommodationId);
+
+    @Query("""
+            select aa.accommodation.id as accommodationId, am.description as description
+            from AccommodationAmenity aa
+            join Amenity am on am.id = aa.amenityId
+            where aa.accommodation.id in :accommodationIds
+            """)
+    List<AmenityDataRow> findAmenitiesByAccommodationIdIn(@Param("accommodationIds") List<Long> accommodationIds);
 
     @Query("""
             select ap.price
