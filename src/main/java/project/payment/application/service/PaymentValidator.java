@@ -9,7 +9,6 @@ import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
 import project.payment.application.in.command.model.ConfirmPaymentCommand;
 import project.payment.application.out.query.LoadTempPaymentPort;
-import project.reservation.application.out.query.ExistsConfirmedReservationPort;
 import project.reservation.application.out.query.LoadReservationPort;
 import project.reservation.domain.Reservation;
 
@@ -20,7 +19,6 @@ public class PaymentValidator {
     private final LoadTempPaymentPort loadTempPaymentPort;
     private final LoadReservationPort loadReservationPort;
     private final LoadAccommodationPort loadAccommodationPort;
-    private final ExistsConfirmedReservationPort existsConfirmedReservationPort;
 
     @Transactional(readOnly = true)
     public void validate(ConfirmPaymentCommand command, Long memberId) {
@@ -33,7 +31,7 @@ public class PaymentValidator {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
-        if (existsConfirmedReservationPort.existsConfirmedReservation(
+        if (loadReservationPort.existsConfirmedReservation(
                 accommodation.getId(),
                 reservation.getStartDate(),
                 reservation.getEndDate())
