@@ -1,13 +1,24 @@
 package project.reservation.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.reservation.adapter.in.web.request.PostReservationRequest;
 import project.accommodation.domain.Accommodation;
 import project.common.adapter.out.persistence.BaseEntity;
 import project.member.domain.Member;
+import project.reservation.adapter.in.web.request.PostReservationRequest;
+import project.reservation.domain.exception.ReservationExceptions;
 
 import java.time.LocalDateTime;
 
@@ -66,6 +77,9 @@ public class Reservation extends BaseEntity {
     }
 
     public void confirm() {
+        if (this.status != ReservationStatus.PENDING) {
+            throw ReservationExceptions.alreadyConfirmed(this.id);
+        }
         this.status = ReservationStatus.CONFIRMED;
     }
 

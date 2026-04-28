@@ -1,15 +1,19 @@
 package project.payment.domain;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.persistence.*;
-import lombok.*;
-import org.springframework.util.StringUtils;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import project.common.adapter.out.persistence.BaseEntity;
-import project.reservation.domain.Reservation;
+import project.payment.application.service.model.PaymentResult;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 
 @Getter
 @Entity
@@ -39,32 +43,19 @@ public class Payment extends BaseEntity {
 
     private LocalDateTime approvedAt;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservation_id", nullable = false)
-    private Reservation reservation;
+    @Column(nullable = false)
+    private Long reservationId;
 
-    private static final ZoneId ZONE_ASIA_SEOUL = ZoneId.of("Asia/Seoul");
-
-    public static Payment of(JsonNode response, Reservation reservation) {
-        String orderId = response.get("orderId").asText();
-        String paymentKey = response.get("paymentKey").asText();
-
-        PaymentStatus paymentStatus = PaymentStatus.of(response.get("status").asText());
-        PaymentMethod paymentMethod = PaymentMethod.of(response.get("method").asText());
-
-        LocalDateTime requestedAt = parseToLocalDateTime(response.get("requestedAt").asText());
-        LocalDateTime approvedAt = parseToLocalDateTime(response.get("approvedAt").asText(null));
-
-        int totalAmount = response.get("totalAmount").asInt();
-
-        return new Payment(paymentKey, orderId, totalAmount, paymentStatus, requestedAt, paymentMethod, approvedAt, reservation);
-    }
-
-    private static LocalDateTime parseToLocalDateTime(String timestamp) {
-        if (!StringUtils.hasText(timestamp)) {
-            return null;
-        }
-
-        return OffsetDateTime.parse(timestamp).atZoneSameInstant(ZONE_ASIA_SEOUL).toLocalDateTime();
+    public static Payment of(PaymentResult paymentResult, Long reservationId) {
+        return new Payment(
+                paymentResult.paymentKey(),
+                paymentResult.orderId(),
+                paymentResult.totalAmount(),
+                paymentResult.paymentStatus(),
+                paymentResult.requestedAt(),
+                paymentResult.paymentMethod(),
+                paymentResult.approvedAt(),
+                reservationId
+        );
     }
 }

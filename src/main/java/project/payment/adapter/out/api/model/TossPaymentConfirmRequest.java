@@ -1,7 +1,8 @@
 package project.payment.adapter.out.api.model;
 
-public record PaymentConfirmDto(
+public record TossPaymentConfirmRequest(
         String paymentKey,
         String orderId,
-        Integer amount) {
+        Integer amount
+) {
 }

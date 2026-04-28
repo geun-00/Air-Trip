@@ -8,29 +8,42 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import project.auth.adapter.in.web.support.CurrentMemberId;
-import project.payment.adapter.in.web.request.PaymentConfirmRequest;
+import project.payment.adapter.in.web.request.ConfirmPaymentRequest;
 import project.payment.adapter.in.web.request.SavePaymentRequest;
 import project.payment.adapter.in.web.response.PaymentResponse;
-import project.payment.application.service.PaymentService;
+import project.payment.application.in.command.model.ConfirmPaymentCommand;
+import project.payment.application.in.command.ConfirmPaymentUseCase;
+import project.payment.application.in.command.model.SaveTempPaymentCommand;
+import project.payment.application.in.command.SaveTempPaymentUseCase;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/payments")
 public class PaymentController {
 
-    private final PaymentService paymentService;
+    private final ConfirmPaymentUseCase confirmPaymentUseCase;
+    private final SaveTempPaymentUseCase saveTempPaymentUseCase;
 
     @PostMapping("/save")
-    public ResponseEntity<?> savePayment(@Valid @RequestBody SavePaymentRequest savePaymentRequest) {
-        paymentService.savePayment(savePaymentRequest);
+    public ResponseEntity<?> savePayment(@Valid @RequestBody SavePaymentRequest request) {
+        saveTempPaymentUseCase.saveTempPayment(new SaveTempPaymentCommand(request.orderId(), request.amount()));
+
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/confirm")
-    public ResponseEntity<PaymentResponse> confirmPayment(@CurrentMemberId Long memberId,
-                                                          @Valid @RequestBody PaymentConfirmRequest paymentConfirmRequest
+    public ResponseEntity<PaymentResponse> confirmPayment(
+            @CurrentMemberId Long memberId,
+            @Valid @RequestBody ConfirmPaymentRequest request
     ) {
-        PaymentResponse response = paymentService.confirmPayment(paymentConfirmRequest, memberId);
-        return ResponseEntity.ok(response);
+        ConfirmPaymentCommand command = new ConfirmPaymentCommand(
+                request.paymentKey(),
+                request.orderId(),
+                request.amount(),
+                request.reservationId()
+        );
+
+        String receiptUrl = confirmPaymentUseCase.confirmPayment(command, memberId);
+        return ResponseEntity.ok(new PaymentResponse(receiptUrl));
     }
 }
