@@ -1,14 +1,29 @@
 package project.accommodation.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.accommodation.sync.application.model.AccommodationProcessorDto;
 import project.common.adapter.out.persistence.BaseEntity;
-import project.area.domain.SigunguCode;
+import project.common.domain.DayType;
+import project.common.domain.Season;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Getter
 @Entity
@@ -17,15 +32,13 @@ import java.time.LocalDateTime;
 public class Accommodation extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "accommodations_seq")
+    @SequenceGenerator(name = "accommodations_seq", sequenceName = "accommodations_seq")
     @Column(name = "accommodation_id", nullable = false)
     private Long id;
 
-    @Column(name = "map_x", nullable = false)
-    private Double mapX;
-
-    @Column(name = "map_y", nullable = false)
-    private Double mapY;
+    @Embedded
+    private GeoPoint geoPoint;
 
     @Column(name = "title", nullable = false)
     private String title;
@@ -39,64 +52,108 @@ public class Accommodation extends BaseEntity {
     @Column(name = "modified_time", nullable = false)
     private LocalDateTime modifiedTime;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sigungu_code", nullable = false)
-    private SigunguCode sigunguCode;
+    @Column(name = "area_code", nullable = false)
+    private String areaCode;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "max_people")
-    private Integer maxPeople;
-
-    @Column(name = "check_in")
-    private String checkIn;
-
-    @Column(name = "check_out")
-    private String checkOut;
-
-    @Column(name = "number")
-    private String number;
-
-    @Column(name = "refund_regulation", columnDefinition = "TEXT")
-    private String refundRegulation;
+    @OneToOne(mappedBy = "accommodation", cascade = CascadeType.ALL, optional = false)
+    private AccommodationDetail detail;
 
     @Column(name = "is_embedded")
     private Boolean isEmbedded;
 
     @Column(name = "reservation_count")
-    private int reservationCount;
+    private ReservationCount reservationCount = ReservationCount.ZERO;
 
     @Column(name = "average_rating")
-    private double averageRating;
+    private Rating averageRating = Rating.ZERO;
+
+    @OneToMany(mappedBy = "accommodation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AccommodationImage> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "accommodation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<AccommodationPrice> prices = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "accommodation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<AccommodationAmenity> amenities = new LinkedHashSet<>();
 
     public static Accommodation createEmpty() {
         return new Accommodation();
     }
 
-    public void updateOrInit(AccommodationProcessorDto dto, SigunguCode sigunguCode) {
-        this.mapX = dto.getMapX();
-        this.mapY = dto.getMapY();
-        this.description = dto.getDescription();
-        this.address = dto.getAddress();
-        this.maxPeople = dto.getMaxPeople();
-        this.title = dto.getTitle();
-        this.checkIn = dto.getCheckIn();
-        this.checkOut = dto.getCheckOut();
-        this.number = dto.getNumber();
-        this.refundRegulation = dto.getRefundRegulation();
-        this.modifiedTime = dto.getModifiedTime();
-        this.contentId = dto.getContentId();
-        this.sigunguCode = sigunguCode;
+    public void updateBasicInfo(
+            Double longitude,
+            Double latitude,
+            String address,
+            String title,
+            LocalDateTime modifiedTime,
+            String contentId,
+            String areaCode
+    ) {
+        this.geoPoint = new  GeoPoint(longitude, latitude);
+        this.address = address;
+        this.title = title;
+        this.modifiedTime = modifiedTime;
+        this.contentId = contentId;
+        this.areaCode = areaCode;
     }
 
-    private Accommodation(Double mapX, Double mapY, String title, String address, String contentId, LocalDateTime modifiedTime, SigunguCode sigunguCode) {
-        this.mapX = mapX;
-        this.mapY = mapY;
-        this.title = title;
-        this.address = address;
-        this.contentId = contentId;
-        this.modifiedTime = modifiedTime;
-        this.sigunguCode = sigunguCode;
+    public void updateDetail(
+            String description,
+            Integer maxPeople,
+            String checkIn,
+            String checkOut,
+            String number,
+            String refundRegulation
+    ) {
+        if (this.detail == null) {
+            this.detail = new AccommodationDetail(this);
+        }
+
+        this.detail.update(description, maxPeople, checkIn, checkOut, number, refundRegulation);
+    }
+
+    public String getRefundRegulation() {
+        return detail.getRefundRegulation();
+    }
+
+    public void replaceImages(
+            String thumbnailUrl,
+            List<String> originImageUrls,
+            List<String> roomImageUrls
+    ) {
+        this.images.clear();
+        this.images.add(AccommodationImage.thumbnailOf(this, thumbnailUrl));
+        addNormalImages(originImageUrls, thumbnailUrl);
+        addNormalImages(roomImageUrls, thumbnailUrl);
+    }
+
+    private void addNormalImages(List<String> imageUrls, String thumbnailUrl) {
+        imageUrls.stream()
+                 .filter(imageUrl -> !imageUrl.equals(thumbnailUrl))
+                 .forEach(imageUrl -> this.images.add(AccommodationImage.normalOf(this, imageUrl)));
+    }
+
+    public void replacePrices(Map<Season, Map<DayType, Integer>> prices) {
+        this.prices.clear();
+
+        for (Season season : Season.values()) {
+            for (DayType dayType : DayType.values()) {
+                this.prices.add(
+                        AccommodationPrice.create(
+                                this,
+                                season,
+                                dayType,
+                                prices.get(season).get(dayType)
+                        ));
+            }
+        }
+    }
+
+    public void replaceAmenities(List<Long> amenityIds) {
+        this.amenities.clear();
+        amenityIds.stream()
+                  .distinct()
+                  .map(amenityId -> AccommodationAmenity.create(this, amenityId))
+                  .forEach(this.amenities::add);
     }
 }

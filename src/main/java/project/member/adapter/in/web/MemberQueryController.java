@@ -7,6 +7,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import project.member.adapter.in.web.response.ViewHistoryAccommodationResponse;
+import project.member.adapter.in.web.response.ViewHistoryResponse;
+import project.member.application.in.query.GetRecentViewAccommodationsQueryUseCase;
+import project.member.application.in.query.model.ViewHistoryAccommodationView;
+import project.member.application.in.query.model.ViewHistoryGroupView;
 import project.auth.adapter.in.web.support.CurrentMemberId;
 import project.common.adapter.in.web.response.PageResponse;
 import project.member.adapter.in.web.response.ChatMemberSearchResponse;
@@ -31,6 +36,7 @@ public class MemberQueryController {
     private final GetMyProfileQueryUseCase getMyProfileQueryUseCase;
     private final GetMyTripsHistoryQueryUseCase getMyTripsHistoryQueryUseCase;
     private final SearchMembersByNameQueryUseCase searchMembersByNameQueryUseCase;
+    private final GetRecentViewAccommodationsQueryUseCase getRecentViewAccommodationsQueryUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<DefaultProfileResponse> getMyProfile(@CurrentMemberId Long memberId) {
@@ -85,6 +91,38 @@ public class MemberQueryController {
                 tripHistory.startDate(),
                 tripHistory.endDate(),
                 tripHistory.hasReviewed()
+        );
+    }
+
+    @GetMapping("/me/history/accommodations")
+    public ResponseEntity<List<ViewHistoryResponse>> getRecentViewAccommodations(@CurrentMemberId Long memberId) {
+        List<ViewHistoryResponse> result = getRecentViewAccommodationsQueryUseCase.getRecentViewAccommodations(memberId)
+                                                                                  .stream()
+                                                                                  .map(this::toResponse)
+                                                                                  .toList();
+        return ResponseEntity.ok(result);
+    }
+
+    private ViewHistoryResponse toResponse(ViewHistoryGroupView view) {
+        return new ViewHistoryResponse(
+                view.date(),
+                view.accommodations()
+                    .stream()
+                    .map(this::toResponse)
+                    .toList()
+        );
+    }
+
+    private ViewHistoryAccommodationResponse toResponse(ViewHistoryAccommodationView view) {
+        return new ViewHistoryAccommodationResponse(
+                view.viewDate(),
+                view.accommodationId(),
+                view.title(),
+                view.avgRate(),
+                view.thumbnailUrl(),
+                view.isInWishlist(),
+                view.wishlistId(),
+                view.wishlistName()
         );
     }
 }

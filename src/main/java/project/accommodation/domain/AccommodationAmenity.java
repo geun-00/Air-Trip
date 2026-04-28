@@ -1,13 +1,19 @@
 package project.accommodation.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.common.adapter.out.persistence.BaseEntity;
-import project.amenity.domain.Amenity;
 
-@Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
@@ -19,10 +25,11 @@ import project.amenity.domain.Amenity;
 	        )
 	    }
 	)
-public class AccommodationAmenity extends BaseEntity {
+class AccommodationAmenity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "accommodation_amenities_seq")
+    @SequenceGenerator(name = "accommodation_amenities_seq", sequenceName = "accommodation_amenities_seq")
     @Column(name = "accommodation_amenities_id")
     private Long id;
 
@@ -30,16 +37,15 @@ public class AccommodationAmenity extends BaseEntity {
     @JoinColumn(name = "accommodation_id", nullable = false)
     private Accommodation accommodation;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "amenity_id", nullable = false)
-    private Amenity amenity;
+    @Column(name = "amenity_id", nullable = false)
+    private Long amenityId;
 
-    public static AccommodationAmenity create(Accommodation accommodation, Amenity amenity) {
-        return new AccommodationAmenity(accommodation, amenity);
+    static AccommodationAmenity create(Accommodation accommodation, Long amenityId) {
+        return new AccommodationAmenity(accommodation, amenityId);
     }
 
-    private AccommodationAmenity(Accommodation accommodation, Amenity amenity) {
+    private AccommodationAmenity(Accommodation accommodation, Long amenityId) {
         this.accommodation = accommodation;
-        this.amenity = amenity;
+        this.amenityId = amenityId;
     }
 }

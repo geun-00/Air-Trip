@@ -4,23 +4,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
-import project.accommodation.sync.adapter.out.api.TourApiClient;
-import project.accommodation.sync.application.model.AccommodationProcessorDto;
-import project.accommodation.sync.adapter.out.api.HttpClientTemplate;
-import project.accommodation.sync.application.worker.DetailIntroWorker;
+import project.accommodation.sync.application.fetcher.DetailIntroFetcher;
+import project.accommodation.sync.application.model.AccommodationSyncDraft;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DetailIntroProcessor implements ItemProcessor<AccommodationProcessorDto, AccommodationProcessorDto> {
+public class DetailIntroProcessor implements ItemProcessor<AccommodationSyncDraft, AccommodationSyncDraft> {
 
-    private final HttpClientTemplate<TourApiClient> httpClientTemplate;
+    private final DetailIntroFetcher detailIntroFetcher;
 
     @Override
-    public AccommodationProcessorDto process(AccommodationProcessorDto dto) {
-        DetailIntroWorker worker = new DetailIntroWorker(httpClientTemplate, dto);
-        worker.run();
-
-        return dto;
+    public AccommodationSyncDraft process(AccommodationSyncDraft draft) {
+        draft.setIntro(detailIntroFetcher.fetch(draft.getSeed().contentId()));
+        return draft;
     }
 }

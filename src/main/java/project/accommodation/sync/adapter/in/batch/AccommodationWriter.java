@@ -6,26 +6,19 @@ import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import project.accommodation.sync.application.model.AccommodationProcessorDto;
-import project.accommodation.sync.adapter.out.persistence.TourRepositoryFacadeManager;
-import project.accommodation.sync.application.worker.AccommodationSaveWorker;
+import project.accommodation.sync.application.model.AccommodationSyncDraft;
+import project.accommodation.sync.application.writer.AccommodationSyncWriter;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AccommodationWriter implements ItemWriter<AccommodationProcessorDto> {
+public class AccommodationWriter implements ItemWriter<AccommodationSyncDraft> {
 
-    private final TourRepositoryFacadeManager tourRepositoryFacadeManager;
+    private final AccommodationSyncWriter accommodationSyncWriter;
 
     @Override
     @Transactional
-    public void write(Chunk<? extends AccommodationProcessorDto> chunk) throws Exception {
-        AccommodationSaveWorker worker = new AccommodationSaveWorker(
-                tourRepositoryFacadeManager,
-                chunk.getItems(),
-                dto -> true
-                //배치에서는 이전 process 단계에서 이미 필수값 검증된 상태에서 넘어오므로 항상 true
-        );
-        worker.run();
+    public void write(Chunk<? extends AccommodationSyncDraft> chunk) {
+        accommodationSyncWriter.write(chunk.getItems());
     }
 }

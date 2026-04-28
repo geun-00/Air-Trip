@@ -8,7 +8,7 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import project.accommodation.sync.adapter.out.api.HttpClientTemplate;
 import project.holiday.adapter.out.api.HolidayApiClient;
-import project.auth.adapter.out.redis.RedisRepository;
+import project.holiday.application.out.HolidayStore;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,15 +19,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class HolidayService {
 
+    private final HolidayStore holidayStore;
     private final HttpClientTemplate<HolidayApiClient> clientTemplate;
-    private final RedisRepository redisRepository;
 
     @Retryable(retryFor = {RuntimeException.class}, maxAttempts = 2, backoff = @Backoff(delay = 2000))
     public void initHolidays() {
         int year = LocalDate.now().getYear();
-        String key = "holidays:" + year;
 
-        if (redisRepository.hasKey(key)) {
+        if (holidayStore.hasYear(year)) {
             return;
         }
 
@@ -35,7 +34,7 @@ public class HolidayService {
         List<String> holidays = items.stream()
                                      .map(map -> map.get("locdate"))
                                      .toList();
-        redisRepository.addSet(key, holidays);
+        holidayStore.saveHolidays(year, holidays);
     }
 
     @Recover

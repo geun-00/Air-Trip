@@ -1,14 +1,14 @@
 package project.reservation.adapter.out.persistence;
 
-import com.querydsl.core.types.Projections;
 import org.springframework.stereotype.Repository;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
-import project.reservation.adapter.out.persistence.model.ReservedDateQueryDto;
+import project.reservation.adapter.out.persistence.model.ReservedDateRow;
 import project.reservation.domain.Reservation;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.querydsl.core.types.Projections.constructor;
 import static project.reservation.domain.QReservation.reservation;
 import static project.reservation.domain.ReservationStatus.CONFIRMED;
 
@@ -32,9 +32,9 @@ public class ReservationQueryRepository extends CustomQuerydslRepositorySupport 
                 .fetchFirst() != null;
     }
 
-    public List<ReservedDateQueryDto> findReservedDatesByAccommodationId(Long accommodationId) {
+    public List<ReservedDateRow> findReservedDatesByAccommodationId(Long accommodationId) {
         return getQueryFactory()
-                .select(Projections.constructor(ReservedDateQueryDto.class,
+                .select(constructor(ReservedDateRow.class,
                         reservation.startDate,
                         reservation.endDate))
                 .from(reservation)

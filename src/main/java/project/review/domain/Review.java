@@ -22,6 +22,7 @@ public class Review extends BaseEntity {
     @Column(name = "content", nullable = false)
     private String content;
 
+    // TODO : Rating VO 적용
     @Column(name = "rating", nullable = false)
     private Double rating;
 

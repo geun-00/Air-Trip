@@ -1,62 +1,69 @@
 package project.accommodation.sync.application.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.accommodation.sync.adapter.out.api.HttpClientTemplate;
-import project.accommodation.sync.adapter.out.api.TourApiClient;
-import project.accommodation.sync.application.worker.AccommodationSaveWorker;
-import project.accommodation.sync.application.worker.AreaListWorker;
-import project.accommodation.sync.application.worker.DetailCommonWorker;
-import project.accommodation.sync.application.worker.DetailImageWorker;
-import project.accommodation.sync.application.worker.DetailInfoWorker;
-import project.accommodation.sync.application.worker.DetailIntroWorker;
-import project.accommodation.sync.application.model.AccommodationProcessorDto;
-import project.accommodation.sync.adapter.out.persistence.TourRepositoryFacadeManager;
+import project.accommodation.sync.application.fetcher.AreaCodeFetcher;
+import project.accommodation.sync.application.fetcher.AreaListFetcher;
+import project.accommodation.sync.application.fetcher.ChildAreaCodeFetcher;
+import project.accommodation.sync.application.fetcher.DetailCommonFetcher;
+import project.accommodation.sync.application.fetcher.DetailImageFetcher;
+import project.accommodation.sync.application.fetcher.DetailInfoFetcher;
+import project.accommodation.sync.application.fetcher.DetailIntroFetcher;
+import project.accommodation.sync.application.model.AccommodationSyncDraft;
+import project.accommodation.sync.application.model.AccommodationSyncSeed;
+import project.accommodation.sync.application.model.AreaCodeSyncPayload;
+import project.accommodation.sync.application.writer.AccommodationSyncWriter;
+import project.accommodation.sync.application.writer.AreaCodeSyncWriter;
 
 import java.util.List;
 
-import static org.springframework.util.StringUtils.hasText;
-
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TourService {
 
-    private final HttpClientTemplate<TourApiClient> httpClientTemplate;
-    private final TourRepositoryFacadeManager tourRepositoryFacadeManager;
+    private final AreaCodeFetcher areaCodeFetcher;
+    private final ChildAreaCodeFetcher childAreaCodeFetcher;
+    private final AreaCodeSyncWriter areaCodeSyncWriter;
+
+    private final AreaListFetcher areaListFetcher;
+    private final DetailCommonFetcher detailCommonFetcher;
+    private final DetailIntroFetcher detailIntroFetcher;
+    private final DetailInfoFetcher detailInfoFetcher;
+    private final DetailImageFetcher detailImageFetcher;
+    private final AccommodationSyncWriter accommodationSyncWriter;
+
+    @Transactional
+    public void syncAreaCodes() {
+        List<AreaCodeSyncPayload> areaCodes = areaCodeFetcher.fetch();
+
+        for (AreaCodeSyncPayload areaCode : areaCodes) {
+            areaCodeSyncWriter.write(areaCode, childAreaCodeFetcher.fetch(areaCode.code()));
+        }
+    }
 
     @Transactional
     public void fetchAccommodations(int pageNo, int numOfRows) {
-        AreaListWorker worker = new AreaListWorker(httpClientTemplate, tourRepositoryFacadeManager);
-        List<AccommodationProcessorDto> dtoList = worker.run(pageNo, numOfRows);
+        List<AccommodationSyncSeed> seeds = areaListFetcher.fetch(pageNo, numOfRows);
 
-        dtoList.forEach(this::fillDto);
-
-        saveAccommodations(dtoList);
+        List<AccommodationSyncDraft> drafts = seeds.stream()
+                                                   .map(AccommodationSyncDraft::new)
+                                                   .toList();
+        drafts.forEach(this::fillDraft);
+        saveAccommodations(drafts);
     }
 
-    private void fillDto(AccommodationProcessorDto dto) {
-        new DetailCommonWorker(httpClientTemplate, dto).run();
-        new DetailIntroWorker(httpClientTemplate, dto).run();
-        new DetailInfoWorker(httpClientTemplate, dto).run();
-        new DetailImageWorker(httpClientTemplate, dto).run();
+    private void fillDraft(AccommodationSyncDraft draft) {
+        String contentId = draft.getSeed().contentId();
+
+        // TODO: 각 fetch 비동기 호출로 전환 가능
+        draft.setCommon(detailCommonFetcher.fetch(contentId));
+        draft.setIntro(detailIntroFetcher.fetch(contentId));
+        draft.setInfo(detailInfoFetcher.fetch(contentId));
+        draft.setImage(detailImageFetcher.fetch(contentId));
     }
 
-    private void saveAccommodations(List<AccommodationProcessorDto> dtoList) {
-        AccommodationSaveWorker worker = new AccommodationSaveWorker(
-                tourRepositoryFacadeManager,
-                dtoList,
-                this::hasMandatoryFields
-        );
-
-        worker.run();
-    }
-
-    private boolean hasMandatoryFields(AccommodationProcessorDto dto) {
-        return hasText(dto.getTitle()) && hasText(dto.getContentId()) && dto.getModifiedTime() != null && hasText(dto.getSigunguCode()) &&
-                hasText(dto.getAddress()) && dto.getMapX() != null && dto.getMapY() != null &&
-                dto.hasThumbnail() && dto.hasAllPrices();
+    private void saveAccommodations(List<AccommodationSyncDraft> drafts) {
+        accommodationSyncWriter.write(drafts);
     }
 }

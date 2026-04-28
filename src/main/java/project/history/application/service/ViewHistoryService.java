@@ -2,7 +2,6 @@ package project.history.application.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.accommodation.domain.exception.AccommodationExceptions;
@@ -15,13 +14,7 @@ import project.member.adapter.out.persistence.MemberRepository;
 import project.history.adapter.out.persistence.ViewHistoryRepository;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -78,27 +71,5 @@ public class ViewHistoryService {
 
     private void refreshKeyExpiration(String key) {
         redisTemplate.expire(key, Duration.ofDays(EXPIRE_DAYS));
-    }
-
-    public Map<Long, LocalDateTime> getRecentViewIdsWithTime(Long memberId) {
-        String key = KEY_PREFIX + memberId;
-
-        Set<TypedTuple<String>> typedTuples =
-                redisTemplate.opsForZSet().reverseRangeWithScores(key, 0, -1);
-
-        if (typedTuples == null || typedTuples.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        Map<Long, LocalDateTime> result = new LinkedHashMap<>();
-
-        for (TypedTuple<String> tuple : typedTuples) {
-            Long id = Long.valueOf(tuple.getValue());
-
-            LocalDateTime time = LocalDateTime.ofInstant(
-                    Instant.ofEpochMilli(tuple.getScore().longValue()), ZoneId.systemDefault());
-            result.put(id, time);
-        }
-        return result;
     }
 }

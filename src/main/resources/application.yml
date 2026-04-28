@@ -87,7 +87,7 @@ spring:
         order_inserts: true
         jdbc:
           batch_size: 50
-        generate_statistics: true
+        generate_statistics: false
         default_batch_fetch_size: 100
     open-in-view: false
 

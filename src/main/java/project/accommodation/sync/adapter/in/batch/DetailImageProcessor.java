@@ -4,23 +4,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
-import project.accommodation.sync.adapter.out.api.TourApiClient;
-import project.accommodation.sync.application.model.AccommodationProcessorDto;
-import project.accommodation.sync.adapter.out.api.HttpClientTemplate;
-import project.accommodation.sync.application.worker.DetailImageWorker;
+import project.accommodation.sync.application.fetcher.DetailImageFetcher;
+import project.accommodation.sync.application.model.AccommodationSyncDraft;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DetailImageProcessor implements ItemProcessor<AccommodationProcessorDto, AccommodationProcessorDto> {
+public class DetailImageProcessor implements ItemProcessor<AccommodationSyncDraft, AccommodationSyncDraft> {
 
-    private final HttpClientTemplate<TourApiClient> httpClientTemplate;
+    private final DetailImageFetcher detailImageFetcher;
 
     @Override
-    public AccommodationProcessorDto process(AccommodationProcessorDto dto) {
-        DetailImageWorker worker = new DetailImageWorker(httpClientTemplate, dto);
-        worker.run();
-
-        return dto.hasThumbnail() ? dto : null;
+    public AccommodationSyncDraft process(AccommodationSyncDraft draft) {
+        draft.setImage(detailImageFetcher.fetch(draft.getSeed().contentId()));
+        return draft.hasThumbnail() ? draft : null;
     }
 }

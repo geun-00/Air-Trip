@@ -7,18 +7,15 @@ import project.accommodation.adapter.out.persistence.model.AccAllImagesQueryDto;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
 import project.wishlist.adapter.in.web.response.WishlistsResponse;
 import project.wishlist.adapter.out.persistence.model.WishlistDetailQueryDto;
+import project.wishlist.adapter.out.persistence.model.WishlistInfoRow;
 import project.wishlist.domain.QWishlistAccommodation;
 import project.wishlist.domain.Wishlist;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.querydsl.core.types.Projections.constructor;
-import static project.accommodation.adapter.in.web.response.DetailAccommodationResDto.WishlistInfo;
 import static project.accommodation.domain.QAccommodation.accommodation;
 import static project.accommodation.domain.QAccommodationImage.accommodationImage;
 import static project.member.domain.QMember.member;
@@ -51,9 +48,9 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
                 accommodation.id,
                 wishlist.name,
                 accommodation.title,
-                accommodation.description,
-                accommodation.mapX,
-                accommodation.mapY,
+                accommodation.detail.description,
+                accommodation.geoPoint.longitude,
+                accommodation.geoPoint.latitude,
                 review.rating.avg().coalesce(0.0),
                 wishlistAccommodation.memo
         ))
@@ -65,7 +62,7 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
                 .where(wishlist.id.eq(wishlistId),
                         wishlist.member.id.eq(memberId)
                 )
-                .groupBy(accommodation.id, wishlist.name, accommodation.title, accommodation.description, accommodation.mapX, accommodation.mapY, wishlistAccommodation.memo)
+                .groupBy(accommodation.id, wishlist.name, accommodation.title, accommodation.detail.description, accommodation.geoPoint.longitude, accommodation.geoPoint.latitude, wishlistAccommodation.memo)
                 .fetch();
     }
 
@@ -106,10 +103,10 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
                 .fetch();
     }
 
-    public Optional<WishlistInfo> getWishlistInfo(Long accId, Long memberId) {
+    public Optional<WishlistInfoRow> getWishlistInfo(Long accId, Long memberId) {
         return Optional.ofNullable(
                 select(constructor(
-                        WishlistInfo.class,
+                        WishlistInfoRow.class,
                         wishlistAccommodation.accommodation.id,
                         wishlistAccommodation.isNotNull(),
                         wishlist.id,
@@ -124,13 +121,13 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
         );
     }
 
-    public Map<Long, WishlistInfo> getWishlistInfos(List<Long> accIds, Long memberId) {
-        if (accIds == null || accIds.isEmpty() || memberId == null) {
-            return Collections.emptyMap();
+    public List<WishlistInfoRow> getWishlistInfos(List<Long> accommodationIds, Long memberId) {
+        if (accommodationIds == null || accommodationIds.isEmpty() || memberId == null) {
+            return Collections.emptyList();
         }
 
-        List<WishlistInfo> results = select(
-                constructor(WishlistInfo.class,
+        return select(
+                constructor(WishlistInfoRow.class,
                 wishlistAccommodation.accommodation.id,
                 wishlistAccommodation.isNotNull(),
                 wishlist.id,
@@ -139,14 +136,8 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
                 .join(wishlistAccommodation).on(wishlistAccommodation.wishlist.eq(wishlist))
                 .where(
                         wishlist.member.id.eq(memberId),
-                        wishlistAccommodation.accommodation.id.in(accIds)
+                        wishlistAccommodation.accommodation.id.in(accommodationIds)
                 )
                 .fetch();
-
-        return results.stream()
-                      .collect(Collectors.toMap(
-                              WishlistInfo::accommodationId,
-                              Function.identity()
-                      ));
     }
 }

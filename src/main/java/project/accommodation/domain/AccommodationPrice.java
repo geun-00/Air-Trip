@@ -1,21 +1,30 @@
 package project.accommodation.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.common.domain.DayType;
 import project.common.domain.Season;
-import project.common.adapter.out.persistence.BaseEntity;
 
-@Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "accommodation_prices")
-public class AccommodationPrice extends BaseEntity {
+class AccommodationPrice {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "accommodation_prices_seq")
+    @SequenceGenerator(name = "accommodation_prices_seq", sequenceName = "accommodation_prices_seq")
     @Column(name = "accommodation_price_id", nullable = false)
     private Long id;
 
@@ -34,7 +43,7 @@ public class AccommodationPrice extends BaseEntity {
     @Column(name = "price", nullable = false)
     private Integer price;
 
-    public static AccommodationPrice create(Accommodation accommodation, Season season, DayType dayType, Integer price) {
+    static AccommodationPrice create(Accommodation accommodation, Season season, DayType dayType, Integer price) {
         return new AccommodationPrice(accommodation, season, dayType, price);
     }
 

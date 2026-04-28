@@ -119,22 +119,22 @@ public class EmbeddingService {
 
     private List<AccommodationEmbeddingDto> getEmbeddingDtos(List<Long> ids) {
         return em.createQuery("""
-                         SELECT new project.config.ai.embed.AccommodationEmbeddingDto(
+                         SELECT new project.chatbot.adapter.out.ai.embed.AccommodationEmbeddingDto(
                              acc.id,
                              acc.title,
-                             acc.description,
-                             acc.maxPeople,
+                             acc.detail.description,
+                             acc.detail.maxPeople,
                              acc.address,
-                             ac.codeName,
-                             sc.codeName,
+                             parentArea.codeName,
+                             childArea.codeName,
                              p.season,
                              p.dayType,
                              p.price
                          )
                          FROM Accommodation AS acc
                          JOIN AccommodationPrice AS p ON p.accommodation = acc
-                         JOIN SigunguCode AS sc ON sc = acc.sigunguCode
-                         JOIN AreaCode AS ac ON ac = sc.areaCode
+                         JOIN AreaCode AS childArea ON childArea.code = acc.areaCode
+                         LEFT JOIN AreaCode AS parentArea ON parentArea = childArea.parent
                          WHERE acc.id IN :ids
                          """, AccommodationEmbeddingDto.class)
                  .setParameter("ids", ids)
@@ -174,7 +174,7 @@ public class EmbeddingService {
                          )
                          FROM Accommodation AS acc
                          LEFT JOIN AccommodationAmenity AS aa ON aa.accommodation = acc
-                         JOIN Amenity AS am ON aa.amenity = am
+                         JOIN Amenity AS am ON aa.amenityId = am.id
                          WHERE acc.id IN :ids
                          """, AmenitiesDto.class)
                  .setParameter("ids", ids)

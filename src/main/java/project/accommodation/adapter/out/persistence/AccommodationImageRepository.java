@@ -1,14 +1,12 @@
 package project.accommodation.adapter.out.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import project.accommodation.domain.Accommodation;
 import project.accommodation.domain.AccommodationImage;
 
-import java.util.List;
-
+@Deprecated(forRemoval = true)
 public interface AccommodationImageRepository extends JpaRepository<AccommodationImage, Long> {
 
     @Query("""
@@ -17,7 +15,4 @@ public interface AccommodationImageRepository extends JpaRepository<Accommodatio
             WHERE ai.accommodation = :accommodation AND ai.thumbnail = TRUE
             """)
     String findThumbnailUrl(@Param("accommodation") Accommodation accommodation);
-
-    @Modifying(clearAutomatically = true)
-    void deleteByAccommodationIn(List<Accommodation> accommodations);
 }
