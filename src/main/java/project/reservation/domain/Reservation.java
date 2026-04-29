@@ -75,8 +75,10 @@ public class Reservation extends BaseEntity {
         this.status = ReservationStatus.CONFIRMED;
     }
 
-    public boolean isOwner(Long memberId) {
-        return this.memberId.equals(memberId);
+    public void validateOwner(Long memberId) {
+        if (!this.memberId.equals(memberId)) {
+            throw ReservationExceptions.notOwner(this.id, memberId);
+        }
     }
 
     public LocalDateTime getStartDate() {

@@ -31,6 +31,14 @@ public class ReservationPersistenceAdapter implements LoadReservationPort, SaveR
     }
 
     @Override
+    public Reservation loadOwnerReservation(Long reservationId, Long memberId) {
+        Reservation reservation = loadReservation(reservationId);
+        reservation.validateOwner(memberId);
+
+        return reservation;
+    }
+
+    @Override
     public boolean existsConfirmedReservation(Long accommodationId, LocalDateTime startDate, LocalDateTime endDate) {
         return reservationQueryRepository.existsConfirmedReservation(accommodationId, startDate, endDate);
     }

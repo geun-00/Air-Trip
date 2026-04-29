@@ -8,6 +8,8 @@ public interface LoadReservationPort {
 
     Reservation loadReservation(Long reservationId);
 
+    Reservation loadOwnerReservation(Long reservationId, Long memberId);
+
     Reservation loadReservationWithLock(Long reservationId);
 
     boolean existsConfirmedReservation(Long accommodationId, LocalDateTime startDate, LocalDateTime endDate);

@@ -6,16 +6,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import project.controller.RestDocsTestSupport;
+import project.reservation.adapter.in.web.ReservationCommandController;
+import project.reservation.adapter.in.web.request.CreateReservationRequest;
 import project.reservation.application.in.command.CreateReservationUseCase;
 import project.reservation.application.in.command.model.CreateReservationCommand;
-import project.security.WithMockMember;
-import project.controller.RestDocsTestSupport;
-import project.reservation.adapter.in.web.request.CreateReservationRequest;
 import project.reservation.application.in.command.model.CreateReservationResult;
-import project.review.adapter.in.web.request.PostReviewRequest;
-import project.reservation.adapter.in.web.ReservationCommandController;
+import project.security.WithMockMember;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
@@ -146,45 +144,5 @@ class ReservationCommandControllerTest extends RestDocsTestSupport {
                                )
                        ));
 
-    }
-
-    @Test
-    @DisplayName("예약 리뷰 등록")
-    @WithMockMember
-    void postReview() throws Exception {
-        //given
-        PostReviewRequest requestDto = new PostReviewRequest(BigDecimal.valueOf(4.5), "만족스러운 여행이었어요!");
-
-        //when
-        //then
-        mockMvc.perform(post("/api/reservations/{reservationId}/reviews", 1L)
-                       .header(AUTHORIZATION, "Bearer {access-token}")
-                       .contentType(MediaType.APPLICATION_JSON_VALUE)
-                       .content(creatJson(requestDto)))
-               .andExpectAll(
-                       handler().handlerType(ReservationCommandController.class),
-                       handler().methodName("postReview"),
-                       status().isCreated()
-               )
-               .andDo(
-                       document("post-review",
-                               resource(
-                                       builder()
-                                               .tag(RESERVATION_API_TAG)
-                                               .summary("예약 리뷰 등록")
-                                               .requestHeaders(headerWithName(AUTHORIZATION).description("Bearer {액세스 토큰}"))
-                                               .pathParameters(parameterWithName("reservationId").type(SimpleType.NUMBER).description("리뷰 등록할 예약 ID"))
-                                               .requestFields(
-                                                       fieldWithPath("rating")
-                                                               .description("별점 (0.0 ~ 5.0)")
-                                                               .type(NUMBER),
-                                                       fieldWithPath("content")
-                                                               .description("내용 (최대 100자)")
-                                                               .type(STRING)
-                                               )
-                                               .requestSchema(schema("PostReviewRequest"))
-                                               .build()
-                               )
-                       ));
     }
 }
