@@ -14,4 +14,6 @@ public interface LoadChatRoomPort {
     void markLatestMessageAsRead(Long roomId, ChatRoom chatRoom, Long memberId);
 
     void removeRoomMember(Long roomId, Long memberId);
+
+    void resetUnreadCount(Long roomId, Long memberId);
 }

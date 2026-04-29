@@ -14,20 +14,21 @@ import project.auth.adapter.in.web.support.CurrentMemberId;
 import project.chat.adapter.in.web.request.UpdateChatRoomNameRequest;
 import project.chat.adapter.in.web.response.ChatRoomResponse;
 import project.chat.application.in.command.LeaveChatRoomUseCase;
+import project.chat.application.in.command.MarkChatRoomAsReadUseCase;
 import project.chat.application.in.command.UpdateChatRoomNameUseCase;
 import project.chat.application.in.command.model.LeaveChatRoomCommand;
+import project.chat.application.in.command.model.MarkChatRoomAsReadCommand;
 import project.chat.application.in.command.model.UpdateChatRoomNameCommand;
 import project.chat.application.in.command.model.UpdateChatRoomNameResult;
-import project.chat.application.service.ChatRoomService;
 
 @RestController
 @RequestMapping("/api/chat/rooms")
 @RequiredArgsConstructor
 public class ChatRoomCommandController {
 
-    private final ChatRoomService chatRoomService;
     private final LeaveChatRoomUseCase leaveChatRoomUseCase;
     private final UpdateChatRoomNameUseCase updateChatRoomNameUseCase;
+    private final MarkChatRoomAsReadUseCase markChatRoomAsReadUseCase;
 
     @PatchMapping("/{roomId}/name")
     public ResponseEntity<ChatRoomResponse> updateChatRoomName(
@@ -76,7 +77,8 @@ public class ChatRoomCommandController {
             @PathVariable Long roomId,
             @CurrentMemberId Long memberId
     ) {
-        chatRoomService.markChatRoomAsRead(roomId, memberId);
+        markChatRoomAsReadUseCase.markAsRead(new MarkChatRoomAsReadCommand(roomId, memberId));
+
         return ResponseEntity.ok().build();
     }
 }

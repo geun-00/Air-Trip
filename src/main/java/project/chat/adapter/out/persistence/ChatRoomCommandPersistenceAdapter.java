@@ -61,4 +61,9 @@ public class ChatRoomCommandPersistenceAdapter implements LoadChatRoomPort {
     public void removeRoomMember(Long roomId, Long memberId) {
         stringRedisTemplate.opsForSet().remove(ChatRedisKey.ROOM_MEMBERS.format(roomId), memberId.toString());
     }
+
+    @Override
+    public void resetUnreadCount(Long roomId, Long memberId) {
+        stringRedisTemplate.opsForHash().put(ChatRedisKey.UNREAD.format(roomId), memberId.toString(), "0");
+    }
 }

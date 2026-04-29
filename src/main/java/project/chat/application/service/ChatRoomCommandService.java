@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.chat.application.event.ChatLeaveEvent;
 import project.chat.application.in.command.LeaveChatRoomUseCase;
+import project.chat.application.in.command.MarkChatRoomAsReadUseCase;
 import project.chat.application.in.command.UpdateChatRoomNameUseCase;
 import project.chat.application.in.command.model.LeaveChatRoomCommand;
+import project.chat.application.in.command.model.MarkChatRoomAsReadCommand;
 import project.chat.application.in.command.model.UpdateChatRoomNameCommand;
 import project.chat.application.in.command.model.UpdateChatRoomNameResult;
 import project.chat.application.out.command.LoadChatRoomPort;
@@ -18,7 +20,7 @@ import project.member.application.out.command.LoadMemberPort;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ChatRoomCommandService implements UpdateChatRoomNameUseCase, LeaveChatRoomUseCase {
+public class ChatRoomCommandService implements UpdateChatRoomNameUseCase, LeaveChatRoomUseCase, MarkChatRoomAsReadUseCase {
 
     private final LoadMemberPort loadMemberPort;
     private final LoadChatRoomPort loadChatRoomPort;
@@ -60,5 +62,13 @@ public class ChatRoomCommandService implements UpdateChatRoomNameUseCase, LeaveC
         String memberName = loadMemberPort.loadMemberName(command.memberId());
 
         eventPublisher.publishEvent(new ChatLeaveEvent(memberName, command.roomId()));
+    }
+
+    @Override
+    public void markAsRead(MarkChatRoomAsReadCommand command) {
+        loadChatRoomPort.resetUnreadCount(command.roomId(), command.memberId());
+
+        ChatRoom chatRoom = loadChatRoomPort.loadParticipantChatRoom(command.roomId(), command.memberId());
+        loadChatRoomPort.markLatestMessageAsRead(command.roomId(), chatRoom, command.memberId());
     }
 }
