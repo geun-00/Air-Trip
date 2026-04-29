@@ -37,7 +37,7 @@ public class ReservationCommandService implements CreateReservationUseCase {
         Accommodation accommodation = loadAccommodationPort.loadAccommodation(command.accommodationId());
 
         LocalDateTime startDate = command.startDate().atStartOfDay();
-        LocalDateTime endDate = command.endDate().atTime(23, 59, 59);
+        LocalDateTime endDate = command.endDate().plusDays(1).atStartOfDay();
 
         validateReservationAvailability(accommodation.getId(), startDate, endDate);
 
@@ -75,7 +75,7 @@ public class ReservationCommandService implements CreateReservationUseCase {
                 accommodation.getTitle(),
                 accommodation.getRefundRegulation(),
                 reservation.getStartDate(),
-                reservation.getEndDate(),
+                reservation.getDisplayEndDate(),
                 reservation.getAdults(),
                 reservation.getChildren(),
                 reservation.getInfants()

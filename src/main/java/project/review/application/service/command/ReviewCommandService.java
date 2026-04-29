@@ -52,11 +52,20 @@ public class ReviewCommandService implements CreateReviewUseCase,
     public void updateReview(UpdateReviewCommand command) {
         Review review = loadReviewPort.loadOwnerReview(command.reviewId(), command.memberId());
         review.update(command.rating().doubleValue(), command.content());
+
+        evictAccommodationCommonInfo(review.getReservationId());
     }
 
     @Override
     public void deleteReview(DeleteReviewCommand command) {
         Review review = loadReviewPort.loadOwnerReview(command.reviewId(), command.memberId());
         deleteReviewPort.delete(review);
+
+        evictAccommodationCommonInfo(review.getReservationId());
+    }
+
+    private void evictAccommodationCommonInfo(Long reservationId) {
+        Reservation reservation = loadReservationPort.loadReservation(reservationId);
+        evictAccommodationCommonInfoPort.evictAccommodationCommonInfo(reservation.getAccommodationId());
     }
 }

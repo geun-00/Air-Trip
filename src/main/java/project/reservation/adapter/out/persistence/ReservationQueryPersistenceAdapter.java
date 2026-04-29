@@ -19,7 +19,7 @@ public class ReservationQueryPersistenceAdapter implements LoadReservedDatesPort
                                          .stream()
                                          .map(row -> new ReservedDateRangeView(
                                                  row.startDate().toLocalDate(),
-                                                 row.endDate().toLocalDate()
+                                                 row.endDate().minusNanos(1).toLocalDate()
                                          ))
                                          .toList();
     }

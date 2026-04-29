@@ -89,6 +89,10 @@ public class Reservation extends BaseEntity {
         return stayPeriod.getEndDate();
     }
 
+    public LocalDateTime getDisplayEndDate() {
+        return stayPeriod.getDisplayEndDate();
+    }
+
     public int getAdults() {
         return guestCount.getAdults();
     }

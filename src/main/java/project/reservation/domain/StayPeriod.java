@@ -29,4 +29,8 @@ public class StayPeriod {
     public boolean overlaps(StayPeriod other) {
         return this.startDate.isBefore(other.endDate) && this.endDate.isAfter(other.startDate);
     }
+
+    public LocalDateTime getDisplayEndDate() {
+        return endDate.minusNanos(1);
+    }
 }

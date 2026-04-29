@@ -47,7 +47,7 @@ public class Member extends BaseEntity {
     private SocialType socialType;
 
     @Column(name = "is_email_verified", nullable = false)
-    private Boolean isEmailVerified = false;
+    private boolean isEmailVerified = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
@@ -97,7 +97,7 @@ public class Member extends BaseEntity {
     }
 
     public void validateEmailVerified() {
-        if (Boolean.FALSE.equals(isEmailVerified)) {
+        if (!isEmailVerified) {
             throw MemberExceptions.emailNotVerified();
         }
     }
