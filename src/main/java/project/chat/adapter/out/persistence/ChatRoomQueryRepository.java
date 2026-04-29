@@ -1,13 +1,12 @@
 package project.chat.adapter.out.persistence;
 
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
-import com.querydsl.jpa.impl.JPAQuery;
 import org.springframework.stereotype.Repository;
 import project.chat.adapter.in.web.response.ChatRoomResponse;
+import project.chat.adapter.out.persistence.model.ChatRoomInfoRow;
 import project.chat.domain.ChatRoom;
 import project.chat.domain.QChatMessage;
 import project.chat.domain.QChatParticipant;
@@ -17,6 +16,7 @@ import project.member.domain.QMember;
 import java.util.List;
 import java.util.Optional;
 
+import static com.querydsl.core.types.Projections.*;
 import static project.chat.domain.QChatMessage.chatMessage;
 import static project.chat.domain.QChatRoom.chatRoom;
 
@@ -26,39 +26,45 @@ public class ChatRoomQueryRepository extends CustomQuerydslRepositorySupport {
     private static final QChatParticipant CP1 = new QChatParticipant("cp1");
     private static final QChatParticipant CP2 = new QChatParticipant("cp2");
     private static final QMember OTHER_MEMBER = new QMember("otherMember");
-    private static final QChatMessage SUB_CM = new QChatMessage("subMessage");
+    private static final QChatMessage LATEST_MESSAGE = new QChatMessage("latestMessage");
 
     public ChatRoomQueryRepository() {
         super(ChatRoom.class);
     }
 
-    public Optional<ChatRoomResponse> findChatRoomInfo(Long currentMemberId, Long otherMemberId, ChatRoom targetRoom) {
-        BooleanExpression currentUserCond = CP1.chatRoom.eq(chatRoom).and(CP1.member.id.eq(currentMemberId));
-        BooleanExpression otherUserCond = CP2.chatRoom.eq(chatRoom).and(CP2.member.id.eq(otherMemberId));
-
+    public Optional<ChatRoomInfoRow> findChatRoomInfo(
+            Long currentMemberId,
+            Long otherMemberId,
+            Long roomId
+    ) {
         return Optional.ofNullable(
-                getBaseChatRoomQuery(currentUserCond, otherUserCond)
-                        .where(chatRoom.eq(targetRoom))
+                select(constructor(ChatRoomInfoRow.class,
+                        chatRoom.id,
+                        CP1.customRoomName,
+                        OTHER_MEMBER.id,
+                        OTHER_MEMBER.name,
+                        OTHER_MEMBER.detail.profileUrl,
+                        CP2.isActive,
+                        chatMessage.content,
+                        chatMessage.createdAt))
+                        .from(chatRoom)
+                        .join(CP1).on(
+                                CP1.chatRoom.eq(chatRoom),
+                                CP1.memberId.eq(currentMemberId)
+                        )
+                        .join(CP2).on(
+                                CP2.chatRoom.eq(chatRoom),
+                                CP2.memberId.eq(otherMemberId)
+                        )
+                        .join(OTHER_MEMBER).on(OTHER_MEMBER.id.eq(CP2.memberId))
+                        .leftJoin(chatMessage).on(chatMessage.id.eq(latestMessageIdSubQuery()))
+                        .where(chatRoom.id.eq(roomId))
                         .fetchOne()
         );
     }
 
     public List<ChatRoomResponse> findChatRooms(Long memberId) {
-        // CP1: 현재 사용자의 참가 정보
-        // CP2: 상대방의 참가 정보
-        BooleanExpression currentUserCond = CP1.chatRoom.eq(chatRoom)
-                                                        .and(CP1.member.id.eq(memberId))
-                                                        .and(CP1.isActive.isTrue());
-        BooleanExpression otherUserCond = CP2.chatRoom.eq(chatRoom)
-                                                      .and(CP2.member.id.ne(memberId));
-
-        return getBaseChatRoomQuery(currentUserCond, otherUserCond)
-                .orderBy(chatMessage.createdAt.desc().nullsLast())
-                .fetch();
-    }
-
-    private JPAQuery<ChatRoomResponse> getBaseChatRoomQuery(BooleanExpression currentUserCond, BooleanExpression otherUserCond) {
-        return select(Projections.constructor(
+        return select(constructor(
                 ChatRoomResponse.class,
                 chatRoom.id,
                 CP1.customRoomName,
@@ -70,25 +76,24 @@ public class ChatRoomQueryRepository extends CustomQuerydslRepositorySupport {
                 chatMessage.createdAt,
                 Expressions.asNumber(0)))
                 .from(chatRoom)
-                .join(CP1).on(currentUserCond)
-                .join(CP2).on(otherUserCond)
-                .join(CP2.member, OTHER_MEMBER)
-                .leftJoin(chatMessage).on(chatMessage.id.eq(
-                        JPAExpressions.select(SUB_CM.id.max())
-                                      .from(SUB_CM)
-                                      .where(SUB_CM.chatRoom.eq(chatRoom))
-                ));
+                .join(CP1).on(
+                        CP1.chatRoom.eq(chatRoom),
+                        CP1.memberId.eq(memberId),
+                        CP1.isActive.isTrue()
+                )
+                .join(CP2).on(
+                        CP2.chatRoom.eq(chatRoom),
+                        CP2.memberId.ne(memberId)
+                )
+                .join(OTHER_MEMBER).on(OTHER_MEMBER.id.eq(CP2.memberId))
+                .leftJoin(chatMessage).on(chatMessage.id.eq(latestMessageIdSubQuery()))
+                .orderBy(chatMessage.createdAt.desc().nullsLast())
+                .fetch();
     }
 
-    @Deprecated
-    private JPQLQuery<Integer> buildUnreadCountSubQuery() {
-        return JPAExpressions
-                .select(SUB_CM.count().intValue())
-                .from(SUB_CM)
-                .where(SUB_CM.chatRoom.eq(chatRoom)
-                                      .and(CP1.lastReadMessage.isNull().or(SUB_CM.id.gt(CP1.lastReadMessage.id)))
-                                      // 본인이 보낸 메시지 제외
-                                      .and(SUB_CM.writer.ne(CP1.member))
-                );
+    private JPQLQuery<Long> latestMessageIdSubQuery() {
+        return JPAExpressions.select(LATEST_MESSAGE.id.max())
+                             .from(LATEST_MESSAGE)
+                             .where(LATEST_MESSAGE.chatRoomId.eq(chatRoom.id));
     }
 }
