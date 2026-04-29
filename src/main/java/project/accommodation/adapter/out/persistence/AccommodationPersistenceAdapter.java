@@ -29,4 +29,9 @@ public class AccommodationPersistenceAdapter implements LoadAccommodationPort {
         return accommodationRepository.findThumbnailUrlByAccommodationId(accommodationId)
                                       .orElse(null);
     }
+
+    @Override
+    public boolean existsAccommodation(Long accommodationId) {
+        return accommodationRepository.existsById(accommodationId);
+    }
 }

@@ -9,4 +9,6 @@ public interface LoadAccommodationPort {
     Accommodation loadAccommodationWithLock(Long accommodationId);
 
     String loadThumbnailUrl(Long accommodationId);
+
+    boolean existsAccommodation(Long accommodationId);
 }

@@ -5,6 +5,9 @@ import project.common.exception.ErrorCode;
 
 public abstract class WishlistExceptions {
 
+    private WishlistExceptions() {
+    }
+
     public static BusinessException notFoundByIdAndMemberId(Long wishlistId, Long memberId) {
         return new BusinessException(
                 ErrorCode.ENTITY_NOT_FOUND,

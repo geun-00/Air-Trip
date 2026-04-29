@@ -45,4 +45,8 @@ class WishlistAccommodation {
     void updateMemo(String newMemo) {
         this.memo = new WishlistMemo(newMemo);
     }
+
+    boolean isAccommodation(Long accommodationId) {
+        return this.accommodationId.equals(accommodationId);
+    }
 }
