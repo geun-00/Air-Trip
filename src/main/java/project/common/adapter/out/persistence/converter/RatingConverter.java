@@ -1,8 +1,8 @@
-package project.accommodation.adapter.out.persistence.converter;
+package project.common.adapter.out.persistence.converter;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import project.accommodation.domain.Rating;
+import project.common.domain.Rating;
 
 @Converter(autoApply = true)
 public class RatingConverter implements AttributeConverter<Rating, Double> {

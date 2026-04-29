@@ -2,6 +2,8 @@ package project.accommodation.adapter.in.web;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,7 +31,6 @@ import project.accommodation.application.in.query.model.MainAccommodationItemVie
 import project.accommodation.application.in.query.model.MainAccommodationView;
 import project.auth.adapter.in.web.support.CurrentMemberId;
 import project.common.adapter.in.web.response.PageResponse;
-import project.common.application.query.PageQuery;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -86,14 +87,14 @@ public class AccommodationQueryController {
     public ResponseEntity<PageResponse<FilteredAccommodationResponse>> getFilteredPagingAccommodations(
             @ModelAttribute AccommodationSearchRequest searchRequest,
             @CurrentMemberId(required = false) Long memberId,
-            Pageable pageable
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         AccommodationSearchQuery searchQuery = new AccommodationSearchQuery(
                 searchRequest.areaCode(),
                 searchRequest.amenities(),
                 searchRequest.priceGoe(),
                 searchRequest.priceLoe(),
-                new PageQuery(pageable.getPageNumber(), pageable.getPageSize())
+                pageable
         );
         PageResponse<FilteredAccommodationResponse> result = searchAccommodationsQueryUseCase.getFilteredPagingAccommodations(searchQuery, memberId)
                                                                                              .map(this::toResponse);

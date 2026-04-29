@@ -76,7 +76,7 @@ public class MemberQueryPersistenceAdapter implements GetMemberProfilePort,
                 row.thumbnailUrl(),
                 row.title(),
                 row.startDate().toLocalDate(),
-                row.endDate().toLocalDate(),
+                row.endDate().minusNanos(1).toLocalDate(),
                 row.hasReviewed()
         );
     }

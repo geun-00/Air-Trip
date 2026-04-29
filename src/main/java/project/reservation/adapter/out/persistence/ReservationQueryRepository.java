@@ -24,10 +24,10 @@ public class ReservationQueryRepository extends CustomQuerydslRepositorySupport 
                 .selectOne()
                 .from(reservation)
                 .where(
-                        reservation.accommodation.id.eq(accId),
+                        reservation.accommodationId.eq(accId),
                         reservation.status.eq(CONFIRMED),
-                        reservation.startDate.lt(to),
-                        reservation.endDate.gt(from)
+                        reservation.stayPeriod.startDate.lt(to),
+                        reservation.stayPeriod.endDate.gt(from)
                 )
                 .fetchFirst() != null;
     }
@@ -35,12 +35,12 @@ public class ReservationQueryRepository extends CustomQuerydslRepositorySupport 
     public List<ReservedDateRow> findReservedDatesByAccommodationId(Long accommodationId) {
         return getQueryFactory()
                 .select(constructor(ReservedDateRow.class,
-                        reservation.startDate,
-                        reservation.endDate))
+                        reservation.stayPeriod.startDate,
+                        reservation.stayPeriod.endDate))
                 .from(reservation)
-                .where(reservation.accommodation.id.eq(accommodationId)
+                .where(reservation.accommodationId.eq(accommodationId)
                                                    .and(reservation.status.eq(CONFIRMED))
-                                                   .and(reservation.endDate.after(LocalDateTime.now())))
+                                                   .and(reservation.stayPeriod.endDate.after(LocalDateTime.now())))
                 .fetch();
     }
 }

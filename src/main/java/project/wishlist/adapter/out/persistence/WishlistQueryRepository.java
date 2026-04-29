@@ -1,5 +1,7 @@
 package project.wishlist.adapter.out.persistence;
 
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import org.springframework.stereotype.Repository;
@@ -27,6 +29,8 @@ import static project.wishlist.domain.QWishlistAccommodation.wishlistAccommodati
 @Repository
 public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
 
+    private static final NumberExpression<Double> REVIEW_RATING = Expressions.numberTemplate(Double.class, "{0}", review.rating);
+
     public WishlistQueryRepository() {
         super(Wishlist.class);
     }
@@ -51,18 +55,26 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
                 accommodation.detail.description,
                 accommodation.geoPoint.longitude,
                 accommodation.geoPoint.latitude,
-                review.rating.avg().coalesce(0.0),
+                REVIEW_RATING.avg().coalesce(0.0),
                 wishlistAccommodation.memo
         ))
                 .from(wishlistAccommodation)
                 .join(wishlistAccommodation.wishlist, wishlist)
                 .join(wishlistAccommodation.accommodation, accommodation)
-                .leftJoin(reservation).on(reservation.accommodation.eq(accommodation))
-                .leftJoin(review).on(review.reservation.eq(reservation))
+                .leftJoin(reservation).on(reservation.accommodationId.eq(accommodation.id))
+                .leftJoin(review).on(review.reservationId.eq(reservation.id))
                 .where(wishlist.id.eq(wishlistId),
                         wishlist.member.id.eq(memberId)
                 )
-                .groupBy(accommodation.id, wishlist.name, accommodation.title, accommodation.detail.description, accommodation.geoPoint.longitude, accommodation.geoPoint.latitude, wishlistAccommodation.memo)
+                .groupBy(
+                        accommodation.id,
+                        wishlist.name,
+                        accommodation.title,
+                        accommodation.detail.description,
+                        accommodation.geoPoint.longitude,
+                        accommodation.geoPoint.latitude,
+                        wishlistAccommodation.memo
+                )
                 .fetch();
     }
 

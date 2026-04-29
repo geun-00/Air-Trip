@@ -1,5 +1,7 @@
 package project.review.adapter.out.persistence.model;
 
+import project.common.domain.Rating;
+
 import java.time.LocalDateTime;
 
 public record DetailReviewRow(
@@ -9,7 +11,7 @@ public record DetailReviewRow(
         String profileUrl,
         LocalDateTime memberCreatedDate,
         LocalDateTime reviewCreatedDate,
-        double rating,
+        Rating rating,
         String content
 ) {
 }

@@ -1,8 +1,10 @@
-package project.reservation.adapter.in.web.request;
+package project.reservation.application.in.command.model;
 
 import java.time.LocalDate;
 
-public record PostReservationRequest(
+public record CreateReservationCommand(
+        Long memberId,
+        Long accommodationId,
         LocalDate startDate,
         LocalDate endDate,
         int adults,

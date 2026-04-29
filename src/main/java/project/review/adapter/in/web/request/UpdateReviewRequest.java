@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
-public record PostReviewReqDto(
+public record UpdateReviewRequest(
         @NotNull
         @DecimalMin("0.0")
         @DecimalMax("5.0")

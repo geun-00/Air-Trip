@@ -1,12 +1,16 @@
 package project.review.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import project.common.domain.Rating;
 import project.common.adapter.out.persistence.BaseEntity;
-import project.member.domain.Member;
-import project.reservation.domain.Reservation;
 
 @Getter
 @Entity
@@ -22,31 +26,33 @@ public class Review extends BaseEntity {
     @Column(name = "content", nullable = false)
     private String content;
 
-    // TODO : Rating VO 적용
     @Column(name = "rating", nullable = false)
-    private Double rating;
+    private Rating rating;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservation_id", nullable = false)
-    private Reservation reservation;
+    @Column(name = "reservation_id", nullable = false)
+    private Long reservationId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
 
-    public static Review create(double rating, String content, Reservation reservation, Member member) {
-        return new Review(content, rating, reservation, member);
+    public static Review create(
+            double rating,
+            String content,
+            Long reservationId,
+            Long memberId
+    ) {
+        return new Review(content, new Rating(rating), reservationId, memberId);
     }
 
-    private Review(String content, Double rating, Reservation reservation, Member member) {
+    private Review(String content, Rating rating, Long reservationId, Long memberId) {
         this.content = content;
         this.rating = rating;
-        this.reservation = reservation;
-        this.member = member;
+        this.reservationId = reservationId;
+        this.memberId = memberId;
     }
 
-    public void update(Double rating, String content) {
-        this.rating = rating;
+    public void update(double rating, String content) {
+        this.rating = new Rating(rating);
         this.content = content;
     }
 }

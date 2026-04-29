@@ -21,4 +21,11 @@ public abstract class ReservationExceptions {
                 "id=" + reservationId + " 예약 조회 실패"
         );
     }
+
+    public static BusinessException notOwner(Long reservationId, Long memberId) {
+        return new BusinessException(
+                ErrorCode.ACCESS_DENIED,
+                String.format("reservationId=%d, memberId=%d 예약 소유자 아님", reservationId, memberId)
+        );
+    }
 }

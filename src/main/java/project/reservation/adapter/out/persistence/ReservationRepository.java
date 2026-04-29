@@ -10,11 +10,8 @@ import project.reservation.domain.Reservation;
 import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Override
-    Optional<Reservation> findById(Long id);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from Reservation r where r.id = :id")
     Optional<Reservation> findByIdWithPessimisticLock(@Param("id") Long id);
-
 }

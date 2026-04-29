@@ -13,11 +13,10 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-// TODO : package-private 수정
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "accommodation_images")
-public class AccommodationImage {
+class AccommodationImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "accommodation_images_seq")

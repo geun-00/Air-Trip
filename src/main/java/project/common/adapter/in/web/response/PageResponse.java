@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.function.Function;
 
+// TODO : 애플리케이션 계층 공용 모델 분리 or 패키지 구조 변경
 @Getter
 public class PageResponse<E> {
 

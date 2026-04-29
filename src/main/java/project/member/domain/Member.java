@@ -14,7 +14,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.common.adapter.out.persistence.BaseEntity;
+import project.member.domain.exception.MemberExceptions;
 import project.member.domain.support.AdminMemberCreateSpec;
+
 import project.member.domain.support.RestMemberCreateSpec;
 import project.member.domain.support.SocialMemberCreateSpec;
 
@@ -45,7 +47,7 @@ public class Member extends BaseEntity {
     private SocialType socialType;
 
     @Column(name = "is_email_verified", nullable = false)
-    private Boolean isEmailVerified = false;
+    private boolean isEmailVerified = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
@@ -92,6 +94,12 @@ public class Member extends BaseEntity {
 
     public void verifyEmail() {
         this.isEmailVerified = true;
+    }
+
+    public void validateEmailVerified() {
+        if (!isEmailVerified) {
+            throw MemberExceptions.emailNotVerified();
+        }
     }
 
     public void updateProfileUrl(String profileUrl) {

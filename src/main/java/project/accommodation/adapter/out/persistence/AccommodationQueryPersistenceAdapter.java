@@ -2,8 +2,6 @@ package project.accommodation.adapter.out.persistence;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import project.accommodation.adapter.out.persistence.model.FilteredAccommodationRow;
 import project.accommodation.adapter.out.persistence.model.MainAccommodationRow;
@@ -12,12 +10,11 @@ import project.accommodation.application.in.query.model.MainAccommodationItemVie
 import project.accommodation.application.in.query.model.MainAccommodationView;
 import project.accommodation.application.out.query.GetAccommodationPricePort;
 import project.accommodation.application.out.query.GetMainAccommodationsPort;
+import project.accommodation.application.out.query.SearchAccommodationsPort;
 import project.accommodation.application.out.query.model.MainAccommodationsCondition;
 import project.accommodation.application.out.query.model.SearchAccommodationsCondition;
-import project.accommodation.application.out.query.SearchAccommodationsPort;
 import project.accommodation.domain.exception.AccommodationExceptions;
 import project.common.adapter.in.web.response.PageResponse;
-import project.common.application.query.PageQuery;
 import project.common.domain.StayDatePolicy;
 
 import java.util.List;
@@ -76,10 +73,7 @@ public class AccommodationQueryPersistenceAdapter implements GetMainAccommodatio
 
     @Override
     public PageResponse<FilteredAccommodationView> getFilteredPagingAccommodations(SearchAccommodationsCondition condition) {
-        PageQuery pageQuery = condition.pageQuery();
-        Pageable pageable = PageRequest.of(pageQuery.page(), pageQuery.size());
-
-        Page<FilteredAccommodationView> page = accommodationQueryRepository.getFilteredPagingAccommodations(condition, pageable)
+        Page<FilteredAccommodationView> page = accommodationQueryRepository.getFilteredPagingAccommodations(condition)
                                                                            .map(this::convertToView);
         return PageResponse.from(page);
     }
