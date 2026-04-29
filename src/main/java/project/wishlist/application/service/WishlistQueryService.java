@@ -40,7 +40,7 @@ public class WishlistQueryService implements GetWishlistDetailsQueryUseCase,
                         .map(wishlist -> new WishlistView(
                                 wishlist.wishlistId(),
                                 wishlist.name(),
-                                thumbnailUrls.get(wishlist.recentAccommodationId()),
+                                thumbnailUrl(thumbnailUrls, wishlist.recentAccommodationId()),
                                 wishlist.savedAccommodations()
                         ))
                         .toList();
@@ -52,5 +52,12 @@ public class WishlistQueryService implements GetWishlistDetailsQueryUseCase,
                         .filter(Objects::nonNull)
                         .distinct()
                         .toList();
+    }
+
+    private String thumbnailUrl(
+            Map<Long, String> thumbnailUrls,
+            Long accommodationId
+    ) {
+        return accommodationId == null ? null : thumbnailUrls.get(accommodationId);
     }
 }

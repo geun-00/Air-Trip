@@ -43,7 +43,7 @@ class WishlistAccommodation {
     }
 
     void updateMemo(String newMemo) {
-        this.memo = new WishlistMemo(newMemo);
+        this.memo = WishlistMemo.from(newMemo);
     }
 
     boolean isAccommodation(Long accommodationId) {

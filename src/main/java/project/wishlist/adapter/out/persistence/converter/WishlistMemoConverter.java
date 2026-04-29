@@ -14,6 +14,6 @@ public class WishlistMemoConverter implements AttributeConverter<WishlistMemo, S
 
     @Override
     public WishlistMemo convertToEntityAttribute(String dbData) {
-        return new WishlistMemo(dbData);
+        return WishlistMemo.from(dbData);
     }
 }
