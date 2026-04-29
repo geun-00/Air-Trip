@@ -12,6 +12,7 @@ import project.chat.application.in.command.model.LeaveChatRoomCommand;
 import project.chat.application.in.command.model.MarkChatRoomAsReadCommand;
 import project.chat.application.in.command.model.UpdateChatRoomNameCommand;
 import project.chat.application.in.command.model.UpdateChatRoomNameResult;
+import project.chat.application.out.command.ChatRoomStatePort;
 import project.chat.application.out.command.LoadChatRoomPort;
 import project.chat.application.out.query.model.ChatRoomInfoView;
 import project.chat.domain.ChatRoom;
@@ -24,6 +25,7 @@ public class ChatRoomCommandService implements UpdateChatRoomNameUseCase, LeaveC
 
     private final LoadMemberPort loadMemberPort;
     private final LoadChatRoomPort loadChatRoomPort;
+    private final ChatRoomStatePort chatRoomStatePort;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -36,7 +38,7 @@ public class ChatRoomCommandService implements UpdateChatRoomNameUseCase, LeaveC
                 command.otherMemberId(),
                 command.roomId()
         );
-        int unreadCount = loadChatRoomPort.loadUnreadCount(command.roomId(), command.memberId());
+        int unreadCount = chatRoomStatePort.loadUnreadCount(command.roomId(), command.memberId());
 
         return new UpdateChatRoomNameResult(
                 chatRoomInfo.roomId(),
@@ -56,8 +58,8 @@ public class ChatRoomCommandService implements UpdateChatRoomNameUseCase, LeaveC
         ChatRoom chatRoom = loadChatRoomPort.loadParticipantChatRoom(command.roomId(), command.memberId());
         chatRoom.leave(command.memberId());
 
-        loadChatRoomPort.markLatestMessageAsRead(command.roomId(), chatRoom, command.memberId());
-        loadChatRoomPort.removeRoomMember(command.roomId(), command.memberId());
+        updateLastReadMessage(command.roomId(), chatRoom, command.memberId());
+        chatRoomStatePort.removeRoomMember(command.roomId(), command.memberId());
 
         String memberName = loadMemberPort.loadMemberName(command.memberId());
 
@@ -66,9 +68,14 @@ public class ChatRoomCommandService implements UpdateChatRoomNameUseCase, LeaveC
 
     @Override
     public void markAsRead(MarkChatRoomAsReadCommand command) {
-        loadChatRoomPort.resetUnreadCount(command.roomId(), command.memberId());
+        chatRoomStatePort.resetUnreadCount(command.roomId(), command.memberId());
 
         ChatRoom chatRoom = loadChatRoomPort.loadParticipantChatRoom(command.roomId(), command.memberId());
-        loadChatRoomPort.markLatestMessageAsRead(command.roomId(), chatRoom, command.memberId());
+        updateLastReadMessage(command.roomId(), chatRoom, command.memberId());
+    }
+
+    private void updateLastReadMessage(Long roomId, ChatRoom chatRoom, Long memberId) {
+        loadChatRoomPort.loadLatestMessageId(roomId)
+                        .ifPresent(messageId -> chatRoom.updateLastReadMessage(memberId, messageId));
     }
 }

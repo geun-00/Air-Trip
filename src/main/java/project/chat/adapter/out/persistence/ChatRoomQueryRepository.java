@@ -1,11 +1,8 @@
 package project.chat.adapter.out.persistence;
 
-import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import org.springframework.stereotype.Repository;
-import project.chat.adapter.in.web.response.ChatRoomResponse;
 import project.chat.adapter.out.persistence.model.ChatRoomInfoRow;
 import project.chat.domain.ChatRoom;
 import project.chat.domain.QChatMessage;
@@ -16,7 +13,7 @@ import project.member.domain.QMember;
 import java.util.List;
 import java.util.Optional;
 
-import static com.querydsl.core.types.Projections.*;
+import static com.querydsl.core.types.Projections.constructor;
 import static project.chat.domain.QChatMessage.chatMessage;
 import static project.chat.domain.QChatRoom.chatRoom;
 
@@ -63,9 +60,8 @@ public class ChatRoomQueryRepository extends CustomQuerydslRepositorySupport {
         );
     }
 
-    public List<ChatRoomResponse> findChatRooms(Long memberId) {
-        return select(constructor(
-                ChatRoomResponse.class,
+    public List<ChatRoomInfoRow> findChatRooms(Long memberId) {
+        return select(constructor(ChatRoomInfoRow.class,
                 chatRoom.id,
                 CP1.customRoomName,
                 OTHER_MEMBER.id,
@@ -73,8 +69,7 @@ public class ChatRoomQueryRepository extends CustomQuerydslRepositorySupport {
                 OTHER_MEMBER.detail.profileUrl,
                 CP2.isActive,
                 chatMessage.content,
-                chatMessage.createdAt,
-                Expressions.asNumber(0)))
+                chatMessage.createdAt))
                 .from(chatRoom)
                 .join(CP1).on(
                         CP1.chatRoom.eq(chatRoom),
