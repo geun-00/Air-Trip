@@ -1,7 +1,5 @@
 package project.wishlist.adapter.out.persistence;
 
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import org.springframework.stereotype.Repository;
@@ -18,17 +16,14 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.querydsl.core.types.Projections.constructor;
+import static project.accommodation.adapter.out.persistence.QAccommodationStats.accommodationStats;
 import static project.accommodation.domain.QAccommodation.accommodation;
 import static project.accommodation.domain.QAccommodationImage.accommodationImage;
-import static project.reservation.domain.QReservation.reservation;
-import static project.review.domain.QReview.review;
 import static project.wishlist.domain.QWishlist.wishlist;
 import static project.wishlist.domain.QWishlistAccommodation.wishlistAccommodation;
 
 @Repository
 public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
-
-    private static final NumberExpression<Double> REVIEW_RATING = Expressions.numberTemplate(Double.class, "{0}", review.rating);
 
     public WishlistQueryRepository() {
         super(Wishlist.class);
@@ -43,28 +38,17 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
                 accommodation.detail.description,
                 accommodation.geoPoint.longitude,
                 accommodation.geoPoint.latitude,
-                REVIEW_RATING.avg().coalesce(0.0),
+                accommodationStats.averageRating.coalesce(0.0),
                 wishlistAccommodation.memo
         )).from(wishlistAccommodation)
           .join(wishlistAccommodation.wishlist, wishlist)
           .join(accommodation)
           .on(accommodation.id.eq(wishlistAccommodation.accommodationId))
-          .leftJoin(reservation)
-          .on(reservation.accommodationId.eq(accommodation.id))
-          .leftJoin(review)
-          .on(review.reservationId.eq(reservation.id))
+          .leftJoin(accommodationStats)
+          .on(accommodationStats.accommodationId.eq(accommodation.id))
           .where(
                   wishlist.id.eq(wishlistId),
                   wishlist.memberId.eq(memberId)
-          )
-          .groupBy(
-                  accommodation.id,
-                  wishlist.name,
-                  accommodation.title,
-                  accommodation.detail.description,
-                  accommodation.geoPoint.longitude,
-                  accommodation.geoPoint.latitude,
-                  wishlistAccommodation.memo
           )
           .fetch();
     }
@@ -76,6 +60,10 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
                 accommodationImage.imageUrl
         )).from(accommodationImage)
           .where(accommodationImage.accommodation.id.in(accommodationIds))
+          .orderBy(
+                  accommodationImage.accommodation.id.asc(),
+                  accommodationImage.id.asc()
+          )
           .fetch();
     }
 
