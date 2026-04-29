@@ -1,11 +1,18 @@
 package project.chat.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.common.adapter.out.persistence.BaseEntity;
-import project.member.domain.Member;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +23,7 @@ import java.time.LocalDateTime;
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"chat_room_id", "member_id"})
         })
-public class ChatParticipant extends BaseEntity {
+class ChatParticipant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,22 +34,20 @@ public class ChatParticipant extends BaseEntity {
     @JoinColumn(name = "chat_room_id", nullable = false)
     private ChatRoom chatRoom;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_read_message")
-    private ChatMessage lastReadMessage;
+    @Column(name = "last_read_message")
+    private Long lastReadMessageId;
 
     @Column(name = "is_creator", nullable = false)
     private Boolean isCreator;
 
     @Column(name = "custom_room_name", nullable = false)
-    private String customRoomName;
+    private ChatRoomName customRoomName;
 
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
+    private boolean isActive = true;
 
     @Column(name = "left_at")
     private LocalDateTime leftAt;
@@ -50,17 +55,23 @@ public class ChatParticipant extends BaseEntity {
     @Column(name = "last_rejoined_at")
     private LocalDateTime lastRejoinedAt;
 
-    public static ChatParticipant creator(ChatRoom chatRoom, Member sender, String roomName) {
-        return new ChatParticipant(chatRoom, sender, true, roomName);
+    static ChatParticipant create(
+            ChatRoom chatRoom,
+            Long memberId,
+            Boolean isCreator,
+            String roomName
+    ) {
+        return new ChatParticipant(chatRoom, memberId, isCreator, new ChatRoomName(roomName));
     }
 
-    public static ChatParticipant participant(ChatRoom chatRoom, Member receiver, String roomName) {
-        return new ChatParticipant(chatRoom, receiver, false, roomName);
-    }
-
-    private ChatParticipant(ChatRoom chatRoom, Member member, Boolean isCreator, String customRoomName) {
+    private ChatParticipant(
+            ChatRoom chatRoom,
+            Long memberId,
+            Boolean isCreator,
+            ChatRoomName customRoomName
+    ) {
         this.chatRoom = chatRoom;
-        this.member = member;
+        this.memberId = memberId;
         this.isCreator = isCreator;
         this.customRoomName = customRoomName;
     }
@@ -89,7 +100,19 @@ public class ChatParticipant extends BaseEntity {
         this.lastRejoinedAt = LocalDateTime.now();
     }
 
-    public void updateLastReadMessage(ChatMessage lastReadMessage) {
-        this.lastReadMessage = lastReadMessage;
+    void updateRoomName(String roomName) {
+        this.customRoomName = new ChatRoomName(roomName);
+    }
+
+    void updateLastReadMessage(Long messageId) {
+        this.lastReadMessageId = messageId;
+    }
+
+    boolean isMember(Long memberId) {
+        return this.memberId.equals(memberId);
+    }
+
+    public String getCustomRoomName() {
+        return customRoomName.value();
     }
 }

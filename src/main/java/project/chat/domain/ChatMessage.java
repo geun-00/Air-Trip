@@ -5,7 +5,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.common.adapter.out.persistence.BaseEntity;
-import project.member.domain.Member;
 
 @Entity
 @Getter
@@ -18,24 +17,26 @@ public class ChatMessage extends BaseEntity {
     @Column(name = "chat_message_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_room_id", nullable = false)
-    private ChatRoom chatRoom;
+    @Column(name = "chat_room_id", nullable = false)
+    private Long chatRoomId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member writer;
+    @Column(name = "member_id", nullable = false)
+    private Long writerId;
 
     @Column(name = "content", nullable = false)
-    private String content;
+    private ChatMessageContent content;
 
-    public static ChatMessage create(ChatRoom chatRoom, Member writer, String content) {
-        return new ChatMessage(chatRoom, writer, content);
+    public static ChatMessage create(Long chatRoomId, Long writerId, String content) {
+        return new ChatMessage(chatRoomId, writerId, new ChatMessageContent(content));
     }
 
-    private ChatMessage(ChatRoom chatRoom, Member writer, String content) {
-        this.chatRoom = chatRoom;
-        this.writer = writer;
+    private ChatMessage(Long chatRoomId, Long writerId, ChatMessageContent content) {
+        this.chatRoomId = chatRoomId;
+        this.writerId = writerId;
         this.content = content;
+    }
+
+    public String getContent() {
+        return content.value();
     }
 }
