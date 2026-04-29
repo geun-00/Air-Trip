@@ -129,10 +129,9 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
         );
     }
 
-    public Page<FilteredAccommodationRow> getFilteredPagingAccommodations(
-            SearchAccommodationsCondition condition,
-            Pageable pageable
-    ) {
+    public Page<FilteredAccommodationRow> getFilteredPagingAccommodations(SearchAccommodationsCondition condition) {
+        Pageable pageable = condition.pageable();
+
         List<GuestFilteredAccommodationRow> fetched = select(constructor(GuestFilteredAccommodationRow.class,
                 accommodation.id,
                 accommodation.title,

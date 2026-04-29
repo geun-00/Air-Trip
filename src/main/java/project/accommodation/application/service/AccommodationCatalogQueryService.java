@@ -54,7 +54,7 @@ public class AccommodationCatalogQueryService implements GetMainAccommodationsQu
                 searchQuery.amenities(),
                 searchQuery.priceGoe(),
                 searchQuery.priceLoe(),
-                searchQuery.pageQuery(),
+                searchQuery.pageable(),
                 memberId,
                 stayDatePolicy
         );
