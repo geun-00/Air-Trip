@@ -5,7 +5,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.common.adapter.out.persistence.BaseEntity;
-import project.member.domain.Member;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -18,23 +20,29 @@ public class Wishlist extends BaseEntity {
     @Column(name = "wishlist_id", nullable = false)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
 
     @Column(name = "name", length = 50, nullable = false)
-    private String name;
+    private WishlistName name;
 
-    public static Wishlist create(Member member, String name) {
-        return new Wishlist(member, name);
+    @OneToMany(mappedBy = "wishlist", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WishlistAccommodation> accommodations = new ArrayList<>();
+
+    public static Wishlist create(Long memberId, String name) {
+        return new Wishlist(memberId, new WishlistName(name));
     }
 
-    private Wishlist(Member member, String name) {
-        this.member = member;
+    private Wishlist(Long memberId, WishlistName name) {
+        this.memberId = memberId;
         this.name = name;
     }
 
     public void updateName(String newName) {
-        this.name = newName;
+        this.name = new WishlistName(newName);
+    }
+
+    public String getName() {
+        return name.value();
     }
 }
