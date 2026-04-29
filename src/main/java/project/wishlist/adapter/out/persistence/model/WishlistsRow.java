@@ -2,10 +2,10 @@ package project.wishlist.adapter.out.persistence.model;
 
 import project.wishlist.domain.WishlistName;
 
-public record WishlistInfoRow(
-        Long accommodationId,
-        boolean isInWishlist,
+public record WishlistsRow(
         Long wishlistId,
-        WishlistName wishlistName
+        WishlistName name,
+        Long recentAccommodationId,
+        int savedAccommodations
 ) {
 }

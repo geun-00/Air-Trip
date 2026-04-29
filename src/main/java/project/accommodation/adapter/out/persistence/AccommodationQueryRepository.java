@@ -367,17 +367,13 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
 
     private Map<Long, WishlistRow> fetchWishlistMap(Long memberId, List<Long> accommodationIds) {
         List<WishlistRow> rows = select(constructor(WishlistRow.class,
-                                                    wishlistAccommodation.accommodation.id,
-                                                    wishlist.id,
-                                                    wishlist.name
-        ))
-                .from(wishlistAccommodation)
-                .join(wishlistAccommodation.wishlist, wishlist)
-                .where(
-                        wishlist.member.id.eq(memberId),
-                        wishlistAccommodation.accommodation.id.in(accommodationIds)
-                )
-                .fetch();
+                wishlistAccommodation.accommodationId,
+                wishlist.id,
+                wishlist.name
+        )).from(wishlistAccommodation)
+          .join(wishlistAccommodation.wishlist, wishlist)
+          .where(wishlist.memberId.eq(memberId), wishlistAccommodation.accommodationId.in(accommodationIds))
+          .fetch();
 
         return rows.stream()
                    .collect(toMap(

@@ -5,11 +5,11 @@ import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import org.springframework.stereotype.Repository;
-import project.accommodation.adapter.out.persistence.model.AccAllImagesQueryDto;
+import project.accommodation.adapter.out.persistence.model.AccommodationImageRow;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
-import project.wishlist.adapter.in.web.response.WishlistsResponse;
-import project.wishlist.adapter.out.persistence.model.WishlistDetailQueryDto;
+import project.wishlist.adapter.out.persistence.model.WishlistDetailRow;
 import project.wishlist.adapter.out.persistence.model.WishlistInfoRow;
+import project.wishlist.adapter.out.persistence.model.WishlistsRow;
 import project.wishlist.domain.QWishlistAccommodation;
 import project.wishlist.domain.Wishlist;
 
@@ -20,7 +20,6 @@ import java.util.Optional;
 import static com.querydsl.core.types.Projections.constructor;
 import static project.accommodation.domain.QAccommodation.accommodation;
 import static project.accommodation.domain.QAccommodationImage.accommodationImage;
-import static project.member.domain.QMember.member;
 import static project.reservation.domain.QReservation.reservation;
 import static project.review.domain.QReview.review;
 import static project.wishlist.domain.QWishlist.wishlist;
@@ -35,20 +34,9 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
         super(Wishlist.class);
     }
 
-    public boolean existsWishlistAccommodation(Long wishlistId, Long accommodationId, Long memberId) {
-        return getQueryFactory()
-                .selectOne()
-                .from(wishlistAccommodation)
-                .join(wishlistAccommodation.wishlist, wishlist)
-                .where(wishlistAccommodation.accommodation.id.eq(accommodationId),
-                        wishlistAccommodation.wishlist.id.eq(wishlistId),
-                        wishlist.member.id.eq(memberId)
-                )
-                .fetchFirst() != null;
-    }
-
-    public List<WishlistDetailQueryDto> findWishlistDetails(Long wishlistId, Long memberId) {
-        return select(constructor(WishlistDetailQueryDto.class,
+    public List<WishlistDetailRow> findWishlistDetails(Long wishlistId, Long memberId) {
+        return select(constructor(
+                WishlistDetailRow.class,
                 accommodation.id,
                 wishlist.name,
                 accommodation.title,
@@ -57,80 +45,81 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
                 accommodation.geoPoint.latitude,
                 REVIEW_RATING.avg().coalesce(0.0),
                 wishlistAccommodation.memo
-        ))
-                .from(wishlistAccommodation)
-                .join(wishlistAccommodation.wishlist, wishlist)
-                .join(wishlistAccommodation.accommodation, accommodation)
-                .leftJoin(reservation).on(reservation.accommodationId.eq(accommodation.id))
-                .leftJoin(review).on(review.reservationId.eq(reservation.id))
-                .where(wishlist.id.eq(wishlistId),
-                        wishlist.member.id.eq(memberId)
-                )
-                .groupBy(
-                        accommodation.id,
-                        wishlist.name,
-                        accommodation.title,
-                        accommodation.detail.description,
-                        accommodation.geoPoint.longitude,
-                        accommodation.geoPoint.latitude,
-                        wishlistAccommodation.memo
-                )
-                .fetch();
+        )).from(wishlistAccommodation)
+          .join(wishlistAccommodation.wishlist, wishlist)
+          .join(accommodation)
+          .on(accommodation.id.eq(wishlistAccommodation.accommodationId))
+          .leftJoin(reservation)
+          .on(reservation.accommodationId.eq(accommodation.id))
+          .leftJoin(review)
+          .on(review.reservationId.eq(reservation.id))
+          .where(
+                  wishlist.id.eq(wishlistId),
+                  wishlist.memberId.eq(memberId)
+          )
+          .groupBy(
+                  accommodation.id,
+                  wishlist.name,
+                  accommodation.title,
+                  accommodation.detail.description,
+                  accommodation.geoPoint.longitude,
+                  accommodation.geoPoint.latitude,
+                  wishlistAccommodation.memo
+          )
+          .fetch();
     }
 
-    public List<AccAllImagesQueryDto> findAllImages(List<Long> accIds) {
-        return select(constructor(AccAllImagesQueryDto.class,
-                accommodationImage.accommodation.id,
-                accommodationImage.imageUrl))
-                .from(accommodationImage)
-                .where(accommodationImage.accommodation.id.in(accIds))
-                .fetch();
-    }
-
-    public List<WishlistsResponse> getAllWishlists(Long memberId) {
-        QWishlistAccommodation waSub = new QWishlistAccommodation("waSub");
-        JPQLQuery<Long> recentAccIdSubquery = JPAExpressions.select(waSub.accommodation.id)
-                                                            .from(waSub)
-                                                            .where(waSub.wishlist.eq(wishlist)
-                                                                                 .and(waSub.id.eq(
-                                                                                         JPAExpressions.select(waSub.id.max())
-                                                                                                       .from(waSub)
-                                                                                                       .where(waSub.wishlist.eq(wishlist))
-                                                                                 )));
-
+    public List<AccommodationImageRow> findAllImages(List<Long> accommodationIds) {
         return select(constructor(
-                WishlistsResponse.class,
+                AccommodationImageRow.class,
+                accommodationImage.accommodation.id,
+                accommodationImage.imageUrl
+        )).from(accommodationImage)
+          .where(accommodationImage.accommodation.id.in(accommodationIds))
+          .fetch();
+    }
+
+    public List<WishlistsRow> getAllWishlists(Long memberId) {
+        QWishlistAccommodation recent = new QWishlistAccommodation("recent");
+        QWishlistAccommodation latest = new QWishlistAccommodation("latest");
+        JPQLQuery<Long> recentAccommodationId = JPAExpressions.select(recent.accommodationId)
+                                                              .from(recent)
+                                                              .where(
+                                                                      recent.wishlist.eq(wishlist),
+                                                                      recent.id.eq(JPAExpressions.select(latest.id.max())
+                                                                                                  .from(latest)
+                                                                                                  .where(latest.wishlist.eq(wishlist)))
+                                                              );
+        return select(constructor(WishlistsRow.class,
                 wishlist.id,
                 wishlist.name,
-                accommodationImage.imageUrl,
-                wishlistAccommodation.accommodation.count().intValue().coalesce(0)))
-                .from(wishlist)
-                .join(wishlist.member, member)
-                .leftJoin(wishlistAccommodation).on(wishlistAccommodation.wishlist.eq(wishlist))
-                .leftJoin(accommodation).on(accommodation.id.eq(recentAccIdSubquery))
-                .leftJoin(accommodationImage)
-                .on(accommodationImage.accommodation.eq(accommodation).and(accommodationImage.thumbnail.isTrue()))
-                .where(member.id.eq(memberId))
-                .groupBy(wishlist.id, wishlist.name, accommodationImage.imageUrl)
-                .fetch();
+                recentAccommodationId,
+                wishlistAccommodation.accommodationId.count().intValue().coalesce(0)
+        )).from(wishlist)
+          .leftJoin(wishlistAccommodation)
+          .on(wishlistAccommodation.wishlist.eq(wishlist))
+          .where(wishlist.memberId.eq(memberId))
+          .groupBy(
+                  wishlist.id,
+                  wishlist.name
+          )
+          .fetch();
     }
 
     public Optional<WishlistInfoRow> getWishlistInfo(Long accId, Long memberId) {
-        return Optional.ofNullable(
-                select(constructor(
-                        WishlistInfoRow.class,
-                        wishlistAccommodation.accommodation.id,
-                        wishlistAccommodation.isNotNull(),
-                        wishlist.id,
-                        wishlist.name))
-                        .from(wishlist)
-                        .leftJoin(wishlistAccommodation).on(
-                                wishlistAccommodation.wishlist.eq(wishlist),
-                                wishlistAccommodation.accommodation.id.eq(accId)
-                        )
-                        .where(wishlist.member.id.eq(memberId))
-                        .fetchOne()
-        );
+        return Optional.ofNullable(select(constructor(WishlistInfoRow.class,
+                wishlistAccommodation.accommodationId,
+                wishlistAccommodation.isNotNull(),
+                wishlist.id,
+                wishlist.name
+        )).from(wishlist)
+          .leftJoin(wishlistAccommodation)
+          .on(
+                  wishlistAccommodation.wishlist.eq(wishlist),
+                  wishlistAccommodation.accommodationId.eq(accId)
+          )
+          .where(wishlist.memberId.eq(memberId))
+          .fetchOne());
     }
 
     public List<WishlistInfoRow> getWishlistInfos(List<Long> accommodationIds, Long memberId) {
@@ -138,18 +127,19 @@ public class WishlistQueryRepository extends CustomQuerydslRepositorySupport {
             return Collections.emptyList();
         }
 
-        return select(
-                constructor(WishlistInfoRow.class,
-                wishlistAccommodation.accommodation.id,
+        return select(constructor(
+                WishlistInfoRow.class,
+                wishlistAccommodation.accommodationId,
                 wishlistAccommodation.isNotNull(),
                 wishlist.id,
-                wishlist.name))
-                .from(wishlist)
-                .join(wishlistAccommodation).on(wishlistAccommodation.wishlist.eq(wishlist))
-                .where(
-                        wishlist.member.id.eq(memberId),
-                        wishlistAccommodation.accommodation.id.in(accommodationIds)
-                )
-                .fetch();
+                wishlist.name
+        )).from(wishlist)
+          .join(wishlistAccommodation)
+          .on(wishlistAccommodation.wishlist.eq(wishlist))
+          .where(
+                  wishlist.memberId.eq(memberId),
+                  wishlistAccommodation.accommodationId.in(accommodationIds)
+          )
+          .fetch();
     }
 }

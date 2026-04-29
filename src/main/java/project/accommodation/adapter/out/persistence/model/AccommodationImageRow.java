@@ -1,6 +1,6 @@
 package project.accommodation.adapter.out.persistence.model;
 
-public record AccAllImagesQueryDto(
+public record AccommodationImageRow(
         Long accommodationId,
         String imageUrl
 ) {

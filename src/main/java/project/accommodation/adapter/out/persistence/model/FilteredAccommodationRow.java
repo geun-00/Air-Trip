@@ -1,5 +1,7 @@
 package project.accommodation.adapter.out.persistence.model;
 
+import project.wishlist.domain.WishlistName;
+
 import java.util.List;
 
 public record FilteredAccommodationRow(
@@ -11,7 +13,7 @@ public record FilteredAccommodationRow(
         List<String> imageUrls,
         boolean isInWishlist,
         Long wishlistId,
-        String wishlistName
+        WishlistName wishlistName
 ) {
 
 }

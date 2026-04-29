@@ -1,6 +1,7 @@
 package project.accommodation.adapter.out.persistence.model;
 
 import project.accommodation.domain.Capacity;
+import project.wishlist.domain.WishlistName;
 
 public record DetailAccommodationRow(
         Long accommodationId,
@@ -17,7 +18,7 @@ public record DetailAccommodationRow(
         int price,
         boolean isInWishlist,
         Long wishlistId,
-        String wishlistName,
+        WishlistName wishlistName,
         Double avgRate
 ) {
 
