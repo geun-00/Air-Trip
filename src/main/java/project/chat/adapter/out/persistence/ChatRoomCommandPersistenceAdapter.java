@@ -16,6 +16,7 @@ public class ChatRoomCommandPersistenceAdapter implements LoadChatRoomPort {
 
     private final ChatRoomRepository chatRoomRepository;
     private final StringRedisTemplate stringRedisTemplate;
+    private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomQueryRepository chatRoomQueryRepository;
 
     @Override
@@ -31,7 +32,7 @@ public class ChatRoomCommandPersistenceAdapter implements LoadChatRoomPort {
                                       .orElseThrow(() -> ChatExceptions.notFoundChatRoom(currentMemberId, otherMemberId));
     }
 
-    private  ChatRoomInfoView toView(ChatRoomInfoRow row) {
+    private ChatRoomInfoView toView(ChatRoomInfoRow row) {
         return new ChatRoomInfoView(
                 row.roomId(),
                 row.customRoomName().value(),
@@ -47,7 +48,17 @@ public class ChatRoomCommandPersistenceAdapter implements LoadChatRoomPort {
     @Override
     public int loadUnreadCount(Long roomId, Long memberId) {
         Object count = stringRedisTemplate.opsForHash().get(ChatRedisKey.UNREAD.format(roomId), memberId.toString());
-
         return count == null ? 0 : Integer.parseInt(count.toString());
+    }
+
+    @Override
+    public void markLatestMessageAsRead(Long roomId, ChatRoom chatRoom, Long memberId) {
+        chatMessageRepository.findLatestByChatRoomId(roomId)
+                             .ifPresent(message -> chatRoom.updateLastReadMessage(memberId, message.getId()));
+    }
+
+    @Override
+    public void removeRoomMember(Long roomId, Long memberId) {
+        stringRedisTemplate.opsForSet().remove(ChatRedisKey.ROOM_MEMBERS.format(roomId), memberId.toString());
     }
 }

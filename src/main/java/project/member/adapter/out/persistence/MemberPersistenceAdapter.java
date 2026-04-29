@@ -23,6 +23,11 @@ public class MemberPersistenceAdapter implements LoadMemberPort, SaveMemberPort 
     }
 
     @Override
+    public String loadMemberName(Long memberId) {
+        return loadById(memberId).getName();
+    }
+
+    @Override
     public boolean existsByEmail(String email) {
         return memberRepository.existsByEmail(new Email(email));
     }

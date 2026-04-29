@@ -10,4 +10,8 @@ public interface LoadChatRoomPort {
     ChatRoomInfoView loadChatRoomInfo(Long currentMemberId, Long otherMemberId, Long roomId);
 
     int loadUnreadCount(Long roomId, Long memberId);
+
+    void markLatestMessageAsRead(Long roomId, ChatRoom chatRoom, Long memberId);
+
+    void removeRoomMember(Long roomId, Long memberId);
 }

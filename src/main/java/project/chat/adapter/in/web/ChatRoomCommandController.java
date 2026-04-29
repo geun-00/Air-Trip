@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import project.auth.adapter.in.web.support.CurrentMemberId;
-import project.chat.adapter.in.web.request.LeaveChatRoomRequest;
 import project.chat.adapter.in.web.request.UpdateChatRoomNameRequest;
 import project.chat.adapter.in.web.response.ChatRoomResponse;
+import project.chat.application.in.command.LeaveChatRoomUseCase;
 import project.chat.application.in.command.UpdateChatRoomNameUseCase;
+import project.chat.application.in.command.model.LeaveChatRoomCommand;
 import project.chat.application.in.command.model.UpdateChatRoomNameCommand;
 import project.chat.application.in.command.model.UpdateChatRoomNameResult;
 import project.chat.application.service.ChatRoomService;
@@ -24,8 +25,9 @@ import project.chat.application.service.ChatRoomService;
 @RequiredArgsConstructor
 public class ChatRoomCommandController {
 
-    private final UpdateChatRoomNameUseCase updateChatRoomNameUseCase;
     private final ChatRoomService chatRoomService;
+    private final LeaveChatRoomUseCase leaveChatRoomUseCase;
+    private final UpdateChatRoomNameUseCase updateChatRoomNameUseCase;
 
     @PatchMapping("/{roomId}/name")
     public ResponseEntity<ChatRoomResponse> updateChatRoomName(
@@ -62,10 +64,10 @@ public class ChatRoomCommandController {
     @PostMapping("/{roomId}")
     public ResponseEntity<Void> leaveChatRoom(
             @PathVariable Long roomId,
-            @RequestBody LeaveChatRoomRequest request,
             @CurrentMemberId Long memberId
     ) {
-        chatRoomService.leaveChatRoom(roomId, memberId, request.isActive());
+        leaveChatRoomUseCase.leaveChatRoom(new LeaveChatRoomCommand(roomId, memberId));
+
         return ResponseEntity.ok().build();
     }
 
