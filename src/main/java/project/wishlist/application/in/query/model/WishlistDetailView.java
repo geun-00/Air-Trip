@@ -1,6 +1,8 @@
-package project.wishlist.adapter.out.persistence.model;
+package project.wishlist.application.in.query.model;
 
-public record WishlistDetailQueryDto(
+import java.util.List;
+
+public record WishlistDetailView(
         Long accommodationId,
         String wishlistName,
         String title,
@@ -8,5 +10,7 @@ public record WishlistDetailQueryDto(
         double mapX,
         double mapY,
         double avgRate,
-        String memo) {
+        List<String> imageUrls,
+        String memo
+) {
 }

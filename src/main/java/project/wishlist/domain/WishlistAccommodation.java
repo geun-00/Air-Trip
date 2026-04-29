@@ -1,19 +1,22 @@
 package project.wishlist.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.common.adapter.out.persistence.BaseEntity;
-import project.accommodation.domain.Accommodation;
 
 @Entity
-@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "wishlist_accommodations", uniqueConstraints =
-    @UniqueConstraint(name = "uk_wishlist_accommodation_wid_aid", columnNames = {"wishlist_id" , "accommodation_id"})
-)
-public class WishlistAccommodation extends BaseEntity {
+@Table(name = "wishlist_accommodations", uniqueConstraints = @UniqueConstraint(name = "uk_wishlist_accommodations_wishlist_accommodation", columnNames = {"wishlist_id", "accommodation_id"}))
+class WishlistAccommodation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,23 +27,26 @@ public class WishlistAccommodation extends BaseEntity {
     @JoinColumn(name = "wishlist_id", nullable = false)
     private Wishlist wishlist;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "accommodation_id", nullable = false)
-    private Accommodation accommodation;
+    @Column(name = "accommodation_id", nullable = false)
+    private Long accommodationId;
 
     @Column(name = "memo", length = 250)
-    private String memo;
+    private WishlistMemo memo;
 
-    public static WishlistAccommodation create(Wishlist wishlist, Accommodation accommodation) {
-        return new WishlistAccommodation(wishlist, accommodation);
+    static WishlistAccommodation create(Wishlist wishlist, Long accommodationId) {
+        return new WishlistAccommodation(wishlist, accommodationId);
     }
 
-    private WishlistAccommodation(Wishlist wishlist, Accommodation accommodation) {
+    private WishlistAccommodation(Wishlist wishlist, Long accommodationId) {
         this.wishlist = wishlist;
-        this.accommodation = accommodation;
+        this.accommodationId = accommodationId;
     }
 
-    public void updateMemo(String newMemo) {
-        this.memo = newMemo;
+    void updateMemo(String newMemo) {
+        this.memo = WishlistMemo.from(newMemo);
+    }
+
+    boolean isAccommodation(Long accommodationId) {
+        return this.accommodationId.equals(accommodationId);
     }
 }

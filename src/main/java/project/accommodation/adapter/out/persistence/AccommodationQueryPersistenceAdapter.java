@@ -16,6 +16,7 @@ import project.accommodation.application.out.query.model.SearchAccommodationsCon
 import project.accommodation.domain.exception.AccommodationExceptions;
 import project.common.adapter.in.web.response.PageResponse;
 import project.common.domain.StayDatePolicy;
+import project.wishlist.domain.WishlistName;
 
 import java.util.List;
 
@@ -64,7 +65,7 @@ public class AccommodationQueryPersistenceAdapter implements GetMainAccommodatio
                 row.avgRate(),
                 row.thumbnailUrl(),
                 row.isInWishlist(),
-                row.wishlistName(),
+                value(row.wishlistName()),
                 row.wishlistId(),
                 row.areaName(),
                 row.areaCode()
@@ -101,8 +102,12 @@ public class AccommodationQueryPersistenceAdapter implements GetMainAccommodatio
                 row.imageUrls(),
                 row.isInWishlist(),
                 row.wishlistId(),
-                row.wishlistName()
+                value(row.wishlistName())
         );
+    }
+
+    private String value(WishlistName name) {
+        return name == null ? null : name.value();
     }
 
     private record AreaKey(String areaName, String areaCode) {

@@ -1,5 +1,7 @@
 package project.accommodation.adapter.out.persistence.model;
 
+import project.wishlist.domain.WishlistName;
+
 public record MainAccommodationRow(
         Long accommodationId,
         String title,
@@ -8,7 +10,7 @@ public record MainAccommodationRow(
         String thumbnailUrl,
         boolean isInWishlist,
         Long wishlistId,
-        String wishlistName,
+        WishlistName wishlistName,
         int reservationCount,
         String areaName,
         String areaCode
