@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
-import project.chat.adapter.in.web.response.RequestChatResponse;
 
 import java.time.LocalDateTime;
 
@@ -31,17 +30,4 @@ public class ChatRequestDocument {
 
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
-
-    public RequestChatResponse toResDto() {
-        return RequestChatResponse.builder()
-                                  .requestId(requestId)
-                                  .senderId(senderId)
-                                  .senderName(senderName)
-                                  .senderProfileImage(senderProfileImage)
-                                  .receiverId(receiverId)
-                                  .receiverName(receiverName)
-                                  .receiverProfileImage(receiverProfileImage)
-                                  .expiresAt(expiresAt)
-                                  .build();
-    }
 }
