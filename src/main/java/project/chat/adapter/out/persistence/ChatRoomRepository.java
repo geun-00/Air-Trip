@@ -1,8 +1,8 @@
 package project.chat.adapter.out.persistence;
 
-import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import project.chat.domain.ChatRoom;
 
 import java.util.Optional;
@@ -33,5 +33,19 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     Optional<ChatRoom> findByIdAndMemberIdWithParticipants(
             @Param("roomId") Long roomId,
             @Param("memberId") Long memberId
+    );
+
+    @Query("""
+            SELECT COUNT(participant) > 0
+            FROM ChatParticipant participant
+            JOIN ChatParticipant otherParticipant
+            ON participant.chatRoom = otherParticipant.chatRoom
+            WHERE participant.memberId = :currentMemberId
+            AND otherParticipant.memberId = :otherMemberId
+            AND participant.isActive = true
+            """)
+    boolean existsActiveChatRoom(
+            @Param("currentMemberId") Long currentMemberId,
+            @Param("otherMemberId") Long otherMemberId
     );
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import project.chat.adapter.out.persistence.model.ChatRoomInfoRow;
 import project.chat.application.out.command.LoadChatRoomPort;
+import project.chat.application.out.command.SaveChatRoomPort;
 import project.chat.application.out.query.model.ChatRoomInfoView;
 import project.chat.domain.ChatMessage;
 import project.chat.domain.ChatRoom;
@@ -14,7 +15,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class ChatRoomCommandPersistenceAdapter implements LoadChatRoomPort {
+public class ChatRoomCommandPersistenceAdapter implements LoadChatRoomPort, SaveChatRoomPort {
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
@@ -24,6 +25,11 @@ public class ChatRoomCommandPersistenceAdapter implements LoadChatRoomPort {
     public ChatRoom loadParticipantChatRoom(Long roomId, Long memberId) {
         return chatRoomRepository.findByIdAndMemberIdWithParticipants(roomId, memberId)
                                  .orElseThrow(() -> ChatExceptions.notFoundChatParticipant(roomId, memberId));
+    }
+
+    @Override
+    public Optional<ChatRoom> findChatRoomByMembersId(Long currentMemberId, Long otherMemberId) {
+        return chatRoomRepository.findByMembersId(currentMemberId, otherMemberId);
     }
 
     @Override
@@ -58,5 +64,15 @@ public class ChatRoomCommandPersistenceAdapter implements LoadChatRoomPort {
                 row.lastMessage() == null ? null : row.lastMessage().value(),
                 row.lastMessageTime()
         );
+    }
+
+    @Override
+    public boolean existsActiveChatRoom(Long currentMemberId, Long otherMemberId) {
+        return chatRoomRepository.existsActiveChatRoom(currentMemberId, otherMemberId);
+    }
+
+    @Override
+    public ChatRoom save(ChatRoom chatRoom) {
+        return chatRoomRepository.save(chatRoom);
     }
 }

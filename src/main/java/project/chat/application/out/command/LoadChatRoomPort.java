@@ -10,9 +10,13 @@ public interface LoadChatRoomPort {
 
     ChatRoom loadParticipantChatRoom(Long roomId, Long memberId);
 
+    Optional<ChatRoom> findChatRoomByMembersId(Long currentMemberId, Long otherMemberId);
+
     Optional<Long> loadLatestMessageId(Long roomId);
 
     ChatRoomInfoView loadChatRoomInfo(Long currentMemberId, Long otherMemberId, Long roomId);
 
     List<ChatRoomInfoView> loadChatRooms(Long memberId);
+
+    boolean existsActiveChatRoom(Long currentMemberId, Long otherMemberId);
 }

@@ -7,4 +7,6 @@ public interface ChatRoomStatePort {
     void resetUnreadCount(Long roomId, Long memberId);
 
     void removeRoomMember(Long roomId, Long memberId);
+
+    void addRoomMembers(Long roomId, Long... memberIds);
 }

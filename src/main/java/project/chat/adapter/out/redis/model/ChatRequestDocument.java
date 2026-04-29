@@ -1,9 +1,9 @@
 package project.chat.adapter.out.redis.model;
 
-
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
@@ -12,10 +12,10 @@ import project.chat.adapter.in.web.response.RequestChatResponse;
 import java.time.LocalDateTime;
 
 @Getter
-@Builder
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @RedisHash(value = "chatRequest", timeToLive = 86400)
-public class ChatRequest {
+public class ChatRequestDocument {
     @Id
     private String requestId;
 

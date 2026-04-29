@@ -5,6 +5,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import project.chat.application.out.command.ChatRoomStatePort;
 
+import java.util.Arrays;
+
 @Component
 @RequiredArgsConstructor
 public class ChatRoomStateAdapter implements ChatRoomStatePort {
@@ -20,6 +22,14 @@ public class ChatRoomStateAdapter implements ChatRoomStatePort {
     @Override
     public void removeRoomMember(Long roomId, Long memberId) {
         stringRedisTemplate.opsForSet().remove(ChatRedisKey.ROOM_MEMBERS.format(roomId), memberId.toString());
+    }
+
+    @Override
+    public void addRoomMembers(Long roomId, Long... memberIds) {
+        String[] ids = Arrays.stream(memberIds)
+                             .map(String::valueOf)
+                             .toArray(String[]::new);
+        stringRedisTemplate.opsForSet().add(ChatRedisKey.ROOM_MEMBERS.format(roomId), ids);
     }
 
     @Override
