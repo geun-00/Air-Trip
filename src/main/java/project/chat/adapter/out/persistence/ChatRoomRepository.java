@@ -36,6 +36,14 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     );
 
     @Query("""
+            SELECT DISTINCT cr
+            FROM ChatRoom cr
+            LEFT JOIN FETCH cr.participants
+            WHERE cr.id = :roomId
+            """)
+    Optional<ChatRoom> findByIdWithParticipants(@Param("roomId") Long roomId);
+
+    @Query("""
             SELECT COUNT(participant) > 0
             FROM ChatParticipant participant
             JOIN ChatParticipant otherParticipant

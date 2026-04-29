@@ -5,6 +5,7 @@ import project.chat.domain.ChatRoom;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface LoadChatRoomPort {
 
@@ -17,6 +18,8 @@ public interface LoadChatRoomPort {
     ChatRoomInfoView loadChatRoomInfo(Long currentMemberId, Long otherMemberId, Long roomId);
 
     List<ChatRoomInfoView> loadChatRooms(Long memberId);
+
+    Set<Long> loadParticipantIds(Long roomId);
 
     boolean existsActiveChatRoom(Long currentMemberId, Long otherMemberId);
 }

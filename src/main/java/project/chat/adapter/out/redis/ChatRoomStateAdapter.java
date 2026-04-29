@@ -5,7 +5,11 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import project.chat.application.out.command.ChatRoomStatePort;
 
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -20,6 +24,11 @@ public class ChatRoomStateAdapter implements ChatRoomStatePort {
     }
 
     @Override
+    public void incrementUnreadCount(Long roomId, Long memberId) {
+        stringRedisTemplate.opsForHash().increment(ChatRedisKey.UNREAD.format(roomId), memberId.toString(), 1);
+    }
+
+    @Override
     public void removeRoomMember(Long roomId, Long memberId) {
         stringRedisTemplate.opsForSet().remove(ChatRedisKey.ROOM_MEMBERS.format(roomId), memberId.toString());
     }
@@ -29,11 +38,37 @@ public class ChatRoomStateAdapter implements ChatRoomStatePort {
         String[] ids = Arrays.stream(memberIds)
                              .map(String::valueOf)
                              .toArray(String[]::new);
-        stringRedisTemplate.opsForSet().add(ChatRedisKey.ROOM_MEMBERS.format(roomId), ids);
+        String key = ChatRedisKey.ROOM_MEMBERS.format(roomId);
+        stringRedisTemplate.opsForSet().add(key, ids);
+        stringRedisTemplate.expire(key, Duration.ofDays(1));
     }
 
     @Override
     public void resetUnreadCount(Long roomId, Long memberId) {
         stringRedisTemplate.opsForHash().put(ChatRedisKey.UNREAD.format(roomId), memberId.toString(), "0");
+    }
+
+    @Override
+    public boolean isRoomMember(Long roomId, Long memberId) {
+        return Boolean.TRUE.equals(stringRedisTemplate.opsForSet()
+                                                      .isMember(ChatRedisKey.ROOM_MEMBERS.format(roomId), memberId.toString()));
+    }
+
+    @Override
+    public boolean existsRoomMembers(Long roomId) {
+        return stringRedisTemplate.hasKey(ChatRedisKey.ROOM_MEMBERS.format(roomId));
+    }
+
+    @Override
+    public Set<Long> loadRoomMemberIds(Long roomId) {
+        Set<String> members = stringRedisTemplate.opsForSet().members(ChatRedisKey.ROOM_MEMBERS.format(roomId));
+        if (members == null) {
+            return Set.of();
+        }
+
+        return members.stream()
+                      .filter(Objects::nonNull)
+                      .map(Long::valueOf)
+                      .collect(Collectors.toUnmodifiableSet());
     }
 }

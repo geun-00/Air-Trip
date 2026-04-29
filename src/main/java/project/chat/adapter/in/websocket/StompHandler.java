@@ -9,7 +9,7 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import project.auth.adapter.out.jwt.JwtProvider;
-import project.chat.application.service.ChatRoomService;
+import project.chat.application.in.command.CheckChatRoomParticipantUseCase;
 
 import static org.springframework.messaging.simp.stomp.StompCommand.CONNECT;
 import static org.springframework.messaging.simp.stomp.StompCommand.SEND;
@@ -23,7 +23,7 @@ import static project.auth.adapter.out.jwt.JwtProperties.TOKEN_PREFIX;
 public class StompHandler implements ChannelInterceptor {
 
     private final JwtProvider jwtProvider;
-    private final ChatRoomService chatRoomService;
+    private final CheckChatRoomParticipantUseCase checkChatRoomParticipantUseCase;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -51,7 +51,7 @@ public class StompHandler implements ChannelInterceptor {
             }
             Long memberId = jwtProvider.getId(token);
 
-            if (!chatRoomService.isChatRoomParticipant(roomId, memberId)) {
+            if (!checkChatRoomParticipantUseCase.isChatRoomParticipant(roomId, memberId)) {
                 return null;
             }
         }
