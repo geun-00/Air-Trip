@@ -5,12 +5,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import project.auth.adapter.in.web.AuthController;
 import project.controller.RestDocsTestSupport;
-import project.member.application.in.command.SendEmailVerificationUseCase;
-import project.member.application.in.command.VerifyEmailUseCase;
-import project.security.WithMockMember;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
@@ -30,9 +26,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthControllerTest extends RestDocsTestSupport {
 
     public static final String AUTH_API_TAG = "Auth API";
-
-    @MockitoBean VerifyEmailUseCase verifyEmailUseCase;
-    @MockitoBean SendEmailVerificationUseCase sendEmailVerificationUseCase;
 
     @Test
     @DisplayName("쿠키로 받은 리프레시 토큰으로 액세스 토큰을 갱신한다.")
@@ -101,31 +94,4 @@ class AuthControllerTest extends RestDocsTestSupport {
                        )));
     }
 
-    @Test
-    @DisplayName("이메일 인증 요청")
-    @WithMockMember
-    void sendEmail() throws Exception {
-        //given
-
-        //when
-        //then
-        mockMvc.perform(post("/api/auth/email/verify")
-                       .header(AUTHORIZATION, "Bearer {access-token}")
-               )
-               .andExpectAll(
-                       handler().handlerType(AuthController.class),
-                       handler().methodName("sendEmail"),
-                       status().isOk()
-               )
-               .andDo(document("send-email",
-                       resource(
-                               builder()
-                                       .tag(AUTH_API_TAG)
-                                       .summary("이메일 인증 요청")
-                                       .description("회원가입 과정에서 저장된 이메일로 인증을 진행합니다.")
-                                       .requestHeaders(headerWithName(AUTHORIZATION).description("Bearer {액세스 토큰}"))
-                                       .build()
-                       )
-               ));
-    }
 }

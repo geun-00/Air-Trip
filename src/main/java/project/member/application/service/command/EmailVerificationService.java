@@ -65,29 +65,8 @@ public class EmailVerificationService implements SendEmailVerificationUseCase, V
         log.error("[메일 전송 실패]", ex);
     }
 
-    @Transactional
-    @Override
-    public String verifyToken(String token) {
-        Long memberId = manageEmailVerificationTokenPort.findMemberIdByToken(token);
-
-        if (memberId == null) {
-            return buildVerificationRedirectUrl(false);
-        }
-
-        Member member = loadMemberPort.loadById(memberId);
-        member.verifyEmail();
-        saveMemberPort.save(member);
-        manageEmailVerificationTokenPort.deleteByToken(token);
-
-        return buildVerificationRedirectUrl(true);
-    }
-
     private String buildVerificationLink(String token) {
-        return baseUrl + "/api/auth/email/verify?token=" + token;
-    }
-
-    private String buildVerificationRedirectUrl(boolean success) {
-        return frontendUrl + "/users/profile?emailVerify=" + (success ? "success" : "failed");
+        return baseUrl + "/api/members/email-verification?token=" + token;
     }
 
     private String generateHtml(String link) {
@@ -159,5 +138,26 @@ public class EmailVerificationService implements SendEmailVerificationUseCase, V
                 </body>
                 </html>
                 """.formatted(link);
+    }
+
+    @Transactional
+    @Override
+    public String verifyToken(String token) {
+        Long memberId = manageEmailVerificationTokenPort.findMemberIdByToken(token);
+
+        if (memberId == null) {
+            return buildVerificationRedirectUrl(false);
+        }
+
+        Member member = loadMemberPort.loadById(memberId);
+        member.verifyEmail();
+        saveMemberPort.save(member);
+        manageEmailVerificationTokenPort.deleteByToken(token);
+
+        return buildVerificationRedirectUrl(true);
+    }
+
+    private String buildVerificationRedirectUrl(boolean success) {
+        return frontendUrl + "/users/profile?emailVerify=" + (success ? "success" : "failed");
     }
 }
