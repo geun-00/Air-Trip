@@ -1,14 +1,12 @@
-package project.chat.adapter.in.websocket.response;
-
-import lombok.Builder;
+package project.chat.adapter.out.notification.model;
 
 import java.time.LocalDateTime;
 
-@Builder
-public record StompChatRequestNotification(
+public record ChatRequestNotification(
         String requestId,
         Long senderId,
         String senderName,
         String senderProfileImage,
         LocalDateTime expiresAt
-) {}
+) {
+}
