@@ -5,13 +5,22 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import project.security.WithMockMember;
-import project.chat.adapter.in.web.ChatRequestController;
-import project.controller.RestDocsTestSupport;
-import project.chat.adapter.in.web.response.ChatRoomResponse;
+import project.chat.adapter.in.web.command.ChatRequestCommandController;
+import project.chat.adapter.in.web.query.ChatRequestQueryController;
 import project.chat.adapter.in.web.request.RequestChatRequest;
-import project.chat.adapter.in.web.response.RequestChatResponse;
-import project.chat.application.service.ChatRequestService;
+import project.chat.application.in.command.AcceptChatRequestUseCase;
+import project.chat.application.in.command.RejectChatRequestUseCase;
+import project.chat.application.in.command.RequestChatUseCase;
+import project.chat.application.in.command.model.AcceptChatRequestCommand;
+import project.chat.application.in.command.model.AcceptChatRequestResult;
+import project.chat.application.in.command.model.ChatRequest;
+import project.chat.application.in.command.model.RejectChatRequestCommand;
+import project.chat.application.in.command.model.RequestChatCommand;
+import project.chat.application.in.query.GetReceivedChatRequestsUseCase;
+import project.chat.application.in.query.GetSentChatRequestsUseCase;
+import project.chat.application.in.query.model.ChatRequestView;
+import project.controller.RestDocsTestSupport;
+import project.security.WithMockMember;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -21,9 +30,10 @@ import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.docume
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static com.epages.restdocs.apispec.ResourceSnippetParameters.builder;
 import static com.epages.restdocs.apispec.Schema.schema;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.payload.JsonFieldType.BOOLEAN;
@@ -37,12 +47,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ChatRequestController.class)
+@WebMvcTest({ChatRequestCommandController.class, ChatRequestQueryController.class})
 class ChatRequestControllerTest extends RestDocsTestSupport {
 
     private static final String API_TAG = "Chat Request API";
 
-    @MockitoBean ChatRequestService chatRequestService;
+    @MockitoBean RequestChatUseCase requestChatUseCase;
+    @MockitoBean AcceptChatRequestUseCase acceptChatRequestUseCase;
+    @MockitoBean RejectChatRequestUseCase rejectChatRequestUseCase;
+    @MockitoBean GetReceivedChatRequestsUseCase getReceivedChatRequestsUseCase;
+    @MockitoBean GetSentChatRequestsUseCase getSentChatRequestsUseCase;
 
     @Test
     @DisplayName("대화 요청")
@@ -50,9 +64,9 @@ class ChatRequestControllerTest extends RestDocsTestSupport {
     void requestChat() throws Exception {
         //given
         RequestChatRequest request = new RequestChatRequest(1L);
-        RequestChatResponse response = new RequestChatResponse("request-id", 2L, "Walter Umar", "https://sender-profile.com",
-                                                               1L, "Amina Morales", "https://receiver-profile.com", LocalDateTime.now().plusDays(1));
-        given(chatRequestService.requestChat(anyLong(), anyLong())).willReturn(response);
+        ChatRequest response = new ChatRequest("request-id", 2L, "Walter Umar", "https://sender-profile.com",
+                                               1L, "Amina Morales", "https://receiver-profile.com", LocalDateTime.now().plusDays(1));
+        given(requestChatUseCase.requestChat(any(RequestChatCommand.class))).willReturn(response);
 
         //when
         //then
@@ -62,7 +76,7 @@ class ChatRequestControllerTest extends RestDocsTestSupport {
                        .content(creatJson(request))
                )
                .andExpectAll(
-                       handler().handlerType(ChatRequestController.class),
+                       handler().handlerType(ChatRequestCommandController.class),
                        handler().methodName("requestChat"),
                        status().isOk(),
                        jsonPath("$.requestId").value(response.requestId()),
@@ -124,10 +138,10 @@ class ChatRequestControllerTest extends RestDocsTestSupport {
     @WithMockMember
     void acceptRequestChat() throws Exception {
         //given
-        ChatRoomResponse response = new ChatRoomResponse(1L, "custom-room-name", 1L, "Ahmad Gul", "https://example.com", true,
-                                                         "안녕하세요", LocalDateTime.now().minusDays(7).truncatedTo(ChronoUnit.MICROS), 3);
+        AcceptChatRequestResult response = new AcceptChatRequestResult(1L, "custom-room-name", 1L, "Ahmad Gul", "https://example.com", true,
+                                                                       "안녕하세요", LocalDateTime.now().minusDays(7).truncatedTo(ChronoUnit.MICROS), 3);
 
-        given(chatRequestService.acceptRequestChat(anyString(), anyLong())).willReturn(response);
+        given(acceptChatRequestUseCase.acceptChatRequest(any(AcceptChatRequestCommand.class))).willReturn(response);
 
         //when
         //then
@@ -135,7 +149,7 @@ class ChatRequestControllerTest extends RestDocsTestSupport {
                        .header(AUTHORIZATION, "Bearer {access-token}")
                )
                .andExpectAll(
-                       handler().handlerType(ChatRequestController.class),
+                       handler().handlerType(ChatRequestCommandController.class),
                        handler().methodName("acceptRequestChat"),
                        status().isOk(),
                        jsonPath("$.roomId").value(response.roomId()),
@@ -143,7 +157,7 @@ class ChatRequestControllerTest extends RestDocsTestSupport {
                        jsonPath("$.memberId").value(response.memberId()),
                        jsonPath("$.memberName").value(response.memberName()),
                        jsonPath("$.memberProfileImage").value(response.memberProfileImage()),
-                       jsonPath("$.isOtherMemberActive").value(response.isOtherMemberActive()),
+                       jsonPath("$.isOtherMemberActive").value(response.otherMemberActive()),
                        jsonPath("$.lastMessage").value(response.lastMessage()),
                        jsonPath("$.lastMessageTime").exists(),
                        jsonPath("$.unreadCount").value(response.unreadCount())
@@ -204,7 +218,7 @@ class ChatRequestControllerTest extends RestDocsTestSupport {
                        .header(AUTHORIZATION, "Bearer {access-token}")
                )
                .andExpectAll(
-                       handler().handlerType(ChatRequestController.class),
+                        handler().handlerType(ChatRequestCommandController.class),
                        handler().methodName("rejectRequestChat"),
                        status().isOk()
                )
@@ -218,6 +232,8 @@ class ChatRequestControllerTest extends RestDocsTestSupport {
                                        .build()
                        )
                ));
+
+        verify(rejectChatRequestUseCase).rejectChatRequest(any(RejectChatRequestCommand.class));
     }
 
     @Test
@@ -225,14 +241,14 @@ class ChatRequestControllerTest extends RestDocsTestSupport {
     @WithMockMember
     void getReceivedChatRequests() throws Exception {
         //given
-        List<RequestChatResponse> response = List.of(
-                new RequestChatResponse("request-id-1", 1L, "Walter Umar", "https://sender-1-profile.com",
-                                        2L, "Amina Morales", "https://receiver-1-profile.com", LocalDateTime.now().plusDays(1)),
-                new RequestChatResponse("request-id-2", 3L, "Natalya Bello", "https://sender-2-profile.com",
-                                        4L, "Richard Santos", "https://receiver-2-profile.com", LocalDateTime.now().plusHours(3)),
-                new RequestChatResponse("request-id-3", 5L, "Dmitriy Sari", "https://sender-3-profile.com",
-                                        6L, "Frank Rai", "https://receiver-3-profile.com", LocalDateTime.now().plusHours(5)));
-        given(chatRequestService.getReceivedChatRequests(anyLong())).willReturn(response);
+        List<ChatRequestView> response = List.of(
+                new ChatRequestView("request-id-1", 1L, "Walter Umar", "https://sender-1-profile.com",
+                                    2L, "Amina Morales", "https://receiver-1-profile.com", LocalDateTime.now().plusDays(1)),
+                new ChatRequestView("request-id-2", 3L, "Natalya Bello", "https://sender-2-profile.com",
+                                    4L, "Richard Santos", "https://receiver-2-profile.com", LocalDateTime.now().plusHours(3)),
+                new ChatRequestView("request-id-3", 5L, "Dmitriy Sari", "https://sender-3-profile.com",
+                                    6L, "Frank Rai", "https://receiver-3-profile.com", LocalDateTime.now().plusHours(5)));
+        given(getReceivedChatRequestsUseCase.getReceivedChatRequests(anyLong())).willReturn(response);
 
         //when
         //then
@@ -240,7 +256,7 @@ class ChatRequestControllerTest extends RestDocsTestSupport {
                        .header(AUTHORIZATION, "Bearer {access-token}")
                )
                .andExpectAll(
-                       handler().handlerType(ChatRequestController.class),
+                       handler().handlerType(ChatRequestQueryController.class),
                        handler().methodName("getReceivedChatRequests"),
                        status().isOk(),
                        jsonPath("$.length()").value(response.size())
@@ -291,14 +307,14 @@ class ChatRequestControllerTest extends RestDocsTestSupport {
     @WithMockMember
     void getSentChatRequests() throws Exception {
         //given
-        List<RequestChatResponse> response = List.of(
-                new RequestChatResponse("request-id-1", 1L, "Walter Umar", "https://sender-1-profile.com",
-                                        2L, "Amina Morales", "https://receiver-1-profile.com", LocalDateTime.now().plusDays(1)),
-                new RequestChatResponse("request-id-2", 3L, "Natalya Bello", "https://sender-2-profile.com",
-                                        4L, "Richard Santos", "https://receiver-2-profile.com", LocalDateTime.now().plusHours(3)),
-                new RequestChatResponse("request-id-3", 5L, "Dmitriy Sari", "https://sender-3-profile.com",
-                                        6L, "Frank Rai", "https://receiver-3-profile.com", LocalDateTime.now().plusHours(5)));
-        given(chatRequestService.getSentChatRequests(anyLong())).willReturn(response);
+        List<ChatRequestView> response = List.of(
+                new ChatRequestView("request-id-1", 1L, "Walter Umar", "https://sender-1-profile.com",
+                                    2L, "Amina Morales", "https://receiver-1-profile.com", LocalDateTime.now().plusDays(1)),
+                new ChatRequestView("request-id-2", 3L, "Natalya Bello", "https://sender-2-profile.com",
+                                    4L, "Richard Santos", "https://receiver-2-profile.com", LocalDateTime.now().plusHours(3)),
+                new ChatRequestView("request-id-3", 5L, "Dmitriy Sari", "https://sender-3-profile.com",
+                                    6L, "Frank Rai", "https://receiver-3-profile.com", LocalDateTime.now().plusHours(5)));
+        given(getSentChatRequestsUseCase.getSentChatRequests(anyLong())).willReturn(response);
 
         //when
         //then
@@ -306,7 +322,7 @@ class ChatRequestControllerTest extends RestDocsTestSupport {
                        .header(AUTHORIZATION, "Bearer {access-token}")
                )
                .andExpectAll(
-                       handler().handlerType(ChatRequestController.class),
+                        handler().handlerType(ChatRequestQueryController.class),
                        handler().methodName("getSentChatRequests"),
                        status().isOk(),
                        jsonPath("$.length()").value(response.size())

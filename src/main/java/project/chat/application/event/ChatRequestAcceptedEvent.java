@@ -1,6 +1,6 @@
 package project.chat.application.event;
 
-import project.chat.adapter.in.web.response.ChatRoomResponse;
+import project.chat.application.in.command.model.AcceptChatRequestResult;
 
-public record ChatRequestAcceptedEvent(String requestId, Long senderId, ChatRoomResponse chatRoomResponse) {
+public record ChatRequestAcceptedEvent(String requestId, Long senderId, AcceptChatRequestResult chatRoom) {
 }

@@ -1,12 +1,12 @@
 package project.chat.adapter.out.redis;
 
 import org.springframework.data.repository.CrudRepository;
-import project.chat.adapter.out.redis.model.ChatRequest;
+import project.chat.adapter.out.redis.model.ChatRequestDocument;
 
 import java.util.List;
 
-public interface ChatRequestRepository extends CrudRepository<ChatRequest, String> {
-    List<ChatRequest> findBySenderId(Long senderId);
+public interface ChatRequestRepository extends CrudRepository<ChatRequestDocument, String> {
+    List<ChatRequestDocument> findBySenderId(Long senderId);
 
-    List<ChatRequest> findByReceiverId(Long receiverId);
+    List<ChatRequestDocument> findByReceiverId(Long receiverId);
 }

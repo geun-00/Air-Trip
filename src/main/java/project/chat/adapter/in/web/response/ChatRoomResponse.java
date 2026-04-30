@@ -11,13 +11,6 @@ public record ChatRoomResponse(
         boolean isOtherMemberActive,
         String lastMessage,
         LocalDateTime lastMessageTime,
-        int unreadCount) {
-
-    public static ChatRoomResponse withUnreadCount(ChatRoomResponse dto, int unreadCount) {
-        return new ChatRoomResponse(
-                dto.roomId(), dto.customRoomName(), dto.memberId(),
-                dto.memberName(), dto.memberProfileImage(), dto.isOtherMemberActive(),
-                dto.lastMessage(), dto.lastMessageTime(), unreadCount
-        );
-    }
+        int unreadCount
+) {
 }

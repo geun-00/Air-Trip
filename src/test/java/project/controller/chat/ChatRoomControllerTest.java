@@ -5,16 +5,22 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import project.security.WithMockMember;
-import project.chat.adapter.in.websocket.response.ChatMessageResponse;
-import project.chat.adapter.in.web.response.ChatMessagesResponse;
-import project.chat.adapter.in.web.response.ChatRoomResponse;
-import project.chat.adapter.in.web.request.LeaveChatRoomRequest;
+import project.chat.adapter.in.web.command.ChatRoomCommandController;
+import project.chat.adapter.in.web.query.ChatRoomQueryController;
 import project.chat.adapter.in.web.request.UpdateChatRoomNameRequest;
-import project.chat.adapter.in.web.ChatRoomController;
+import project.chat.application.in.command.LeaveChatRoomUseCase;
+import project.chat.application.in.command.MarkChatRoomAsReadUseCase;
+import project.chat.application.in.command.UpdateChatRoomNameUseCase;
+import project.chat.application.in.command.model.UpdateChatRoomNameCommand;
+import project.chat.application.in.command.model.UpdateChatRoomNameResult;
+import project.chat.application.in.query.GetChatMessagesUseCase;
+import project.chat.application.in.query.GetChatRoomsUseCase;
+import project.chat.application.in.query.model.ChatMessageView;
+import project.chat.application.in.query.model.ChatMessagesView;
+import project.chat.application.in.query.model.ChatRoomView;
+import project.chat.application.in.query.model.GetChatMessagesQuery;
 import project.controller.RestDocsTestSupport;
-import project.chat.application.service.ChatMessageService;
-import project.chat.application.service.ChatRoomService;
+import project.security.WithMockMember;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -24,9 +30,8 @@ import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.docume
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static com.epages.restdocs.apispec.ResourceSnippetParameters.builder;
 import static com.epages.restdocs.apispec.Schema.schema;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
@@ -43,30 +48,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ChatRoomController.class)
+@WebMvcTest({ChatRoomQueryController.class, ChatRoomCommandController.class})
 class ChatRoomControllerTest extends RestDocsTestSupport {
 
     private static final String API_TAG = "ChatRoom API";
     private static final String PATH_PREFIX = "/api/chat/rooms";
 
-    @MockitoBean ChatRoomService chatRoomService;
-    @MockitoBean ChatMessageService chatMessageService;
+    @MockitoBean GetChatRoomsUseCase getChatRoomsUseCase;
+    @MockitoBean GetChatMessagesUseCase getChatMessagesUseCase;
+    @MockitoBean UpdateChatRoomNameUseCase updateChatRoomNameUseCase;
+    @MockitoBean LeaveChatRoomUseCase leaveChatRoomUseCase;
+    @MockitoBean MarkChatRoomAsReadUseCase markChatRoomAsReadUseCase;
 
     @Test
     @DisplayName("참여 중인 전체 채팅방 조회")
     @WithMockMember
     void getChatRooms() throws Exception {
         //given
-        List<ChatRoomResponse> response = List.of(
-                new ChatRoomResponse(1L, "my-chat-room-1", 1L, "Ahmad Gul", "https://example-a.com", true,
-                                     "안녕하세요", LocalDateTime.now().minusDays(7).truncatedTo(ChronoUnit.MICROS), 3),
-                new ChatRoomResponse(2L, "my-chat-room-2", 2L, "Aleksey Begam", "https://example-b.com", false,
-                                     "반갑습니다", LocalDateTime.now().minusDays(6).truncatedTo(ChronoUnit.MICROS), 1),
-                new ChatRoomResponse(3L, "my-chat-room-3", 3L, "Doris Sharma", "https://example-c.com", true,
-                                     "좋은 여행지입니다.", LocalDateTime.now().minusDays(5).truncatedTo(ChronoUnit.MICROS), 0)
+        List<ChatRoomView> response = List.of(
+                new ChatRoomView(1L, "my-chat-room-1", 1L, "Ahmad Gul", "https://example-a.com", true,
+                                 "안녕하세요", LocalDateTime.now().minusDays(7).truncatedTo(ChronoUnit.MICROS), 3),
+                new ChatRoomView(2L, "my-chat-room-2", 2L, "Aleksey Begam", "https://example-b.com", false,
+                                 "반갑습니다", LocalDateTime.now().minusDays(6).truncatedTo(ChronoUnit.MICROS), 1),
+                new ChatRoomView(3L, "my-chat-room-3", 3L, "Doris Sharma", "https://example-c.com", true,
+                                 "좋은 여행지입니다.", LocalDateTime.now().minusDays(5).truncatedTo(ChronoUnit.MICROS), 0)
         );
 
-        given(chatRoomService.getChatRooms(anyLong())).willReturn(response);
+        given(getChatRoomsUseCase.getChatRooms(anyLong())).willReturn(response);
 
         //when
         //then
@@ -74,7 +82,7 @@ class ChatRoomControllerTest extends RestDocsTestSupport {
                        .header(AUTHORIZATION, "Bearer {access-token}")
                )
                .andExpectAll(
-                       handler().handlerType(ChatRoomController.class),
+                       handler().handlerType(ChatRoomQueryController.class),
                        handler().methodName("getChatRooms"),
                        status().isOk(),
                        jsonPath("$.length()").value(response.size())
@@ -128,14 +136,14 @@ class ChatRoomControllerTest extends RestDocsTestSupport {
     @WithMockMember
     void getMessageHistories() throws Exception {
         //given
-        List<ChatMessageResponse> messages = List.of(
-                new ChatMessageResponse(1L, 1L, 4L, "Maria Lai", "안녕하세요", LocalDateTime.now().minusDays(3)),
-                new ChatMessageResponse(2L, 1L, 5L, "Ha Cui", "반갑습니다", LocalDateTime.now().minusDays(2)),
-                new ChatMessageResponse(3L, 1L, 6L, "Halima Pham", "수고하세요", LocalDateTime.now().minusDays(1))
+        List<ChatMessageView> messages = List.of(
+                new ChatMessageView("1", 1L, 4L, "Maria Lai", "안녕하세요", LocalDateTime.now().minusDays(3), false),
+                new ChatMessageView("2", 1L, 5L, "Ha Cui", "반갑습니다", LocalDateTime.now().minusDays(2), false),
+                new ChatMessageView("3", 1L, 6L, "Halima Pham", "수고하세요", LocalDateTime.now().minusDays(1), false)
         );
-        ChatMessagesResponse response = new ChatMessagesResponse(messages, true);
+        ChatMessagesView response = new ChatMessagesView(messages, true);
 
-        given(chatMessageService.getMessageHistories(anyLong(), anyLong(), anyInt())).willReturn(response);
+        given(getChatMessagesUseCase.getChatMessages(any(GetChatMessagesQuery.class))).willReturn(response);
 
         //when
         //then
@@ -145,7 +153,7 @@ class ChatRoomControllerTest extends RestDocsTestSupport {
                        .param("size", "30")
                )
                .andExpectAll(
-                       handler().handlerType(ChatRoomController.class),
+                       handler().handlerType(ChatRoomQueryController.class),
                        handler().methodName("getMessageHistories"),
                        status().isOk(),
                        jsonPath("$.messages.length()").value(response.messages().size()),
@@ -204,10 +212,10 @@ class ChatRoomControllerTest extends RestDocsTestSupport {
     void updateChatRoomName() throws Exception {
         //given
         UpdateChatRoomNameRequest request = new UpdateChatRoomNameRequest("custom-room-name", 1L);
-        ChatRoomResponse response = new ChatRoomResponse(1L, "custom-room-name", 1L, "Ahmad Gul", "https://example.com", true,
-                                                         "안녕하세요", LocalDateTime.now().minusDays(7).truncatedTo(ChronoUnit.MICROS), 3);
+        UpdateChatRoomNameResult response = new UpdateChatRoomNameResult(1L, "custom-room-name", 1L, "Ahmad Gul", "https://example.com", true,
+                                                                         "안녕하세요", LocalDateTime.now().minusDays(7).truncatedTo(ChronoUnit.MICROS), 3);
 
-        given(chatRoomService.updateChatRoomName(anyString(), anyLong(), anyLong(), anyLong())).willReturn(response);
+        given(updateChatRoomNameUseCase.updateChatRoomName(any(UpdateChatRoomNameCommand.class))).willReturn(response);
 
         //when
         //then
@@ -217,7 +225,7 @@ class ChatRoomControllerTest extends RestDocsTestSupport {
                        .content(creatJson(request))
                )
                .andExpectAll(
-                       handler().handlerType(ChatRoomController.class),
+                       handler().handlerType(ChatRoomCommandController.class),
                        handler().methodName("updateChatRoomName"),
                        status().isOk(),
                        jsonPath("$.roomId").value(response.roomId()),
@@ -225,7 +233,7 @@ class ChatRoomControllerTest extends RestDocsTestSupport {
                        jsonPath("$.memberId").value(response.memberId()),
                        jsonPath("$.memberName").value(response.memberName()),
                        jsonPath("$.memberProfileImage").value(response.memberProfileImage()),
-                       jsonPath("$.isOtherMemberActive").value(response.isOtherMemberActive()),
+                       jsonPath("$.isOtherMemberActive").value(response.otherMemberActive()),
                        jsonPath("$.lastMessage").value(response.lastMessage()),
                        jsonPath("$.lastMessageTime").exists(),
                        jsonPath("$.unreadCount").value(response.unreadCount())
@@ -288,17 +296,13 @@ class ChatRoomControllerTest extends RestDocsTestSupport {
     @WithMockMember
     void leaveChatRoom() throws Exception {
         //given
-        LeaveChatRoomRequest request = new LeaveChatRoomRequest(true);
-
         //when
         //then
         mockMvc.perform(post(PATH_PREFIX + "/{roomId}", 1L)
                        .header(AUTHORIZATION, "Bearer {access-token}")
-                       .contentType(MediaType.APPLICATION_JSON_VALUE)
-                       .content(creatJson(request))
                )
                .andExpectAll(
-                       handler().handlerType(ChatRoomController.class),
+                       handler().handlerType(ChatRoomCommandController.class),
                        handler().methodName("leaveChatRoom"),
                        status().isOk()
                )
@@ -309,8 +313,6 @@ class ChatRoomControllerTest extends RestDocsTestSupport {
                                        .summary("채팅방 나가기")
                                        .requestHeaders(headerWithName(AUTHORIZATION).description("Bearer {액세스 토큰}"))
                                        .pathParameters(parameterWithName("roomId").description("채팅방 ID"))
-                                       .requestFields(fieldWithPath("isActive").description("채팅방이 화면에서 활성화되어 있는지 여부").type(BOOLEAN))
-                                       .requestSchema(schema("LeaveChatRoomRequest"))
                                        .build()
                        )
                ));
@@ -329,7 +331,7 @@ class ChatRoomControllerTest extends RestDocsTestSupport {
                        .header(AUTHORIZATION, "Bearer {access-token}")
                )
                .andExpectAll(
-                       handler().handlerType(ChatRoomController.class),
+                       handler().handlerType(ChatRoomCommandController.class),
                        handler().methodName("markChatRoomAsRead"),
                        status().isOk()
                )

@@ -7,6 +7,8 @@ public interface LoadMemberPort {
 
     Member loadById(Long memberId);
 
+    String loadMemberName(Long memberId);
+
     boolean existsByEmail(String email);
 
     boolean existsByEmailAndSocialType(String email, SocialType socialType);
