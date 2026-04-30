@@ -21,7 +21,7 @@ import project.auth.adapter.out.oauth.model.PrincipalUser;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-import static project.auth.adapter.out.jwt.JwtProperties.TOKEN_PREFIX;
+import static project.infrastructure.jwt.JwtProperties.TOKEN_PREFIX;
 
 @Slf4j
 @Component

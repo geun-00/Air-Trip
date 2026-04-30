@@ -1,4 +1,4 @@
-package project.auth.adapter.out.jwt;
+package project.infrastructure.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -17,7 +17,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import static io.jsonwebtoken.io.Decoders.BASE64;
-import static project.auth.adapter.out.jwt.JwtProperties.PRINCIPAL_NAME;
+import static project.infrastructure.jwt.JwtProperties.PRINCIPAL_NAME;
 
 @Component
 public class JwtProvider {

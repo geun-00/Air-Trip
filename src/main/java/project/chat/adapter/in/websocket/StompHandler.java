@@ -8,14 +8,14 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import project.auth.adapter.out.jwt.JwtProvider;
+import project.infrastructure.jwt.JwtProvider;
 import project.chat.application.in.command.CheckChatRoomParticipantUseCase;
 
 import static org.springframework.messaging.simp.stomp.StompCommand.CONNECT;
 import static org.springframework.messaging.simp.stomp.StompCommand.SEND;
 import static org.springframework.messaging.simp.stomp.StompCommand.SUBSCRIBE;
-import static project.auth.adapter.out.jwt.JwtProperties.AUTHORIZATION_HEADER;
-import static project.auth.adapter.out.jwt.JwtProperties.TOKEN_PREFIX;
+import static project.infrastructure.jwt.JwtProperties.AUTHORIZATION_HEADER;
+import static project.infrastructure.jwt.JwtProperties.TOKEN_PREFIX;
 
 @Slf4j
 @Component

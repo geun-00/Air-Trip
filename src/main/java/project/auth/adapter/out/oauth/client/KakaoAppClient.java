@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 
-import static project.auth.adapter.out.jwt.JwtProperties.AUTHORIZATION_HEADER;
+import static project.infrastructure.jwt.JwtProperties.AUTHORIZATION_HEADER;
 
 /**
  * Kakao REST API Http Client

@@ -1,4 +1,4 @@
-package project.auth.adapter.out.jwt;
+package project.infrastructure.jwt;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

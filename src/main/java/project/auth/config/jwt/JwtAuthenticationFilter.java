@@ -16,14 +16,14 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import project.common.exception.ErrorCode;
 import project.auth.domain.exception.JwtProcessingException;
-import project.auth.adapter.out.jwt.JwtProvider;
+import project.infrastructure.jwt.JwtProvider;
 import project.auth.adapter.out.jwt.TokenService;
 
 import java.io.IOException;
 
-import static project.auth.adapter.out.jwt.JwtProperties.ACCESS_TOKEN_KEY;
-import static project.auth.adapter.out.jwt.JwtProperties.AUTHORIZATION_HEADER;
-import static project.auth.adapter.out.jwt.JwtProperties.TOKEN_PREFIX;
+import static project.infrastructure.jwt.JwtProperties.ACCESS_TOKEN_KEY;
+import static project.infrastructure.jwt.JwtProperties.AUTHORIZATION_HEADER;
+import static project.infrastructure.jwt.JwtProperties.TOKEN_PREFIX;
 
 @Component
 @RequiredArgsConstructor

@@ -21,7 +21,7 @@ import project.auth.adapter.out.oauth.model.ProviderUser;
 import java.util.HashMap;
 import java.util.List;
 
-import static project.auth.adapter.out.jwt.JwtProperties.TOKEN_PREFIX;
+import static project.infrastructure.jwt.JwtProperties.TOKEN_PREFIX;
 
 @Slf4j
 @Service

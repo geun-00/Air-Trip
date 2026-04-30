@@ -6,7 +6,7 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
-import project.auth.adapter.out.jwt.JwtProvider;
+import project.infrastructure.jwt.JwtProvider;
 
 import java.util.Map;
 
