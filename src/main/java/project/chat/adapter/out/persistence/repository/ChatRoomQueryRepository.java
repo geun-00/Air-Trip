@@ -1,4 +1,4 @@
-package project.chat.adapter.out.persistence;
+package project.chat.adapter.out.persistence.repository;
 
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;

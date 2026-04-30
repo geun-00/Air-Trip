@@ -1,4 +1,4 @@
-package project.chat.adapter.out.persistence;
+package project.chat.adapter.out.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

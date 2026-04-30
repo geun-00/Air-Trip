@@ -1,4 +1,4 @@
-package project.chat.adapter.in.web;
+package project.chat.adapter.in.web.command;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

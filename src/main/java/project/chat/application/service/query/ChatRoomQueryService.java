@@ -1,4 +1,4 @@
-package project.chat.application.service;
+package project.chat.application.service.query;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

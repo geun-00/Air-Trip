@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import project.chat.adapter.in.websocket.response.ChatMessageResponse;
+import project.chat.adapter.out.redis.model.ChatRedisKey;
 import project.chat.application.out.command.ChatMessageQueuePort;
 import project.chat.application.out.command.model.ChatMessagePayload;
 

@@ -6,7 +6,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 import project.chat.adapter.in.websocket.response.ChatMessageResponse;
 import project.chat.adapter.out.persistence.model.ChatMessageHistoryRow;
-import project.chat.adapter.out.redis.ChatRedisKey;
+import project.chat.adapter.out.persistence.repository.ChatMessageQueryRepository;
+import project.chat.adapter.out.redis.model.ChatRedisKey;
 import project.chat.application.out.query.LoadChatMessagesPort;
 import project.chat.application.out.query.model.ChatMessageHistoryView;
 

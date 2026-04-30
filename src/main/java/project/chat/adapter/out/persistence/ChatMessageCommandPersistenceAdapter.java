@@ -2,6 +2,7 @@ package project.chat.adapter.out.persistence;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import project.chat.adapter.out.persistence.repository.ChatMessageRepository;
 import project.chat.application.out.command.SaveChatMessagePort;
 import project.chat.domain.ChatMessage;
 

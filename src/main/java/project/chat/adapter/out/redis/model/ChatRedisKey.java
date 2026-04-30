@@ -1,4 +1,4 @@
-package project.chat.adapter.out.redis;
+package project.chat.adapter.out.redis.model;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

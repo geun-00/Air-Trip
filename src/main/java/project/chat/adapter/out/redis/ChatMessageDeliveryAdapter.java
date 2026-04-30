@@ -5,6 +5,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Component;
 import project.chat.adapter.in.websocket.response.ChatMessageResponse;
+import project.chat.adapter.out.redis.model.ChatRedisKey;
 import project.chat.application.out.command.ChatMessageDeliveryPort;
 import project.chat.application.out.command.model.ChatMessagePayload;
 import project.infrastructure.messaging.RedisMessagePublisher;

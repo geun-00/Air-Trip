@@ -3,6 +3,7 @@ package project.chat.adapter.out.redis;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import project.chat.adapter.out.redis.model.ChatRedisKey;
 import project.chat.application.out.command.ChatRoomStatePort;
 
 import java.time.Duration;

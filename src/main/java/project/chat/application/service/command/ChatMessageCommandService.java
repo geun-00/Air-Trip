@@ -1,4 +1,4 @@
-package project.chat.application.service;
+package project.chat.application.service.command;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -7,6 +7,7 @@ import project.chat.application.in.command.model.SendChatMessageCommand;
 import project.chat.application.out.command.ChatMessageDeliveryPort;
 import project.chat.application.out.command.ChatRoomStatePort;
 import project.chat.application.out.command.model.ChatMessagePayload;
+import project.chat.application.service.ChatRoomParticipationChecker;
 import project.chat.domain.exception.ChatExceptions;
 import project.member.application.out.command.LoadMemberPort;
 

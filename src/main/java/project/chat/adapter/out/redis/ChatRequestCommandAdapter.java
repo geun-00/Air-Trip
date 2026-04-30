@@ -2,6 +2,7 @@ package project.chat.adapter.out.redis;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import project.chat.adapter.out.redis.model.ChatRedisKey;
 import project.chat.adapter.out.redis.model.ChatRequestDocument;
 import project.chat.application.in.command.model.ChatRequest;
 import project.chat.application.out.command.ChatRequestPort;

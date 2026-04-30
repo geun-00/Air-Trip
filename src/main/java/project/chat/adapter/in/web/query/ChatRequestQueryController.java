@@ -1,4 +1,4 @@
-package project.chat.adapter.in.web;
+package project.chat.adapter.in.web.query;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
