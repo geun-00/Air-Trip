@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import project.infrastructure.jwt.JwtProvider;
-import project.auth.adapter.out.redis.RedisRepository;
 import project.auth.application.out.command.ManageBlacklistedTokenPort;
 import project.auth.config.jwt.JwtAuthenticationResolver;
 
@@ -17,7 +16,6 @@ public abstract class ControllerTestSupport {
     @Autowired protected ObjectMapper objectMapper;
     @Autowired protected MockMvc mockMvc;
 
-    @MockitoBean protected RedisRepository redisRepository;
     @MockitoBean protected JwtProvider jwtProvider;
     @MockitoBean protected ManageBlacklistedTokenPort manageBlacklistedTokenPort;
     @MockitoBean protected JwtAuthenticationResolver jwtAuthenticationResolver;

@@ -14,7 +14,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import project.common.adapter.in.web.ErrorResponse.FieldErrorResponse;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
-import project.auth.adapter.out.redis.RedisRepository;
 
 import java.util.List;
 
@@ -22,8 +21,6 @@ import java.util.List;
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class ExceptionControllerAdvice extends ResponseEntityExceptionHandler {
-
-    private final RedisRepository redisRepository;
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleEmailExistsException(BusinessException e) {

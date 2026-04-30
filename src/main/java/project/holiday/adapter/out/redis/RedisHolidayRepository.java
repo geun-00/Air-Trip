@@ -1,8 +1,8 @@
 package project.holiday.adapter.out.redis;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
-import project.auth.adapter.out.redis.RedisRepository;
 import project.holiday.application.out.HolidayStore;
 import project.infrastructure.time.HolidayProvider;
 
@@ -15,21 +15,27 @@ import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
 @RequiredArgsConstructor
 public class RedisHolidayRepository implements HolidayProvider, HolidayStore {
 
-    private final RedisRepository redisRepository;
+    private final StringRedisTemplate redisTemplate;
 
     @Override
     public boolean isHoliday(LocalDate date) {
-        return redisRepository.isMemberOfSet(key(date.getYear()), date.format(BASIC_ISO_DATE));
+        return Boolean.TRUE.equals(
+                redisTemplate.opsForSet().isMember(key(date.getYear()), date.format(BASIC_ISO_DATE))
+        );
     }
 
     @Override
     public boolean hasYear(int year) {
-        return redisRepository.hasKey(key(year));
+        return redisTemplate.hasKey(key(year));
     }
 
     @Override
     public void saveHolidays(int year, List<String> holidays) {
-        redisRepository.addSet(key(year), holidays);
+        if (holidays == null || holidays.isEmpty()) {
+            return;
+        }
+
+        redisTemplate.opsForSet().add(key(year), holidays.toArray(String[]::new));
     }
 
     private String key(int year) {
