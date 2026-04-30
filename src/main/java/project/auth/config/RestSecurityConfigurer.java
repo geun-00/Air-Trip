@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import project.auth.config.handler.failer.CustomAuthenticationEntryPoint;
-import project.auth.config.handler.failer.RestAuthenticationFailureHandler;
-import project.auth.config.handler.success.RestAuthenticationSuccessHandler;
-import project.auth.config.rest.RestApiDsl;
+import project.auth.adapter.in.security.handler.CustomAuthenticationEntryPoint;
+import project.auth.adapter.in.security.handler.RestAuthenticationFailureHandler;
+import project.auth.adapter.in.security.handler.RestAuthenticationSuccessHandler;
+import project.auth.adapter.in.security.rest.RestApiDsl;
 
 @Configuration
 @RequiredArgsConstructor

@@ -1,4 +1,4 @@
-package project.auth.config.rest;
+package project.auth.adapter.in.security.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
@@ -8,7 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
-import project.auth.domain.exception.CustomAuthenticationException;
+import project.auth.exception.CustomAuthenticationException;
 import project.common.exception.ErrorCode;
 import project.auth.adapter.in.web.request.LoginRequest;
 

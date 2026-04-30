@@ -1,4 +1,4 @@
-package project.auth.domain.exception;
+package project.auth.exception;
 
 import lombok.Getter;
 import org.springframework.security.core.AuthenticationException;

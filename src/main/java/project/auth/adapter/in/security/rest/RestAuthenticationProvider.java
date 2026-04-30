@@ -1,4 +1,4 @@
-package project.auth.config.rest;
+package project.auth.adapter.in.security.rest;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;

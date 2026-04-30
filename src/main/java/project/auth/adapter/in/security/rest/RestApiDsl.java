@@ -1,4 +1,4 @@
-package project.auth.config.rest;
+package project.auth.adapter.in.security.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpMethod;

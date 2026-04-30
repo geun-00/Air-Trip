@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import project.auth.config.handler.failer.OAuthAuthenticationFailureHandler;
-import project.auth.config.handler.success.OAuthAuthenticationSuccessHandler;
+import project.auth.adapter.in.security.handler.OAuthAuthenticationFailureHandler;
+import project.auth.adapter.in.security.handler.OAuthAuthenticationSuccessHandler;
 import project.auth.application.service.CustomOAuth2UserService;
 import project.auth.application.service.CustomOidcUserService;
 

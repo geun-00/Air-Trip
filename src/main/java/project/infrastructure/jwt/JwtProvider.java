@@ -7,7 +7,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
-import project.auth.domain.exception.JwtProcessingException;
+import project.auth.exception.JwtProcessingException;
 import project.common.exception.ErrorCode;
 import project.member.domain.Member;
 

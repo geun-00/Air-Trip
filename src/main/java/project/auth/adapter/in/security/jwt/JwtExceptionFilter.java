@@ -1,4 +1,4 @@
-package project.auth.config.jwt;
+package project.auth.adapter.in.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import project.common.adapter.in.web.ErrorResponse;
 import project.common.exception.ErrorCode;
-import project.auth.domain.exception.JwtProcessingException;
+import project.auth.exception.JwtProcessingException;
 
 import java.io.IOException;
 

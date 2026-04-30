@@ -17,8 +17,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import project.infrastructure.jwt.JwtProperties;
-import project.auth.config.jwt.JwtAuthenticationFilter;
-import project.auth.config.jwt.JwtExceptionFilter;
+import project.auth.adapter.in.security.jwt.JwtAuthenticationFilter;
+import project.auth.adapter.in.security.jwt.JwtExceptionFilter;
 
 import java.util.List;
 

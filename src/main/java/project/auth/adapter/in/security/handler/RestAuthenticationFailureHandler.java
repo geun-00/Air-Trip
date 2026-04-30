@@ -1,4 +1,4 @@
-package project.auth.config.handler.failer;
+package project.auth.adapter.in.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
@@ -11,7 +11,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 import project.common.adapter.in.web.ErrorResponse;
-import project.auth.domain.exception.CustomAuthenticationException;
+import project.auth.exception.CustomAuthenticationException;
 import project.common.exception.ErrorCode;
 
 import java.io.IOException;

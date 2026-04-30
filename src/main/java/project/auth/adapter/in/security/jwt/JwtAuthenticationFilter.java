@@ -1,4 +1,4 @@
-package project.auth.config.jwt;
+package project.auth.adapter.in.security.jwt;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -15,7 +15,7 @@ import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import project.auth.application.out.command.ManageBlacklistedTokenPort;
-import project.auth.domain.exception.JwtProcessingException;
+import project.auth.exception.JwtProcessingException;
 import project.common.exception.ErrorCode;
 import project.infrastructure.jwt.JwtProvider;
 

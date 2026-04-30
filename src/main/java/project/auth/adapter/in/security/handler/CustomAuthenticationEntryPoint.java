@@ -1,4 +1,4 @@
-package project.auth.config.handler.failer;
+package project.auth.adapter.in.security.handler;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

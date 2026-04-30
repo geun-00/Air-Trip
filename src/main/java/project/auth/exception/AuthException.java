@@ -1,4 +1,4 @@
-package project.auth.domain.exception;
+package project.auth.exception;
 
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;

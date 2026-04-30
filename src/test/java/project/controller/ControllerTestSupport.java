@@ -8,7 +8,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import project.infrastructure.jwt.JwtProvider;
 import project.auth.application.out.command.ManageBlacklistedTokenPort;
-import project.auth.config.jwt.JwtAuthenticationResolver;
+import project.auth.adapter.in.security.jwt.JwtAuthenticationResolver;
 
 @Disabled
 public abstract class ControllerTestSupport {

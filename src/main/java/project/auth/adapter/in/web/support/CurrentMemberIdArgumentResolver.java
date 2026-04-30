@@ -8,7 +8,7 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
-import project.auth.domain.exception.AuthException;
+import project.auth.exception.AuthException;
 import project.common.exception.ErrorCode;
 import project.auth.adapter.out.oauth.model.AuthProviderUser;
 import project.auth.adapter.out.oauth.model.PrincipalUser;
