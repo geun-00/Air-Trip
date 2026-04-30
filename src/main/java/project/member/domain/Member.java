@@ -13,7 +13,9 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import project.common.exception.BusinessException;
 import project.common.adapter.out.persistence.BaseEntity;
+import project.common.exception.ErrorCode;
 import project.member.domain.exception.MemberExceptions;
 import project.member.domain.support.AdminMemberCreateSpec;
 
@@ -99,6 +101,12 @@ public class Member extends BaseEntity {
     public void validateEmailVerified() {
         if (!isEmailVerified) {
             throw MemberExceptions.emailNotVerified();
+        }
+    }
+
+    public void validatePassword(String rawPassword, PasswordMatcher passwordMatcher) {
+        if (!passwordMatcher.matches(rawPassword, password)) {
+            throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
     }
 

@@ -1,17 +1,19 @@
 package project.auth.adapter.in.web;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import project.auth.adapter.in.web.request.LoginRequest;
 import project.auth.adapter.in.web.support.AuthTokenResponseWriter;
-import project.auth.application.in.command.LogoutUseCase;
-import project.auth.application.in.command.RefreshAccessTokenUseCase;
+import project.auth.application.in.command.AuthTokenUseCase;
 import project.auth.application.in.command.model.AuthTokenResult;
+import project.auth.application.in.command.model.LoginCommand;
 import project.auth.application.in.command.model.LogoutCommand;
 import project.auth.application.in.command.model.RefreshAccessTokenCommand;
 
@@ -19,22 +21,29 @@ import static project.infrastructure.jwt.JwtProperties.AUTHORIZATION_HEADER;
 import static project.infrastructure.jwt.JwtProperties.REFRESH_TOKEN_KEY;
 import static project.infrastructure.jwt.JwtProperties.TOKEN_PREFIX;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final LogoutUseCase logoutUseCase;
+    private final AuthTokenUseCase authTokenUseCase;
     private final AuthTokenResponseWriter authTokenResponseWriter;
-    private final RefreshAccessTokenUseCase refreshAccessTokenUseCase;
+
+    @PostMapping("/login")
+    public void login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse response
+    ) {
+        AuthTokenResult result = authTokenUseCase.login(new LoginCommand(request.email(), request.password()));
+        authTokenResponseWriter.write(response, result);
+    }
 
     @PostMapping("/refresh")
     public void refreshAccessToken(
             @CookieValue(REFRESH_TOKEN_KEY) String refreshToken,
             HttpServletResponse response
     ) {
-        AuthTokenResult result = refreshAccessTokenUseCase.refreshAccessToken(new RefreshAccessTokenCommand(refreshToken));
+        AuthTokenResult result = authTokenUseCase.refreshAccessToken(new RefreshAccessTokenCommand(refreshToken));
         authTokenResponseWriter.write(response, result);
     }
 
@@ -44,7 +53,7 @@ public class AuthController {
             @CookieValue(REFRESH_TOKEN_KEY) String refreshToken,
             HttpServletResponse response
     ) {
-        logoutUseCase.logout(new LogoutCommand(resolveAccessToken(accessToken), refreshToken));
+        authTokenUseCase.logout(new LogoutCommand(resolveAccessToken(accessToken), refreshToken));
         authTokenResponseWriter.expire(response);
     }
 

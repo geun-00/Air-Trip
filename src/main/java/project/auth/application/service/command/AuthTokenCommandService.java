@@ -3,12 +3,12 @@ package project.auth.application.service.command;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import project.auth.application.in.command.AuthTokenUseCase;
 import project.auth.application.event.OAuthLogoutEvent;
 import project.auth.application.in.command.IssueAuthTokenUseCase;
-import project.auth.application.in.command.LogoutUseCase;
-import project.auth.application.in.command.RefreshAccessTokenUseCase;
 import project.auth.application.in.command.model.AuthTokenResult;
 import project.auth.application.in.command.model.IssueAuthTokenCommand;
+import project.auth.application.in.command.model.LoginCommand;
 import project.auth.application.in.command.model.LogoutCommand;
 import project.auth.application.in.command.model.RefreshAccessTokenCommand;
 import project.auth.application.out.command.AuthTokenPort;
@@ -19,15 +19,16 @@ import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
 import project.member.application.out.command.LoadMemberPort;
 import project.member.domain.Member;
+import project.member.domain.PasswordMatcher;
 
 @Service
 @RequiredArgsConstructor
 public class AuthTokenCommandService implements IssueAuthTokenUseCase,
-                                                RefreshAccessTokenUseCase,
-                                                LogoutUseCase {
+                                                AuthTokenUseCase {
 
     private final AuthTokenPort authTokenPort;
     private final LoadMemberPort loadMemberPort;
+    private final PasswordMatcher passwordMatcher;
     private final ApplicationEventPublisher eventPublisher;
     private final ManageRefreshTokenPort manageRefreshTokenPort;
     private final ManageBlacklistedTokenPort manageBlacklistedTokenPort;
@@ -36,6 +37,21 @@ public class AuthTokenCommandService implements IssueAuthTokenUseCase,
     public AuthTokenResult issue(IssueAuthTokenCommand command) {
         Member member = loadMemberPort.loadByEmail(command.email());
         return issueToken(member, command.principalName());
+    }
+
+    @Override
+    public AuthTokenResult login(LoginCommand command) {
+        Member member = loadMemberForLogin(command.email());
+        member.validatePassword(command.password(), passwordMatcher);
+        return issueToken(member, "default");
+    }
+
+    private Member loadMemberForLogin(String email) {
+        try {
+            return loadMemberPort.loadByEmail(email);
+        } catch (BusinessException exception) {
+            throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
+        }
     }
 
     @Override
