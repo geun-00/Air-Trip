@@ -50,7 +50,7 @@ public interface AccommodationRepository extends JpaRepository<Accommodation, Lo
     List<ImageDataRow> findImagesByAccommodationIdIn(@Param("accommodationIds") List<Long> accommodationIds);
 
     @Query("""
-            select :accommodationId as accommodationId, am.description
+            select :accommodationId as accommodationId, am.description as description
             from AccommodationAmenity aa
             join Amenity am on am.id = aa.amenityId
             where aa.accommodation.id = :accommodationId

@@ -1,7 +1,5 @@
 package project.chat.adapter.out.persistence.repository;
 
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.StringPath;
 import org.springframework.stereotype.Repository;
 import project.chat.adapter.out.persistence.model.ChatMessageHistoryRow;
 import project.chat.domain.ChatMessage;
@@ -17,8 +15,6 @@ import static project.member.domain.QMember.member;
 @Repository
 public class ChatMessageQueryRepository extends CustomQuerydslRepositorySupport {
 
-    private static final StringPath MEMBER_NAME = Expressions.stringPath(member, "name");
-
     public ChatMessageQueryRepository() {
         super(ChatMessage.class);
     }
@@ -32,7 +28,7 @@ public class ChatMessageQueryRepository extends CustomQuerydslRepositorySupport 
                 chatMessage.id,
                 chatMessage.chatRoomId,
                 member.id,
-                MEMBER_NAME,
+                member.name,
                 chatMessage.content,
                 chatMessage.createdAt))
                 .from(chatMessage)
