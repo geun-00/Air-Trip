@@ -40,7 +40,7 @@ public class NaverUser extends OAuth2ProviderUser {
     @Override
     public String getNumber() {
         String number = (String) getAttributes().get("mobile");
-        return number.replaceAll("-", "");
+        return number.replace("-", "");
     }
 
     @Override

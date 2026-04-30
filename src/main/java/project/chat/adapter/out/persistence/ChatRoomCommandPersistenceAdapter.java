@@ -67,7 +67,7 @@ public class ChatRoomCommandPersistenceAdapter implements LoadChatRoomPort, Save
                 row.roomId(),
                 row.customRoomName().value(),
                 row.memberId(),
-                row.memberName(),
+                row.memberName().value(),
                 row.memberProfileImage(),
                 row.otherMemberActive(),
                 row.lastMessage() == null ? null : row.lastMessage().value(),

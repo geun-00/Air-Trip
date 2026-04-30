@@ -23,6 +23,7 @@ import project.accommodation.domain.Accommodation;
 import project.area.domain.QAreaCode;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
 import project.common.domain.StayDatePolicy;
+import project.wishlist.domain.WishlistName;
 
 import java.util.List;
 import java.util.Map;
@@ -275,7 +276,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                                   accommodationPrice.price,
                                   Expressions.constant(false),
                                   Expressions.nullExpression(Long.class),
-                                  Expressions.nullExpression(String.class),
+                                  Expressions.nullExpression(WishlistName.class),
                                   JPAExpressions.select(REVIEW_RATING.avg().coalesce(0.0))
                               .from(review)
                               .join(reservation).on(review.reservationId.eq(reservation.id))

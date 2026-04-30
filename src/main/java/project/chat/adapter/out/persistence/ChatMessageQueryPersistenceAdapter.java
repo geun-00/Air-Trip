@@ -47,7 +47,7 @@ public class ChatMessageQueryPersistenceAdapter implements LoadChatMessagesPort 
                 String.valueOf(row.messageId()),
                 row.roomId(),
                 row.senderId(),
-                row.senderName(),
+                row.senderName().value(),
                 row.content().value(),
                 row.timestamp(),
                 false

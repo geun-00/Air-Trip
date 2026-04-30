@@ -18,7 +18,7 @@ public record OAuthPrincipal(ProviderUser providerUser) implements OidcUser, OAu
 
     @Override
     public String getName() {
-        return providerUser.getUsername();
+        return providerUser.getPrincipalName();
     }
 
     @Override
