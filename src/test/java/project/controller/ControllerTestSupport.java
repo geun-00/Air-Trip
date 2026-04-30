@@ -8,7 +8,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import project.infrastructure.jwt.JwtProvider;
 import project.auth.adapter.out.redis.RedisRepository;
-import project.auth.adapter.out.jwt.TokenService;
+import project.auth.application.out.command.ManageBlacklistedTokenPort;
+import project.auth.config.jwt.JwtAuthenticationResolver;
 
 @Disabled
 public abstract class ControllerTestSupport {
@@ -18,8 +19,8 @@ public abstract class ControllerTestSupport {
 
     @MockitoBean protected RedisRepository redisRepository;
     @MockitoBean protected JwtProvider jwtProvider;
-
-    @MockitoBean protected TokenService tokenService;
+    @MockitoBean protected ManageBlacklistedTokenPort manageBlacklistedTokenPort;
+    @MockitoBean protected JwtAuthenticationResolver jwtAuthenticationResolver;
 
     protected String creatJson(Object dto) throws JsonProcessingException {
         return objectMapper.writeValueAsString(dto);

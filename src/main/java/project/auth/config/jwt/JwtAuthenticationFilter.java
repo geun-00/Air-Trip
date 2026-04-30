@@ -14,10 +14,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import project.common.exception.ErrorCode;
+import project.auth.application.out.command.ManageBlacklistedTokenPort;
 import project.auth.domain.exception.JwtProcessingException;
+import project.common.exception.ErrorCode;
 import project.infrastructure.jwt.JwtProvider;
-import project.auth.adapter.out.jwt.TokenService;
 
 import java.io.IOException;
 
@@ -30,7 +30,8 @@ import static project.infrastructure.jwt.JwtProperties.TOKEN_PREFIX;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
-    private final TokenService tokenService;
+    private final JwtAuthenticationResolver jwtAuthenticationResolver;
+    private final ManageBlacklistedTokenPort manageBlacklistedTokenPort;
 
     /**
      * @throws CredentialsExpiredException         token has expired
@@ -42,12 +43,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String accessToken = resolveToken(request);
 
         if (accessToken != null) {
-            if (tokenService.containsBlackList(accessToken)) {
+            if (manageBlacklistedTokenPort.contains(accessToken)) {
                 throw new JwtProcessingException(ErrorCode.BLACKLISTED_TOKEN);
             }
 
             jwtProvider.validateToken(accessToken);
-            SecurityContextHolder.getContext().setAuthentication(jwtProvider.getAuthentication(accessToken));
+            SecurityContextHolder.getContext().setAuthentication(jwtAuthenticationResolver.resolve(accessToken));
         }
 
         filterChain.doFilter(request, response);

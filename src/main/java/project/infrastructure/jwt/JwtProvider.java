@@ -1,16 +1,15 @@
 package project.infrastructure.jwt;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import project.common.exception.ErrorCode;
 import project.auth.domain.exception.JwtProcessingException;
-import project.auth.config.jwt.JwtAuthenticationToken;
+import project.common.exception.ErrorCode;
 import project.member.domain.Member;
-import project.auth.adapter.out.oauth.model.AuthProviderUser;
-import project.auth.adapter.out.oauth.model.PrincipalUser;
-import project.member.adapter.out.persistence.MemberRepository;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -24,10 +23,8 @@ public class JwtProvider {
 
     private final SecretKey key;
     private final JwtProperties jwtProperties;
-    private final MemberRepository memberRepository;
 
-    public JwtProvider(MemberRepository memberRepository, JwtProperties jwtProperties) {
-        this.memberRepository = memberRepository;
+    public JwtProvider(JwtProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
         this.key = Keys.hmacShaKeyFor(BASE64.decode(jwtProperties.getSecretKey()));
     }
@@ -38,17 +35,6 @@ public class JwtProvider {
 
     public String generateRefreshToken(Member member, String principalName) {
         return generateToken(member.getId(), jwtProperties.getRefreshToken().getExpiration(), principalName);
-    }
-
-    public Authentication getAuthentication(String token) {
-        Long id = getId(token);
-        String principalName = getPrincipalName(token);
-
-        Member member = memberRepository.findById(id)
-                                        .orElseThrow(() -> new JwtProcessingException(ErrorCode.MEMBER_NOT_FOUND));
-        PrincipalUser principal = new PrincipalUser(new AuthProviderUser(member, principalName));
-
-        return JwtAuthenticationToken.authenticated(principal, token, principal.getAuthorities());
     }
 
     public void validateToken(String token) {

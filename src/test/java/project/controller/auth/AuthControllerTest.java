@@ -4,8 +4,10 @@ import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import project.auth.adapter.in.web.AuthController;
+import project.auth.adapter.in.web.support.AuthTokenResponseWriter;
 import project.auth.application.in.command.LogoutUseCase;
 import project.auth.application.in.command.RefreshAccessTokenUseCase;
 import project.auth.application.in.command.model.AuthTokenResult;
@@ -27,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
+@Import(AuthTokenResponseWriter.class)
 class AuthControllerTest extends RestDocsTestSupport {
 
     public static final String AUTH_API_TAG = "Auth API";

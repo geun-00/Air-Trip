@@ -20,6 +20,11 @@ public class AuthTokenRedisAdapter implements ManageRefreshTokenPort, ManageBlac
     }
 
     @Override
+    public boolean contains(String accessToken) {
+        return blacklistedTokenRepository.existsById(accessToken);
+    }
+
+    @Override
     public void save(String refreshToken, Long memberId, long ttlSeconds) {
         refreshTokenRepository.save(new RefreshToken(
                 refreshToken,

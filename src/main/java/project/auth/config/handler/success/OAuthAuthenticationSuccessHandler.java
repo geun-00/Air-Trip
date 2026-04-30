@@ -12,11 +12,13 @@ import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import project.common.exception.BusinessException;
-import project.auth.domain.response.TokenResponse;
+import project.auth.adapter.in.web.support.AuthTokenResponseWriter;
 import project.auth.adapter.out.oauth.model.PrincipalUser;
 import project.auth.adapter.out.oauth.model.ProviderUser;
-import project.auth.adapter.out.jwt.TokenService;
+import project.auth.application.in.command.IssueAuthTokenUseCase;
+import project.auth.application.in.command.model.AuthTokenResult;
+import project.auth.application.in.command.model.IssueAuthTokenCommand;
+import project.common.exception.BusinessException;
 import project.member.application.in.command.RegisterSocialMemberUseCase;
 import project.member.application.in.command.model.RegisterSocialMemberCommand;
 
@@ -30,8 +32,10 @@ public class OAuthAuthenticationSuccessHandler extends SimpleUrlAuthenticationSu
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frondEndUrl;
 
-    private final TokenService tokenService;
+    private final IssueAuthTokenUseCase issueAuthTokenUseCase;
+    private final AuthTokenResponseWriter authTokenResponseWriter;
     private final RegisterSocialMemberUseCase registerSocialMemberUseCase;
+
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
     @Override
@@ -49,7 +53,11 @@ public class OAuthAuthenticationSuccessHandler extends SimpleUrlAuthenticationSu
                     providerUser.getBirthDate(),
                     providerUser.getImageUrl()
             ));
-            TokenResponse tokenResponse = tokenService.generateAndSendToken(providerUser.getEmail(), providerUser.getPrincipalName(), response);
+            AuthTokenResult tokenResponse = issueAuthTokenUseCase.issue(new IssueAuthTokenCommand(
+                    providerUser.getEmail(),
+                    providerUser.getPrincipalName()
+            ));
+            authTokenResponseWriter.write(response, tokenResponse);
 
             log.debug("OAuth 인증 성공, 토큰 발급");
 
