@@ -1,6 +1,5 @@
 package project.auth.config;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +13,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import project.auth.adapter.in.security.handler.CustomAuthenticationEntryPoint;
 import project.auth.adapter.in.security.jwt.JwtAuthenticationFilter;
 import project.auth.adapter.in.security.jwt.JwtExceptionFilter;
 import project.infrastructure.jwt.JwtProperties;
@@ -30,7 +30,8 @@ public class SecurityConfig {
             HttpSecurity http,
             JwtExceptionFilter jwtExceptionFilter,
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            OAuthSecurityConfigurer oAuthSecurityConfigurer
+            OAuthSecurityConfigurer oAuthSecurityConfigurer,
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint
     ) throws Exception {
 
         http
@@ -45,10 +46,7 @@ public class SecurityConfig {
                 )
 
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            log.debug("인증 예외: {}", authException.getMessage());
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        })
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
                 )
 
                 .with(oAuthSecurityConfigurer, Customizer.withDefaults())

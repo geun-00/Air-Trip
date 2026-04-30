@@ -9,9 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import project.common.adapter.in.web.ErrorResponse;
 import project.common.exception.ErrorCode;
 import project.auth.exception.JwtProcessingException;
 
@@ -36,11 +36,17 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
                     errorCode.getCode(), errorCode.getMessage(),
                     e.getCause() != null ? e.getCause().getMessage() : "none");
 
-            ErrorResponse errorResponse = ErrorResponse.from(errorCode);
+            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                    errorCode.getHttpStatus(),
+                    errorCode.getMessage()
+            );
+            problemDetail.setTitle(errorCode.name());
+            problemDetail.setProperty("errorCode", errorCode.getCode());
 
             response.setStatus(httpStatus.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            objectMapper.writeValue(response.getWriter(), errorResponse);
+            response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+
+            objectMapper.writeValue(response.getWriter(), problemDetail);
         }
     }
 }
