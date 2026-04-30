@@ -26,6 +26,8 @@ import project.member.domain.PasswordMatcher;
 public class AuthTokenCommandService implements IssueAuthTokenUseCase,
                                                 AuthTokenUseCase {
 
+    private static final String LOCAL_LOGIN_PRINCIPAL_NAME = "local";
+
     private final AuthTokenPort authTokenPort;
     private final LoadMemberPort loadMemberPort;
     private final PasswordMatcher passwordMatcher;
@@ -43,7 +45,7 @@ public class AuthTokenCommandService implements IssueAuthTokenUseCase,
     public AuthTokenResult login(LoginCommand command) {
         Member member = loadMemberForLogin(command.email());
         member.validatePassword(command.password(), passwordMatcher);
-        return issueToken(member, "default");
+        return issueToken(member, LOCAL_LOGIN_PRINCIPAL_NAME);
     }
 
     private Member loadMemberForLogin(String email) {
@@ -85,10 +87,17 @@ public class AuthTokenCommandService implements IssueAuthTokenUseCase,
 
     @Override
     public void logout(LogoutCommand command) {
+        String refreshToken = command.refreshToken();
+        authTokenPort.validate(refreshToken);
+
+        if (!manageRefreshTokenPort.exists(refreshToken)) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
         addBlackList(command.accessToken());
 
-        Long memberId = authTokenPort.loadMemberId(command.refreshToken());
-        manageRefreshTokenPort.delete(command.refreshToken());
+        Long memberId = authTokenPort.loadMemberId(refreshToken);
+        manageRefreshTokenPort.delete(refreshToken);
 
         Member member = loadMemberPort.loadById(memberId);
         eventPublisher.publishEvent(new OAuthLogoutEvent(member.getSocialType()));

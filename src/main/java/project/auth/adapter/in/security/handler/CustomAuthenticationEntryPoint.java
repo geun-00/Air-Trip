@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import project.common.exception.ErrorCode;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
@@ -36,6 +37,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
         objectMapper.writeValue(response.getWriter(), problemDetail);
     }

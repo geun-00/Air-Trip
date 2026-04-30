@@ -16,6 +16,7 @@ import project.common.exception.ErrorCode;
 import project.auth.exception.JwtProcessingException;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
@@ -45,6 +46,7 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
 
             response.setStatus(httpStatus.value());
             response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
             objectMapper.writeValue(response.getWriter(), problemDetail);
         }

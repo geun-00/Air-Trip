@@ -9,12 +9,14 @@ import project.infrastructure.jwt.JwtProperties;
 import project.infrastructure.jwt.JwtProvider;
 import project.member.domain.Member;
 
+import java.time.Clock;
 import java.util.Date;
 
 @Component
 @RequiredArgsConstructor
 public class AuthTokenAdapter implements AuthTokenPort {
 
+    private final Clock clock;
     private final JwtProvider jwtProvider;
     private final JwtProperties jwtProperties;
 
@@ -37,7 +39,7 @@ public class AuthTokenAdapter implements AuthTokenPort {
     public long loadRemainingMillis(String token) {
         try {
             Date expiration = jwtProvider.getExpiration(token);
-            return expiration.getTime() - new Date().getTime();
+            return expiration.getTime() - clock.millis();
         } catch (ExpiredJwtException ignored) {
             return 0;
         }
