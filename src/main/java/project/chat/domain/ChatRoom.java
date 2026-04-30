@@ -72,12 +72,6 @@ public class ChatRoom extends BaseEntity {
                            .anyMatch(participant -> participant.isMember(memberId));
     }
 
-    public List<Long> getParticipantIds() {
-        return participants.stream()
-                           .map(ChatParticipant::getMemberId)
-                           .toList();
-    }
-
     private ChatParticipant findParticipant(Long memberId) {
         return participants.stream()
                            .filter(participant -> participant.isMember(memberId))

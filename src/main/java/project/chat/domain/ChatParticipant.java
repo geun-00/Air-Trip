@@ -11,13 +11,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "chat_participants",
         uniqueConstraints = {
@@ -76,7 +74,7 @@ class ChatParticipant {
         this.customRoomName = customRoomName;
     }
 
-    public void leave() {
+    void leave() {
         if (!this.isActive) {
             return;
         }
@@ -84,15 +82,7 @@ class ChatParticipant {
         this.leftAt = LocalDateTime.now();
     }
 
-    public boolean hasLeft() {
-        return !isActive && leftAt != null;
-    }
-
-    public boolean isActiveParticipant() {
-        return !hasLeft();
-    }
-
-    public void rejoin() {
+    void rejoin() {
         if (this.isActive) {
             return;
         }
@@ -110,9 +100,5 @@ class ChatParticipant {
 
     boolean isMember(Long memberId) {
         return this.memberId.equals(memberId);
-    }
-
-    public String getCustomRoomName() {
-        return customRoomName.value();
     }
 }

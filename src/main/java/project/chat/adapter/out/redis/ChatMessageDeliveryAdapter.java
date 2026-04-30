@@ -14,6 +14,8 @@ import project.infrastructure.messaging.RedisMessagePublisher;
 @RequiredArgsConstructor
 public class ChatMessageDeliveryAdapter implements ChatMessageDeliveryPort {
 
+    private static final long MESSAGE_CACHE_LIMIT = 100L;
+
     private final ChannelTopic chatTopic;
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisMessagePublisher redisMessagePublisher;
@@ -24,7 +26,7 @@ public class ChatMessageDeliveryAdapter implements ChatMessageDeliveryPort {
 
         redisTemplate.opsForList().rightPush(ChatRedisKey.MESSAGE_QUEUE.getTemplate(), response);
         redisTemplate.opsForList().leftPush(ChatRedisKey.MESSAGE_CACHE.format(message.roomId()), response);
-        redisTemplate.opsForList().trim(ChatRedisKey.MESSAGE_CACHE.format(message.roomId()), 0, 99);
+        redisTemplate.opsForList().trim(ChatRedisKey.MESSAGE_CACHE.format(message.roomId()), 0L, MESSAGE_CACHE_LIMIT - 1);
 
         redisMessagePublisher.publish(chatTopic.getTopic(), response);
     }

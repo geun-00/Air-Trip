@@ -15,14 +15,6 @@ public class ChatRoomParticipationChecker {
     private final ChatRoomStatePort chatRoomStatePort;
 
     public boolean isParticipant(Long roomId, Long memberId) {
-        try {
-            return checkParticipation(roomId, memberId);
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private boolean checkParticipation(Long roomId, Long memberId) {
         boolean member = chatRoomStatePort.isRoomMember(roomId, memberId);
 
         if (!member && !chatRoomStatePort.existsRoomMembers(roomId)) {

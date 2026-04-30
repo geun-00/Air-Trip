@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import project.chat.domain.ChatRoom;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
@@ -36,12 +37,12 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     );
 
     @Query("""
-            SELECT DISTINCT cr
-            FROM ChatRoom cr
-            LEFT JOIN FETCH cr.participants
-            WHERE cr.id = :roomId
+            SELECT participant.memberId
+            FROM ChatParticipant participant
+            WHERE participant.chatRoom.id = :roomId
+            AND participant.isActive = true
             """)
-    Optional<ChatRoom> findByIdWithParticipants(@Param("roomId") Long roomId);
+    List<Long> findActiveParticipantIds(@Param("roomId") Long roomId);
 
     @Query("""
             SELECT COUNT(participant) > 0
@@ -51,6 +52,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             WHERE participant.memberId = :currentMemberId
             AND otherParticipant.memberId = :otherMemberId
             AND participant.isActive = true
+            AND otherParticipant.isActive = true
             """)
     boolean existsActiveChatRoom(
             @Param("currentMemberId") Long currentMemberId,

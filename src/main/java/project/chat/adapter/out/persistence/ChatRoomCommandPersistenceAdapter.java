@@ -16,7 +16,6 @@ import project.chat.domain.exception.ChatExceptions;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -60,11 +59,7 @@ public class ChatRoomCommandPersistenceAdapter implements LoadChatRoomPort, Save
 
     @Override
     public Set<Long> loadParticipantIds(Long roomId) {
-        return chatRoomRepository.findByIdWithParticipants(roomId)
-                                 .orElseThrow(() -> ChatExceptions.notFoundChatRoom(roomId))
-                                 .getParticipantIds()
-                                 .stream()
-                                 .collect(Collectors.toUnmodifiableSet());
+        return Set.copyOf(chatRoomRepository.findActiveParticipantIds(roomId));
     }
 
     private ChatRoomInfoView toView(ChatRoomInfoRow row) {
