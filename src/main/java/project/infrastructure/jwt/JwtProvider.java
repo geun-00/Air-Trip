@@ -13,6 +13,8 @@ import project.member.domain.Member;
 import project.member.domain.Role;
 
 import javax.crypto.SecretKey;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
@@ -23,10 +25,12 @@ import static project.infrastructure.jwt.JwtProperties.ROLE;
 @Component
 public class JwtProvider {
 
+    private final Clock clock;
     private final SecretKey key;
     private final JwtProperties jwtProperties;
 
-    public JwtProvider(JwtProperties jwtProperties) {
+    public JwtProvider(Clock clock, JwtProperties jwtProperties) {
+        this.clock = clock;
         this.jwtProperties = jwtProperties;
         this.key = Keys.hmacShaKeyFor(BASE64.decode(jwtProperties.getSecretKey()));
     }
@@ -59,18 +63,29 @@ public class JwtProvider {
         return Long.valueOf(claims.getSubject());
     }
 
-    public String getPrincipalName(String token) {
+    public JwtClaims getClaims(String token) {
         Claims claims = parseClaims(token);
-        return claims.get(PRINCIPAL_NAME, String.class);
+        return new JwtClaims(
+                Long.valueOf(claims.getSubject()),
+                claims.get(PRINCIPAL_NAME, String.class),
+                Role.valueOf(claims.get(ROLE, String.class))
+        );
     }
 
-    public Role getRole(String token) {
-        Claims claims = parseClaims(token);
-        return Role.valueOf(claims.get(ROLE, String.class));
-    }
-
-    public Date getExpiration(String token) {
-        return parseClaims(token).getExpiration();
+    public long getRemainingMillis(String token) {
+        try {
+            Date expiration = parseClaims(token).getExpiration();
+            return expiration.getTime() - clock.millis();
+        }
+        catch (ExpiredJwtException ignored) {
+            return 0;
+        }
+        catch (MalformedJwtException e) {
+            throw new JwtProcessingException(ErrorCode.MALFORMED_TOKEN, e);
+        }
+        catch (IllegalArgumentException | JwtException e) {
+            throw new JwtProcessingException(ErrorCode.INVALID_TOKEN, e);
+        }
     }
 
     private Claims parseClaims(String token) {
@@ -82,8 +97,10 @@ public class JwtProvider {
     }
 
     private String generateToken(Long id, int expiration, String principalName, Role role) {
-        Date now = new Date();
-        Date exp = new Date(now.getTime() + expiration * 1000L);
+        Instant now = clock.instant();
+        Date issuedAt = Date.from(now);
+        Date expiresAt = Date.from(now.plusSeconds(expiration));
+
         Claims claims = Jwts.claims()
                             .id(UUID.randomUUID().toString())
                             .subject(String.valueOf(id))
@@ -93,8 +110,8 @@ public class JwtProvider {
 
         return Jwts.builder()
                    .claims(claims)
-                   .issuedAt(now)
-                   .expiration(exp)
+                   .issuedAt(issuedAt)
+                   .expiration(expiresAt)
                    .signWith(key)
                    .compact();
     }

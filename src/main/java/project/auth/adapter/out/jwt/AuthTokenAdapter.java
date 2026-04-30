@@ -1,22 +1,19 @@
 package project.auth.adapter.out.jwt;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import project.auth.application.out.command.AuthTokenPort;
+import project.auth.application.out.command.model.AuthTokenClaims;
 import project.auth.application.out.command.model.IssuedAuthTokens;
+import project.infrastructure.jwt.JwtClaims;
 import project.infrastructure.jwt.JwtProperties;
 import project.infrastructure.jwt.JwtProvider;
 import project.member.domain.Member;
-
-import java.time.Clock;
-import java.util.Date;
 
 @Component
 @RequiredArgsConstructor
 public class AuthTokenAdapter implements AuthTokenPort {
 
-    private final Clock clock;
     private final JwtProvider jwtProvider;
     private final JwtProperties jwtProperties;
 
@@ -26,23 +23,14 @@ public class AuthTokenAdapter implements AuthTokenPort {
     }
 
     @Override
-    public Long loadMemberId(String token) {
-        return jwtProvider.getId(token);
-    }
-
-    @Override
-    public String loadPrincipalName(String token) {
-        return jwtProvider.getPrincipalName(token);
+    public AuthTokenClaims loadClaims(String token) {
+        JwtClaims claims = jwtProvider.getClaims(token);
+        return new AuthTokenClaims(claims.memberId(), claims.principalName());
     }
 
     @Override
     public long loadRemainingMillis(String token) {
-        try {
-            Date expiration = jwtProvider.getExpiration(token);
-            return expiration.getTime() - clock.millis();
-        } catch (ExpiredJwtException ignored) {
-            return 0;
-        }
+        return jwtProvider.getRemainingMillis(token);
     }
 
     @Override

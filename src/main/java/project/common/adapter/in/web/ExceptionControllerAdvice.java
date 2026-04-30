@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import project.auth.exception.JwtProcessingException;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
 
@@ -24,6 +25,14 @@ public class ExceptionControllerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ProblemDetail> handle(BusinessException e) {
         log.warn("API 예외 발생: {}", e.getMessage());
+
+        ErrorCode errorCode = e.getErrorCode();
+        return new ResponseEntity<>(createProblemDetail(errorCode), errorCode.getHttpStatus());
+    }
+
+    @ExceptionHandler(JwtProcessingException.class)
+    public ResponseEntity<ProblemDetail> handle(JwtProcessingException e) {
+        log.warn("JWT 예외 발생: {}", e.getMessage());
 
         ErrorCode errorCode = e.getErrorCode();
         return new ResponseEntity<>(createProblemDetail(errorCode), errorCode.getHttpStatus());

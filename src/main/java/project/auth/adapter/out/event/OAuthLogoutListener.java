@@ -4,8 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.stereotype.Component;
@@ -16,7 +14,6 @@ import project.auth.adapter.out.oauth.client.NaverAppClient;
 import project.auth.adapter.out.oauth.client.NaverAppClient.NaverResponse;
 import project.auth.application.event.OAuthLogoutEvent;
 import project.member.domain.SocialType;
-import project.auth.adapter.out.oauth.model.OAuthPrincipal;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -35,21 +32,17 @@ public class OAuthLogoutListener {
 
     @EventListener
     public void handleOAuthLogoutEvent(OAuthLogoutEvent event) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication.getPrincipal() instanceof OAuthPrincipal)) {
-            return;
-        }
         log.debug("OAuthLogoutListener.handleOAuthLogoutEvent: {}", event);
 
         SocialType socialType = event.socialType();
         switch (socialType) {
             case KAKAO -> {
-                String accessToken = getAccessToken(socialType.getSocialName(), authentication);
+                String accessToken = getAccessToken(socialType.getSocialName(), event.principalName());
                 KakaoIdResponse response = kakaoAppClient.logout(TOKEN_PREFIX + accessToken);
                 log.debug("kakao logout success: response={}", response);
             }
             case NAVER -> {
-                String accessToken = getAccessToken(socialType.getSocialName(), authentication);
+                String accessToken = getAccessToken(socialType.getSocialName(), event.principalName());
                 String encodedToken = URLEncoder.encode(accessToken, StandardCharsets.UTF_8);
 
                 NaverResponse response = naverAppClient.logout(encodedToken);
@@ -59,10 +52,7 @@ public class OAuthLogoutListener {
         }
     }
 
-    private String getAccessToken(String registrationId, Authentication authentication) {
-        OAuthPrincipal oauthPrincipal = (OAuthPrincipal) authentication.getPrincipal();
-
-        String principalName = oauthPrincipal.getPrincipalName();
+    private String getAccessToken(String registrationId, String principalName) {
         Assert.notNull(principalName, "PrincipalName Cannot be null");
 
         OAuth2AuthorizedClient authorizedClient = oAuth2AuthorizedClientService.loadAuthorizedClient(registrationId, principalName);

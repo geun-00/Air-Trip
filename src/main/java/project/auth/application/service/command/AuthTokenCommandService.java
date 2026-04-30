@@ -14,6 +14,7 @@ import project.auth.application.in.command.model.RefreshAccessTokenCommand;
 import project.auth.application.out.command.AuthTokenPort;
 import project.auth.application.out.command.ManageBlacklistedTokenPort;
 import project.auth.application.out.command.ManageRefreshTokenPort;
+import project.auth.application.out.command.model.AuthTokenClaims;
 import project.auth.application.out.command.model.IssuedAuthTokens;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
@@ -65,12 +66,11 @@ public class AuthTokenCommandService implements IssueAuthTokenUseCase,
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
 
-        Long memberId = authTokenPort.loadMemberId(refreshToken);
-        String principalName = authTokenPort.loadPrincipalName(refreshToken);
+        AuthTokenClaims claims = authTokenPort.loadClaims(refreshToken);
         manageRefreshTokenPort.delete(refreshToken);
 
-        Member member = loadMemberPort.loadById(memberId);
-        return issueToken(member, principalName);
+        Member member = loadMemberPort.loadById(claims.memberId());
+        return issueToken(member, claims.principalName());
     }
 
     private AuthTokenResult issueToken(Member member, String principalName) {
@@ -96,11 +96,11 @@ public class AuthTokenCommandService implements IssueAuthTokenUseCase,
 
         addBlackList(command.accessToken());
 
-        Long memberId = authTokenPort.loadMemberId(refreshToken);
+        AuthTokenClaims claims = authTokenPort.loadClaims(refreshToken);
         manageRefreshTokenPort.delete(refreshToken);
 
-        Member member = loadMemberPort.loadById(memberId);
-        eventPublisher.publishEvent(new OAuthLogoutEvent(member.getSocialType()));
+        Member member = loadMemberPort.loadById(claims.memberId());
+        eventPublisher.publishEvent(new OAuthLogoutEvent(member.getSocialType(), claims.principalName()));
     }
 
     private void addBlackList(String accessToken) {
