@@ -12,7 +12,6 @@ import static com.epages.restdocs.apispec.ResourceSnippetParameters.builder;
 import static com.epages.restdocs.apispec.Schema.schema;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.payload.JsonFieldType.NUMBER;
-import static org.springframework.restdocs.payload.JsonFieldType.OBJECT;
 import static org.springframework.restdocs.payload.JsonFieldType.STRING;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
@@ -50,13 +49,9 @@ class ErrorCodeControllerTest extends RestDocsTestSupport {
                                                                 .description("오류 메시지"),
                                                         fieldWithPath("[].errorCode")
                                                                 .type(STRING)
-                                                                .description("서버 오류 코드"),
-                                                        fieldWithPath("[].errors")
-                                                                .type(OBJECT)
-                                                                .optional()
-                                                                .description("JSON 입력 값 오류")
+                                                                .description("서버 오류 코드")
                                                 )
-                                                .responseSchema(schema("ErrorResponse"))
+                                                .responseSchema(schema("ErrorCodeResponse"))
                                                 .build()
                                 )
                         ));

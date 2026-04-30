@@ -15,13 +15,13 @@ import project.auth.adapter.out.oauth.client.GitHubAppClient.EmailInfoResponse;
 import project.auth.adapter.out.oauth.converter.ProviderUserConverter;
 import project.auth.adapter.out.oauth.converter.ProviderUserRequest;
 import project.member.domain.SocialType;
-import project.auth.adapter.out.oauth.model.PrincipalUser;
+import project.auth.adapter.out.oauth.model.OAuthPrincipal;
 import project.auth.adapter.out.oauth.model.ProviderUser;
 
 import java.util.HashMap;
 import java.util.List;
 
-import static project.auth.adapter.out.jwt.JwtProperties.TOKEN_PREFIX;
+import static project.infrastructure.jwt.JwtProperties.TOKEN_PREFIX;
 
 @Slf4j
 @Service
@@ -52,7 +52,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         ProviderUserRequest providerUserRequest = new ProviderUserRequest(clientRegistration, oAuth2User);
         ProviderUser providerUser = providerUserConverter.converter(providerUserRequest);
 
-        return new PrincipalUser(providerUser);
+        return new OAuthPrincipal(providerUser);
     }
 
     private String extractPrimaryEmail(String token) {

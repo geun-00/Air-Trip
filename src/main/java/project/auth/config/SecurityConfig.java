@@ -1,12 +1,9 @@
 package project.auth.config;
 
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
-import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,25 +13,27 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import project.auth.adapter.out.jwt.JwtProperties;
-import project.auth.config.jwt.JwtAuthenticationFilter;
-import project.auth.config.jwt.JwtExceptionFilter;
+import project.auth.adapter.in.security.handler.CustomAuthenticationEntryPoint;
+import project.auth.adapter.in.security.jwt.JwtAuthenticationFilter;
+import project.auth.adapter.in.security.jwt.JwtExceptionFilter;
+import project.infrastructure.jwt.JwtProperties;
 
 import java.util.List;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final OAuthSecurityConfigurer oAuthSecurityConfigurer;
-    private final RestSecurityConfigurer restSecurityConfigurer;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final JwtExceptionFilter jwtExceptionFilter;
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtExceptionFilter jwtExceptionFilter,
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            OAuthSecurityConfigurer oAuthSecurityConfigurer,
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint
+    ) throws Exception {
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -46,7 +45,10 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                .with(restSecurityConfigurer, Customizer.withDefaults())
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                )
+
                 .with(oAuthSecurityConfigurer, Customizer.withDefaults())
 
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -77,13 +79,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
-    }
-
-    @Bean
-    public RoleHierarchy roleHierarchy() {
-        return RoleHierarchyImpl.withDefaultRolePrefix()
-                                .role("ADMIN").implies("HOST")
-                                .role("HOST").implies("GUEST")
-                                .build();
     }
 }

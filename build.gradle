@@ -157,136 +157,26 @@ tasks.register('copyOasToSwagger', Copy) {
     doLast {
         def swaggerFile = file("src/main/resources/static/swagger-ui/openapi3.yaml")
 
-        // 1. 기존 YAML 로드
         Yaml yaml = new Yaml()
         def swaggerContent = swaggerFile.text
         def swaggerMap = yaml.load(swaggerContent) ?: [:]
 
-        // 2. 로그인 스펙 정의
-        def authSpec = [
-                paths: [
-                        "/api/auth/login": [
-                                post: [
-                                        tags: ["Auth API"],
-                                        summary: "사용자 로그인",
-                                        description: "이메일과 비밀번호로 사용자 인증",
-                                        requestBody: [
-                                                required: true,
-                                                content: [
-                                                        "application/json": [
-                                                                schema: [
-                                                                        $ref: "#/components/schemas/LoginRequest"
-                                                                ]
-                                                        ]
-                                                ]
-                                        ],
-                                        responses: [
-                                                '200': [
-                                                        description: "인증 성공",
-                                                        headers: [
-                                                                authorization: [description: "Bearer {AccessToken}", schema: [type: "string"]],
-                                                                "Set-Cookie": [description: "RefreshToken={RefreshToken} HttpOnly (개발자 도구에서 확인)", schema: [type: "string"]]
-                                                        ]
-                                                ]
-                                        ]
-                                ]
-                        ]
-                ],
-                components: [
-                        securitySchemes: [
-                                BearerAuth: [type: "apiKey", name: "Authorization", in: "header"],
-                                CookieAuth: [type: "apiKey", name: "RefreshToken", in: "cookie"]
-                        ]
-                ],
-                security: [[BearerAuth: []], [CookieAuth: []]]
+        def securitySchemes = [
+                BearerAuth: [type: "apiKey", name: "Authorization", in: "header"],
+                CookieAuth: [type: "apiKey", name: "RefreshToken", in: "cookie"]
         ]
 
-        def schemas = [
-                LoginRequest: [
-                        title: "LoginRequest",
-                        type: "object",
-                        properties: [
-                                email: [type: "string",
-                                        example: "user@example.com",
-                                        description: "이메일"
-                                ],
-                                password: [type: "string",
-                                           example: "Abcd1234!",
-                                           description: "비밀번호"
-                                ]
-                        ],
-                        required: ["email", "password"]
-                ],
-                EditProfileRequest: [
-                        title: "EditProfileRequest",
-                        type: "object",
-                        properties: [
-                                editProfileRequest: [
-                                    type: "object",
-                                    properties: [
-                                            name: [
-                                                    type: "string",
-                                                    description: "새로 저장할 이름"
-                                            ],
-                                            aboutMe: [
-                                                    type: "string",
-                                                    description: "새로 저장할 소개글 (제약사항 : 최대 500자)"
-                                            ],
-                                            isProfileImageChanged: [
-                                                    type: "boolean",
-                                                    description: "이미지 파일 변경 여부"
-                                            ]
-                                    ],
-                                    required: ["name", "isProfileImageChanged"]
-                                ],
-                                profileImage: [
-                                     type: "string",
-                                     format: "binary",
-                                     description: "프로필 이미지 파일"
-                                ]
-                        ],
-                        required: ["editProfileRequest"]
-                ]
-        ]
-
-        def editProfileRequestBody = [
-                required: true,
-                content: [
-                        "multipart/form-data": [
-                                schema: [
-                                        $ref: "#/components/schemas/EditProfileRequest"
-                                ],
-                                encoding: [
-                                        editProfileRequest: [
-                                                contentType: "application/json"
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
-
-        // 3. 병합: paths
-        swaggerMap.paths = swaggerMap.paths ?: [:]
-        swaggerMap.paths.putAll(authSpec.paths)
-        swaggerMap.paths["/api/members/me"].put.requestBody = editProfileRequestBody
-
-        // 4. 병합: components.securitySchemes
         swaggerMap.components = swaggerMap.components ?: [:]
         swaggerMap.components.securitySchemes = swaggerMap.components.securitySchemes ?: [:]
-        swaggerMap.components.securitySchemes.putAll(authSpec.components.securitySchemes)
+        swaggerMap.components.securitySchemes.putAll(securitySchemes)
 
-        // 5. 병합: security
-        swaggerMap.security = (swaggerMap.security ?: []) + authSpec.security
+        swaggerMap.security = (swaggerMap.security ?: []) + [[BearerAuth: []], [CookieAuth: []]]
 
-        swaggerMap.components.schemas = swaggerMap.components.schemas ?: [:]
-        swaggerMap.components.schemas.putAll(schemas)
-
-        // 6. YAML로 다시 저장
         DumperOptions options = new DumperOptions()
         options.defaultFlowStyle = DumperOptions.FlowStyle.BLOCK
         Yaml yamlDumper = new Yaml(options)
         swaggerFile.text = yamlDumper.dump(swaggerMap)
 
-        println "Auth spec merged into ${swaggerFile}"
+        println "OpenAPI spec updated at ${swaggerFile}"
     }
 }

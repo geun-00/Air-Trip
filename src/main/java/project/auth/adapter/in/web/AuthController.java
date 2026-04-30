@@ -3,89 +3,64 @@ package project.auth.adapter.in.web;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import project.auth.adapter.in.web.support.CurrentMemberId;
-import project.member.adapter.in.web.request.SignupRequest;
-import project.auth.adapter.out.jwt.TokenService;
-import project.member.application.in.command.RegisterMemberUseCase;
-import project.member.application.in.command.SendEmailVerificationUseCase;
-import project.member.application.in.command.VerifyEmailUseCase;
-import project.member.application.in.command.model.RegisterMemberCommand;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import project.auth.adapter.in.web.request.LoginRequest;
+import project.auth.adapter.in.web.support.AuthTokenResponseWriter;
+import project.auth.application.in.command.AuthTokenUseCase;
+import project.auth.application.in.command.model.AuthTokenResult;
+import project.auth.application.in.command.model.LoginCommand;
+import project.auth.application.in.command.model.LogoutCommand;
+import project.auth.application.in.command.model.RefreshAccessTokenCommand;
 
-import java.net.URI;
+import static project.infrastructure.jwt.JwtProperties.AUTHORIZATION_HEADER;
+import static project.infrastructure.jwt.JwtProperties.REFRESH_TOKEN_KEY;
+import static project.infrastructure.jwt.JwtProperties.TOKEN_PREFIX;
 
-import static project.auth.adapter.out.jwt.JwtProperties.AUTHORIZATION_HEADER;
-import static project.auth.adapter.out.jwt.JwtProperties.REFRESH_TOKEN_KEY;
-
-@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final TokenService tokenService;
-    private final VerifyEmailUseCase verifyEmailUseCase;
-    private final RegisterMemberUseCase registerMemberUseCase;
-    private final SendEmailVerificationUseCase sendEmailVerificationUseCase;
+    private final AuthTokenUseCase authTokenUseCase;
+    private final AuthTokenResponseWriter authTokenResponseWriter;
+
+    @PostMapping("/login")
+    public void login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse response
+    ) {
+        AuthTokenResult result = authTokenUseCase.login(new LoginCommand(request.email(), request.password()));
+        authTokenResponseWriter.write(response, result);
+    }
 
     @PostMapping("/refresh")
-    public void refreshAccessToken(@CookieValue(REFRESH_TOKEN_KEY) String refreshToken,
-                                   HttpServletResponse response) {
-        tokenService.refreshAccessToken(refreshToken, response);
+    public void refreshAccessToken(
+            @CookieValue(REFRESH_TOKEN_KEY) String refreshToken,
+            HttpServletResponse response
+    ) {
+        AuthTokenResult result = authTokenUseCase.refreshAccessToken(new RefreshAccessTokenCommand(refreshToken));
+        authTokenResponseWriter.write(response, result);
     }
 
     @PostMapping("/logout")
-    public void logout(@RequestHeader(AUTHORIZATION_HEADER) String accessToken,
-                       @CookieValue(REFRESH_TOKEN_KEY) String refreshToken,
-                       HttpServletResponse response) {
-        tokenService.logoutProcess(accessToken, refreshToken);
-
-        // Access Token 쿠키 삭제
-        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", "")
-                                                         .path("/")
-                                                         .httpOnly(true)
-                                                         .maxAge(0)
-                                                         .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
-
-        // Refresh Token 쿠키 삭제
-        ResponseCookie refreshTokenCookie = ResponseCookie.from(REFRESH_TOKEN_KEY, "")
-                                                          .path("/")
-                                                          .httpOnly(true)
-                                                          .maxAge(0)
-                                                          .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+    public void logout(
+            @RequestHeader(AUTHORIZATION_HEADER) String accessToken,
+            @CookieValue(REFRESH_TOKEN_KEY) String refreshToken,
+            HttpServletResponse response
+    ) {
+        authTokenUseCase.logout(new LogoutCommand(resolveAccessToken(accessToken), refreshToken));
+        authTokenResponseWriter.expire(response);
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest) {
-        registerMemberUseCase.register(new RegisterMemberCommand(
-                signupRequest.name(),
-                signupRequest.email(),
-                signupRequest.number(),
-                signupRequest.birthDate(),
-                signupRequest.password()
-        ));
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
-
-    @PostMapping("/email/verify")
-    public ResponseEntity<?> sendEmail(@CurrentMemberId Long memberId) {
-        sendEmailVerificationUseCase.sendEmail(memberId);
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/email/verify")
-    public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
-        String redirectUrl = verifyEmailUseCase.verifyToken(token);
-
-        return ResponseEntity.status(HttpStatus.FOUND)
-                             .location(URI.create(redirectUrl))
-                             .build();
+    private String resolveAccessToken(String accessToken) {
+        if (accessToken.startsWith(TOKEN_PREFIX)) {
+            return accessToken.substring(TOKEN_PREFIX.length());
+        }
+        return accessToken;
     }
 }
