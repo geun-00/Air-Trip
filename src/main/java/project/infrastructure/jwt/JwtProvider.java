@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import project.auth.exception.JwtProcessingException;
 import project.common.exception.ErrorCode;
 import project.member.domain.Member;
+import project.member.domain.Role;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 import static io.jsonwebtoken.io.Decoders.BASE64;
 import static project.infrastructure.jwt.JwtProperties.PRINCIPAL_NAME;
+import static project.infrastructure.jwt.JwtProperties.ROLE;
 
 @Component
 public class JwtProvider {
@@ -30,11 +32,11 @@ public class JwtProvider {
     }
 
     public String generateAccessToken(Member member, String principalName) {
-        return generateToken(member.getId(), jwtProperties.getAccessToken().getExpiration(), principalName);
+        return generateToken(member.getId(), jwtProperties.getAccessToken().getExpiration(), principalName, member.getRole());
     }
 
     public String generateRefreshToken(Member member, String principalName) {
-        return generateToken(member.getId(), jwtProperties.getRefreshToken().getExpiration(), principalName);
+        return generateToken(member.getId(), jwtProperties.getRefreshToken().getExpiration(), principalName, member.getRole());
     }
 
     public void validateToken(String token) {
@@ -62,7 +64,16 @@ public class JwtProvider {
         return claims.get(PRINCIPAL_NAME, String.class);
     }
 
-    public Claims parseClaims(String token) {
+    public Role getRole(String token) {
+        Claims claims = parseClaims(token);
+        return Role.valueOf(claims.get(ROLE, String.class));
+    }
+
+    public Date getExpiration(String token) {
+        return parseClaims(token).getExpiration();
+    }
+
+    private Claims parseClaims(String token) {
         return Jwts.parser()
                    .verifyWith(key)
                    .build()
@@ -70,13 +81,14 @@ public class JwtProvider {
                    .getPayload();
     }
 
-    private String generateToken(Long id, int expiration, String principalName) {
+    private String generateToken(Long id, int expiration, String principalName, Role role) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + expiration * 1000L);
         Claims claims = Jwts.claims()
                             .id(UUID.randomUUID().toString())
                             .subject(String.valueOf(id))
                             .add(PRINCIPAL_NAME, principalName) //로그아웃, 연결 끊기 요청에 사용될 사용자 식별값
+                            .add(ROLE, role.name())
                             .build();
 
         return Jwts.builder()

@@ -5,22 +5,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import project.auth.adapter.in.security.principal.JwtPrincipal;
 import project.infrastructure.jwt.JwtProvider;
-import project.member.application.out.command.LoadMemberPort;
-import project.member.domain.Member;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationResolver {
 
     private final JwtProvider jwtProvider;
-    private final LoadMemberPort loadMemberPort;
 
     public Authentication resolve(String token) {
         Long memberId = jwtProvider.getId(token);
         String principalName = jwtProvider.getPrincipalName(token);
-        Member member = loadMemberPort.loadById(memberId);
-
-        JwtPrincipal principal = new JwtPrincipal(member.getId(), principalName, member.getRole());
+        JwtPrincipal principal = new JwtPrincipal(memberId, principalName, jwtProvider.getRole(token));
 
         return JwtAuthenticationToken.authenticated(principal, token, principal.getAuthorities());
     }

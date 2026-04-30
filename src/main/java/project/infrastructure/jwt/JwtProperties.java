@@ -24,4 +24,5 @@ public class JwtProperties {
     public static final String REFRESH_TOKEN_KEY = "RefreshToken";
     public static final String ACCESS_TOKEN_KEY = "AccessToken";
     public static final String PRINCIPAL_NAME = "principalName";
+    public static final String ROLE = "role";
 }

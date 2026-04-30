@@ -36,7 +36,7 @@ public class AuthTokenAdapter implements AuthTokenPort {
     @Override
     public long loadRemainingMillis(String token) {
         try {
-            Date expiration = jwtProvider.parseClaims(token).getExpiration();
+            Date expiration = jwtProvider.getExpiration(token);
             return expiration.getTime() - new Date().getTime();
         } catch (ExpiredJwtException ignored) {
             return 0;
