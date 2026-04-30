@@ -1,16 +1,16 @@
 package project.auth.adapter.out.oauth.model;
 
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
-public record PrincipalUser(ProviderUser providerUser) implements UserDetails, OidcUser, OAuth2User {
+public record OAuthPrincipal(ProviderUser providerUser) implements OidcUser, OAuth2User {
 
     public String getPrincipalName() {
         return providerUser.getPrincipalName();
@@ -32,18 +32,8 @@ public record PrincipalUser(ProviderUser providerUser) implements UserDetails, O
     }
 
     @Override
-    public String getPassword() {
-        return providerUser.getPassword();
-    }
-
-    @Override
-    public String getUsername() {
-        return providerUser.getPrincipalName();
-    }
-
-    @Override
     public Map<String, Object> getClaims() {
-        return null;
+        return Collections.emptyMap();
     }
 
     @Override

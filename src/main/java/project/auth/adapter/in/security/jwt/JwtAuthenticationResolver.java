@@ -3,8 +3,7 @@ package project.auth.adapter.in.security.jwt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import project.auth.adapter.out.oauth.model.AuthProviderUser;
-import project.auth.adapter.out.oauth.model.PrincipalUser;
+import project.auth.adapter.in.security.principal.JwtPrincipal;
 import project.infrastructure.jwt.JwtProvider;
 import project.member.application.out.command.LoadMemberPort;
 import project.member.domain.Member;
@@ -20,7 +19,8 @@ public class JwtAuthenticationResolver {
         Long memberId = jwtProvider.getId(token);
         String principalName = jwtProvider.getPrincipalName(token);
         Member member = loadMemberPort.loadById(memberId);
-        PrincipalUser principal = new PrincipalUser(new AuthProviderUser(member, principalName));
+
+        JwtPrincipal principal = new JwtPrincipal(member.getId(), principalName, member.getRole());
 
         return JwtAuthenticationToken.authenticated(principal, token, principal.getAuthorities());
     }

@@ -8,10 +8,9 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import project.auth.adapter.in.security.principal.AuthenticatedMember;
 import project.auth.exception.AuthException;
 import project.common.exception.ErrorCode;
-import project.auth.adapter.out.oauth.model.AuthProviderUser;
-import project.auth.adapter.out.oauth.model.PrincipalUser;
 
 public class CurrentMemberIdArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -22,8 +21,12 @@ public class CurrentMemberIdArgumentResolver implements HandlerMethodArgumentRes
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
-                                  NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
+    public Object resolveArgument(
+            MethodParameter parameter,
+            ModelAndViewContainer mavContainer,
+            NativeWebRequest webRequest,
+            WebDataBinderFactory binderFactory
+    ) {
         CurrentMemberId annotation = parameter.getParameterAnnotation(CurrentMemberId.class);
         Assert.notNull(annotation, "Cannot be empty CurrentMemberId");
 
@@ -39,10 +42,8 @@ public class CurrentMemberIdArgumentResolver implements HandlerMethodArgumentRes
             return null;
         }
 
-        if (authentication.getPrincipal() instanceof PrincipalUser principalUser) {
-            if (principalUser.providerUser() instanceof AuthProviderUser authProviderUser) {
-                return authProviderUser.getId();
-            }
+        if (authentication.getPrincipal() instanceof AuthenticatedMember authenticatedMember) {
+            return authenticatedMember.memberId();
         }
 
         if (required) {

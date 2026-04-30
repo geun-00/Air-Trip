@@ -10,15 +10,21 @@ import java.util.Map;
 public interface ProviderUser {
 
     String getUsername();
-    String getPassword();
+
     String getEmail();
+
     String getImageUrl();
+
     String getProvider();
+
     List<? extends GrantedAuthority> getAuthorities();
 
-    default Map<String, Object> getAttributes() {
-        return null;
-    }
+    Map<String, Object> getAttributes();
+
+    /**
+     * {@link OAuth2AuthorizedClientService}.loadAuthorizedClient()에 사용될 principalName(식별자)
+     */
+    String getPrincipalName();
 
     default LocalDate getBirthDate() {
         return null;
@@ -27,13 +33,4 @@ public interface ProviderUser {
     default String getNumber() {
         return null;
     }
-
-    default Long getId() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * {@link OAuth2AuthorizedClientService}.loadAuthorizedClient()에 사용될 principalName(식별자)
-     */
-    default String getPrincipalName() { return null; }
 }

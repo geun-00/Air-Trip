@@ -16,7 +16,7 @@ import project.auth.adapter.out.oauth.client.NaverAppClient;
 import project.auth.adapter.out.oauth.client.NaverAppClient.NaverResponse;
 import project.auth.application.event.OAuthLogoutEvent;
 import project.member.domain.SocialType;
-import project.auth.adapter.out.oauth.model.PrincipalUser;
+import project.auth.adapter.out.oauth.model.OAuthPrincipal;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +36,7 @@ public class OAuthLogoutListener {
     @EventListener
     public void handleOAuthLogoutEvent(OAuthLogoutEvent event) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication.getPrincipal() instanceof PrincipalUser)) {
+        if (!(authentication.getPrincipal() instanceof OAuthPrincipal)) {
             return;
         }
         log.debug("OAuthLogoutListener.handleOAuthLogoutEvent: {}", event);
@@ -60,9 +60,9 @@ public class OAuthLogoutListener {
     }
 
     private String getAccessToken(String registrationId, Authentication authentication) {
-        PrincipalUser principalUser = (PrincipalUser) authentication.getPrincipal();
+        OAuthPrincipal oauthPrincipal = (OAuthPrincipal) authentication.getPrincipal();
 
-        String principalName = principalUser.getPrincipalName();
+        String principalName = oauthPrincipal.getPrincipalName();
         Assert.notNull(principalName, "PrincipalName Cannot be null");
 
         OAuth2AuthorizedClient authorizedClient = oAuth2AuthorizedClientService.loadAuthorizedClient(registrationId, principalName);

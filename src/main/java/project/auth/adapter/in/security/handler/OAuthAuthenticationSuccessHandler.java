@@ -13,7 +13,7 @@ import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import project.auth.adapter.in.web.support.AuthTokenResponseWriter;
-import project.auth.adapter.out.oauth.model.PrincipalUser;
+import project.auth.adapter.out.oauth.model.OAuthPrincipal;
 import project.auth.adapter.out.oauth.model.ProviderUser;
 import project.auth.application.in.command.IssueAuthTokenUseCase;
 import project.auth.application.in.command.model.AuthTokenResult;
@@ -23,6 +23,7 @@ import project.member.application.in.command.RegisterSocialMemberUseCase;
 import project.member.application.in.command.model.RegisterSocialMemberCommand;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -41,14 +42,14 @@ public class OAuthAuthenticationSuccessHandler extends SimpleUrlAuthenticationSu
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         try {
-            PrincipalUser principal = (PrincipalUser) authentication.getPrincipal();
+            OAuthPrincipal principal = (OAuthPrincipal) authentication.getPrincipal();
             ProviderUser providerUser = principal.providerUser();
 
             registerSocialMemberUseCase.registerSocial(new RegisterSocialMemberCommand(
                     providerUser.getUsername(),
                     providerUser.getEmail(),
                     providerUser.getProvider(),
-                    providerUser.getPassword(),
+                    UUID.randomUUID().toString(),
                     providerUser.getNumber(),
                     providerUser.getBirthDate(),
                     providerUser.getImageUrl()

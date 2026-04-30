@@ -10,7 +10,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import project.auth.adapter.out.oauth.converter.ProviderUserConverter;
 import project.auth.adapter.out.oauth.converter.ProviderUserRequest;
-import project.auth.adapter.out.oauth.model.PrincipalUser;
+import project.auth.adapter.out.oauth.model.OAuthPrincipal;
 import project.auth.adapter.out.oauth.model.ProviderUser;
 
 @Service
@@ -39,6 +39,6 @@ public class CustomOidcUserService implements OAuth2UserService<OidcUserRequest,
         ProviderUserRequest providerUserRequest = new ProviderUserRequest(clientRegistration, oidcUser);
         ProviderUser providerUser = providerUserConverter.converter(providerUserRequest);
 
-        return new PrincipalUser(providerUser);
+        return new OAuthPrincipal(providerUser);
     }
 }

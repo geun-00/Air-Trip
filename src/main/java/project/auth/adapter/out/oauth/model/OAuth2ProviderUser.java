@@ -7,23 +7,21 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public abstract class OAuth2ProviderUser implements ProviderUser {
 
-    protected Map<String, Object> attributes;
     protected OAuth2User oAuth2User;
+    protected Map<String, Object> attributes;
     protected ClientRegistration clientRegistration;
 
-    public OAuth2ProviderUser(Map<String, Object> attributes, OAuth2User oAuth2User, ClientRegistration clientRegistration) {
+    protected OAuth2ProviderUser(
+            Map<String, Object> attributes,
+            OAuth2User oAuth2User,
+            ClientRegistration clientRegistration
+    ) {
         this.attributes = attributes;
         this.oAuth2User = oAuth2User;
         this.clientRegistration = clientRegistration;
-    }
-
-    @Override
-    public String getPassword() {
-        return UUID.randomUUID().toString();
     }
 
     @Override
