@@ -1,21 +1,23 @@
 package project.auth.adapter.in.web;
 
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import project.auth.adapter.in.web.support.CurrentMemberId;
-import project.member.adapter.in.web.request.SignupRequest;
 import project.auth.adapter.out.jwt.TokenService;
-import project.member.application.in.command.RegisterMemberUseCase;
 import project.member.application.in.command.SendEmailVerificationUseCase;
 import project.member.application.in.command.VerifyEmailUseCase;
-import project.member.application.in.command.model.RegisterMemberCommand;
 
 import java.net.URI;
 
@@ -30,7 +32,6 @@ public class AuthController {
 
     private final TokenService tokenService;
     private final VerifyEmailUseCase verifyEmailUseCase;
-    private final RegisterMemberUseCase registerMemberUseCase;
     private final SendEmailVerificationUseCase sendEmailVerificationUseCase;
 
     @PostMapping("/refresh")
@@ -60,18 +61,6 @@ public class AuthController {
                                                           .maxAge(0)
                                                           .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
-    }
-
-    @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest) {
-        registerMemberUseCase.register(new RegisterMemberCommand(
-                signupRequest.name(),
-                signupRequest.email(),
-                signupRequest.number(),
-                signupRequest.birthDate(),
-                signupRequest.password()
-        ));
-        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @PostMapping("/email/verify")

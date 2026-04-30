@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Pattern;
 
 import java.time.LocalDate;
 
-public record SignupRequest(
+public record RegisterMemberRequest(
         @NotBlank
         String name,
 

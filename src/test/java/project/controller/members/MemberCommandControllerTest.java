@@ -5,13 +5,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import project.controller.RestDocsTestSupport;
 import project.member.adapter.in.web.MemberCommandController;
 import project.member.adapter.in.web.request.EditProfileRequest;
+import project.member.adapter.in.web.request.RegisterMemberRequest;
+import project.member.application.in.command.RegisterMemberUseCase;
 import project.member.application.in.command.model.EditProfileResult;
 import project.member.application.in.command.EditMyProfileUseCase;
 import project.security.WithMockMember;
+
+import java.time.LocalDate;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
@@ -22,6 +27,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.multipart;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
 import static org.springframework.restdocs.payload.JsonFieldType.BOOLEAN;
 import static org.springframework.restdocs.payload.JsonFieldType.STRING;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
@@ -39,6 +45,47 @@ class MemberCommandControllerTest extends RestDocsTestSupport {
 
     @MockitoBean
     EditMyProfileUseCase editMyProfileUseCase;
+
+    @MockitoBean
+    RegisterMemberUseCase registerMemberUseCase;
+
+    @Test
+    @DisplayName("REST 회원 가입")
+    void signup() throws Exception {
+        //given
+        RegisterMemberRequest request = new RegisterMemberRequest(
+                "Chris Shu",
+                "email@test.com",
+                "01012345678",
+                LocalDate.of(2000, 9, 14),
+                "password12@"
+        );
+
+        //when
+        //then
+        mockMvc.perform(post("/api/members")
+                                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                                .content(creatJson(request)))
+               .andExpectAll(
+                       handler().handlerType(MemberCommandController.class),
+                       handler().methodName("signup"),
+                       status().isCreated()
+               )
+               .andDo(document(
+                       "rest-signup",
+                       resource(builder().tag(MEMBER_API_TAG)
+                                         .summary("REST 회원 가입")
+                                         .requestFields(
+                                                 fieldWithPath("name").type(JsonFieldType.STRING).description("이름"),
+                                                 fieldWithPath("email").type(JsonFieldType.STRING).description("이메일 (제약사항 : 이메일 형식 준수)"),
+                                                 fieldWithPath("number").type(JsonFieldType.STRING).description("전화번호 (제약사항 : 하이픈(-) 제외)").optional(),
+                                                 fieldWithPath("birthDate").type(JsonFieldType.STRING).description("생일 (제약사항 : 과거일)").optional(),
+                                                 fieldWithPath("password").type(JsonFieldType.STRING).description("비밀번호 (제약사항 : 8~15자리, 특수문자 포함)")
+                                         )
+                                         .requestSchema(schema("RegisterMemberRequest"))
+                                         .build())
+               ));
+    }
 
     @Test
     @DisplayName("내 기본 정보 수정")
