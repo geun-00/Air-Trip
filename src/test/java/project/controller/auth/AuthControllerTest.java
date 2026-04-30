@@ -1,18 +1,22 @@
 package project.controller.auth;
 
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import project.auth.adapter.in.web.AuthController;
+import project.auth.application.in.command.LogoutUseCase;
+import project.auth.application.in.command.RefreshAccessTokenUseCase;
+import project.auth.application.in.command.model.AuthTokenResult;
+import project.auth.application.in.command.model.RefreshAccessTokenCommand;
 import project.controller.RestDocsTestSupport;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static com.epages.restdocs.apispec.ResourceSnippetParameters.builder;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpHeaders.SET_COOKIE;
 import static org.springframework.restdocs.cookies.CookieDocumentation.cookieWithName;
@@ -27,17 +31,15 @@ class AuthControllerTest extends RestDocsTestSupport {
 
     public static final String AUTH_API_TAG = "Auth API";
 
+    @MockitoBean LogoutUseCase logoutUseCase;
+    @MockitoBean RefreshAccessTokenUseCase refreshAccessTokenUseCase;
+
     @Test
     @DisplayName("쿠키로 받은 리프레시 토큰으로 액세스 토큰을 갱신한다.")
     void refreshAccessToken() throws Exception {
         //given
-        doAnswer(invocation -> {
-            HttpServletResponse response = invocation.getArgument(1);
-
-            response.addHeader(AUTHORIZATION, "Bearer {dummy-access-token}");
-            response.addHeader(SET_COOKIE, "RefreshToken={dummy-refresh-token}; Path=/; HttpOnly");
-            return null;
-        }).when(tokenService).refreshAccessToken(any(), any());
+        given(refreshAccessTokenUseCase.refreshAccessToken(any(RefreshAccessTokenCommand.class)))
+                .willReturn(new AuthTokenResult("dummy-access-token", "dummy-refresh-token", 1800, 604800));
 
         //when
         //then
