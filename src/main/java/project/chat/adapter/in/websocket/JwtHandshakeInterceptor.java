@@ -22,7 +22,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
         if (token != null) {
             jwtProvider.validateToken(token);
-            Long id = jwtProvider.getId(token);
+            Long id = jwtProvider.getClaims(token).memberId();
             attributes.put("userId", id);
 
             return true;

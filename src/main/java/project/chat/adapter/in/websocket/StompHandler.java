@@ -49,7 +49,7 @@ public class StompHandler implements ChannelInterceptor {
                 log.warn("{} 요청: destination에서 roomId 추출 실패", accessor.getCommand());
                 return null;
             }
-            Long memberId = jwtProvider.getId(token);
+            Long memberId = jwtProvider.getClaims(token).memberId();
 
             if (!checkChatRoomParticipantUseCase.isChatRoomParticipant(roomId, memberId)) {
                 return null;

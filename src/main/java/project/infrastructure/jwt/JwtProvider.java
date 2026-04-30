@@ -44,32 +44,11 @@ public class JwtProvider {
     }
 
     public void validateToken(String token) {
-        try {
-            parseClaims(token);
-        }
-        catch (ExpiredJwtException e) {
-            throw new JwtProcessingException(ErrorCode.TOKEN_EXPIRED, e);
-        }
-        catch (MalformedJwtException e) {
-            throw new JwtProcessingException(ErrorCode.MALFORMED_TOKEN, e);
-        }
-        catch (IllegalArgumentException | JwtException e) {
-            throw new JwtProcessingException(ErrorCode.INVALID_TOKEN, e);
-        }
-    }
-
-    public Long getId(String token) {
-        Claims claims = parseClaims(token);
-        return Long.valueOf(claims.getSubject());
+        parseValidClaims(token);
     }
 
     public JwtClaims getClaims(String token) {
-        Claims claims = parseClaims(token);
-        return new JwtClaims(
-                Long.valueOf(claims.getSubject()),
-                claims.get(PRINCIPAL_NAME, String.class),
-                Role.valueOf(claims.get(ROLE, String.class))
-        );
+        return toJwtClaims(parseValidClaims(token));
     }
 
     public long getRemainingMillis(String token) {
@@ -88,12 +67,40 @@ public class JwtProvider {
         }
     }
 
+    private Claims parseValidClaims(String token) {
+        try {
+            return parseClaims(token);
+        }
+        catch (ExpiredJwtException e) {
+            throw new JwtProcessingException(ErrorCode.TOKEN_EXPIRED, e);
+        }
+        catch (MalformedJwtException e) {
+            throw new JwtProcessingException(ErrorCode.MALFORMED_TOKEN, e);
+        }
+        catch (IllegalArgumentException | JwtException e) {
+            throw new JwtProcessingException(ErrorCode.INVALID_TOKEN, e);
+        }
+    }
+
     private Claims parseClaims(String token) {
         return Jwts.parser()
                    .verifyWith(key)
                    .build()
                    .parseSignedClaims(token)
                    .getPayload();
+    }
+
+    private JwtClaims toJwtClaims(Claims claims) {
+        try {
+            return new JwtClaims(
+                    Long.valueOf(claims.getSubject()),
+                    claims.get(PRINCIPAL_NAME, String.class),
+                    Role.valueOf(claims.get(ROLE, String.class))
+            );
+        }
+        catch (IllegalArgumentException | NullPointerException e) {
+            throw new JwtProcessingException(ErrorCode.INVALID_TOKEN, e);
+        }
     }
 
     private String generateToken(Long id, int expiration, String principalName, Role role) {

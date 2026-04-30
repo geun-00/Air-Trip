@@ -31,7 +31,7 @@ import java.util.UUID;
 public class OAuthAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     @Value("${app.frontend-url:http://localhost:3000}")
-    private String frondEndUrl;
+    private String frontendUrl;
 
     private final IssueAuthTokenUseCase issueAuthTokenUseCase;
     private final AuthTokenResponseWriter authTokenResponseWriter;
@@ -62,7 +62,7 @@ public class OAuthAuthenticationSuccessHandler extends SimpleUrlAuthenticationSu
 
             log.debug("OAuth 인증 성공, 토큰 발급");
 
-            redirectStrategy.sendRedirect(request, response, frondEndUrl + "/auth/callback?token=" + tokenResponse.accessToken());
+            redirectStrategy.sendRedirect(request, response, frontendUrl + "/auth/callback?token=" + tokenResponse.accessToken());
 
         } catch (BusinessException ex) {
             OAuth2Error oAuth2Error = new OAuth2Error(ex.getMessage(), "Email Already Exists", null);
