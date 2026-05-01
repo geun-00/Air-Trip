@@ -6,7 +6,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import project.common.adapter.in.web.response.PageResponse;
 import project.controller.RestDocsTestSupport;
 import project.member.adapter.in.web.MemberQueryController;
 import project.member.adapter.in.web.response.DefaultProfileResponse;
@@ -180,11 +179,11 @@ class MemberQueryControllerTest extends RestDocsTestSupport {
                 new TripHistoryResponse(2L, 2L, "https://example-b.com", "title-B", now.minusDays(10), now.minusDays(9), false),
                 new TripHistoryResponse(3L, 3L, "https://example-c.com", "title-C", now.minusDays(7), now.minusDays(4), true)
         );
-        PageResponse<TripHistoryView> response = PageResponse.from(new PageImpl<>(
+        PageImpl<TripHistoryView> response = new PageImpl<>(
                 tripHistories,
                 PageRequest.of(0, 10),
                 dtos.size()
-        ));
+        );
         given(readMemberProfileUseCase.getTripsHistory(anyLong(), any())).willReturn(response);
 
         mockMvc.perform(get("/api/members/me/trips/past")

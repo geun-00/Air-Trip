@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
-import project.common.adapter.in.web.response.PageResponse;
 import project.member.application.in.query.model.ChatMemberSearchView;
 import project.member.application.in.query.model.ChatMembersSearchView;
 import project.member.application.in.query.model.DefaultProfileView;
@@ -38,9 +37,8 @@ public class MemberQueryAdapter implements ReadMemberProfilePort, SearchMembersP
     }
 
     @Override
-    public PageResponse<TripHistoryView> getTripsHistory(Long memberId, Pageable pageable) {
-        Page<TripHistoryView> historyViews = memberQueryRepository.getTripsHistory(memberId, pageable)
-                                                                  .map(MemberQueryViewMapper::toView);
-        return PageResponse.from(historyViews);
+    public Page<TripHistoryView> getTripsHistory(Long memberId, Pageable pageable) {
+        return memberQueryRepository.getTripsHistory(memberId, pageable)
+                                    .map(MemberQueryViewMapper::toView);
     }
 }

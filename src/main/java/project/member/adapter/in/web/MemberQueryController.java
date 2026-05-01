@@ -2,6 +2,8 @@ package project.member.adapter.in.web;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,10 +49,13 @@ public class MemberQueryController {
     @GetMapping("/me/trips/past")
     public ResponseEntity<PageResponse<TripHistoryResponse>> getTripsHistory(
             @CurrentMemberId Long memberId,
-            Pageable pageable
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        PageResponse<TripHistoryResponse> response = readMemberProfileUseCase.getTripsHistory(memberId, pageable)
-                                                                             .map(MemberQueryResponseMapper::toResponse);
+        PageResponse<TripHistoryResponse> response = PageResponse.from(
+                readMemberProfileUseCase.getTripsHistory(memberId, pageable)
+                                        .map(MemberQueryResponseMapper::toResponse)
+        );
+
         return ResponseEntity.ok(response);
     }
 

@@ -1,10 +1,10 @@
 package project.member.application.service.query;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.common.adapter.in.web.response.PageResponse;
 import project.member.application.in.query.ReadMemberProfileUseCase;
 import project.member.application.in.query.SearchMembersUseCase;
 import project.member.application.in.query.model.ChatMembersSearchView;
@@ -33,7 +33,7 @@ public class MemberQueryService implements ReadMemberProfileUseCase,
     }
 
     @Override
-    public PageResponse<TripHistoryView> getTripsHistory(Long memberId, Pageable pageable) {
+    public Page<TripHistoryView> getTripsHistory(Long memberId, Pageable pageable) {
         return readMemberProfilePort.getTripsHistory(memberId, pageable);
     }
 }
