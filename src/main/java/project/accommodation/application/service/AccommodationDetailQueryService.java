@@ -35,29 +35,7 @@ public class AccommodationDetailQueryService implements ReadAccommodationDetailU
 
         publishViewHistory(accommodationId, memberId);
 
-        // TODO : 조립 매퍼 클래스 사용
-        return new AccommodationDetailView(
-                commonInfo.getAccommodationId(),
-                commonInfo.getTitle(),
-                commonInfo.getMaxPeople(),
-                commonInfo.getAddress(),
-                commonInfo.getMapX(),
-                commonInfo.getMapY(),
-                commonInfo.getCheckIn(),
-                commonInfo.getCheckOut(),
-                commonInfo.getDescription(),
-                commonInfo.getNumber(),
-                commonInfo.getRefundRegulation(),
-                commonInfo.getPrice(),
-                wishlistState.isInWishlist(),
-                wishlistState.wishlistId(),
-                wishlistState.wishlistName(),
-                commonInfo.getAvgRate(),
-                commonInfo.getImages(),
-                commonInfo.getAmenities(),
-                commonInfo.getReviews(),
-                reservedDates
-        );
+        return toDetailView(commonInfo, wishlistState, reservedDates);
     }
 
     private AccommodationWishlistState getWishlistState(Long accommodationId, Long memberId) {
@@ -83,5 +61,34 @@ public class AccommodationDetailQueryService implements ReadAccommodationDetailU
         }
 
         eventPublisher.publishEvent(new ViewHistoryEvent(accommodationId, memberId));
+    }
+
+    private AccommodationDetailView toDetailView(
+            AccommodationCommonInfoView commonInfo,
+            AccommodationWishlistState wishlistState,
+            List<ReservedDateView> reservedDates
+    ) {
+        return new AccommodationDetailView(
+                commonInfo.getAccommodationId(),
+                commonInfo.getTitle(),
+                commonInfo.getMaxPeople(),
+                commonInfo.getAddress(),
+                commonInfo.getMapX(),
+                commonInfo.getMapY(),
+                commonInfo.getCheckIn(),
+                commonInfo.getCheckOut(),
+                commonInfo.getDescription(),
+                commonInfo.getNumber(),
+                commonInfo.getRefundRegulation(),
+                commonInfo.getPrice(),
+                wishlistState.isInWishlist(),
+                wishlistState.wishlistId(),
+                wishlistState.wishlistName(),
+                commonInfo.getAvgRate(),
+                commonInfo.getImages(),
+                commonInfo.getAmenities(),
+                commonInfo.getReviews(),
+                reservedDates
+        );
     }
 }

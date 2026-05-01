@@ -16,27 +16,16 @@ import project.accommodation.adapter.in.web.response.AccommodationPriceResponse;
 import project.accommodation.adapter.in.web.response.DetailAccommodationResponse;
 import project.accommodation.adapter.in.web.response.FilteredAccommodationResponse;
 import project.accommodation.adapter.in.web.response.MainAccommodationResponse;
-import project.accommodation.adapter.in.web.response.MainAccommodationsResponse;
 import project.accommodation.application.in.query.ReadAccommodationDetailUseCase;
 import project.accommodation.application.in.query.ReadAccommodationsUseCase;
 import project.accommodation.application.in.query.model.AccommodationDetailView;
 import project.accommodation.application.in.query.model.AccommodationPriceView;
 import project.accommodation.application.in.query.model.AccommodationSearchQuery;
-import project.accommodation.application.in.query.model.DetailImageView;
-import project.accommodation.application.in.query.model.DetailReviewView;
-import project.accommodation.application.in.query.model.FilteredAccommodationView;
-import project.accommodation.application.in.query.model.MainAccommodationItemView;
-import project.accommodation.application.in.query.model.MainAccommodationView;
 import project.auth.adapter.in.web.support.CurrentMemberId;
 import project.common.adapter.in.web.response.PageResponse;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import static project.accommodation.adapter.in.web.response.DetailAccommodationResponse.DetailImageResponse;
-import static project.accommodation.adapter.in.web.response.DetailAccommodationResponse.DetailReviewResponse;
-import static project.accommodation.adapter.in.web.response.DetailAccommodationResponse.ReservedDateResponse;
-import static project.accommodation.application.in.query.model.AccommodationDetailView.ReservedDateView;
 
 @RestController
 @RequiredArgsConstructor
@@ -50,33 +39,9 @@ public class AccommodationQueryController {
     public ResponseEntity<List<MainAccommodationResponse>> getAccommodations(@CurrentMemberId(required = false) Long memberId) {
         List<MainAccommodationResponse> result = readAccommodationsUseCase.getAccommodations(memberId)
                                                                           .stream()
-                                                                          .map(this::toResponse)
+                                                                          .map(AccommodationQueryMapper::toResponse)
                                                                           .toList();
         return ResponseEntity.ok(result);
-    }
-
-    private MainAccommodationResponse toResponse(MainAccommodationView view) {
-        return new MainAccommodationResponse(
-                view.areaName(),
-                view.areaCode(),
-                view.accommodations()
-                    .stream()
-                    .map(this::toResponse)
-                    .toList()
-        );
-    }
-
-    private MainAccommodationsResponse toResponse(MainAccommodationItemView view) {
-        return new MainAccommodationsResponse(
-                view.accommodationId(),
-                view.title(),
-                view.price(),
-                view.avgRate(),
-                view.thumbnailUrl(),
-                view.isInWishlist(),
-                view.wishlistName(),
-                view.wishlistId()
-        );
     }
 
     @GetMapping("/search")
@@ -85,32 +50,12 @@ public class AccommodationQueryController {
             @CurrentMemberId(required = false) Long memberId,
             @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        AccommodationSearchQuery searchQuery = new AccommodationSearchQuery(
-                searchRequest.areaCode(),
-                searchRequest.amenities(),
-                searchRequest.priceGoe(),
-                searchRequest.priceLoe(),
-                pageable
-        );
+        AccommodationSearchQuery searchQuery = AccommodationQueryMapper.toQuery(searchRequest, pageable);
         PageResponse<FilteredAccommodationResponse> result = PageResponse.from(
                 readAccommodationsUseCase.getFilteredPagingAccommodations(searchQuery, memberId)
-                                         .map(this::toResponse)
+                                         .map(AccommodationQueryMapper::toResponse)
         );
         return ResponseEntity.ok(result);
-    }
-
-    private FilteredAccommodationResponse toResponse(FilteredAccommodationView view) {
-        return new FilteredAccommodationResponse(
-                view.accommodationId(),
-                view.title(),
-                view.price(),
-                view.avgRate(),
-                view.reviewCount(),
-                view.imageUrls(),
-                view.isInWishlist(),
-                view.wishlistId(),
-                view.wishlistName()
-        );
     }
 
     @GetMapping("/{id}")
@@ -119,52 +64,7 @@ public class AccommodationQueryController {
             @CurrentMemberId(required = false) Long memberId
     ) {
         AccommodationDetailView result = readAccommodationDetailUseCase.getDetailAccommodation(accId, memberId);
-        return ResponseEntity.ok(toResponse(result));
-    }
-
-    private DetailAccommodationResponse toResponse(AccommodationDetailView view) {
-        return new DetailAccommodationResponse(
-                view.accommodationId(),
-                view.title(),
-                view.maxPeople(),
-                view.address(),
-                view.mapX(),
-                view.mapY(),
-                view.checkIn(),
-                view.checkOut(),
-                view.description(),
-                view.number(),
-                view.refundRegulation(),
-                view.price(),
-                view.isInWishlist(),
-                view.wishlistId(),
-                view.wishlistName(),
-                view.avgRate(),
-                toResponse(view.images()),
-                view.amenities(),
-                view.reviews().stream().map(this::toResponse).toList(),
-                view.reservedDates().stream().map(this::toResponse).toList()
-        );
-    }
-
-    private DetailImageResponse toResponse(DetailImageView view) {
-        return new DetailImageResponse(view.thumbnail(), view.others());
-    }
-
-    private DetailReviewResponse toResponse(DetailReviewView view) {
-        return new DetailReviewResponse(
-                view.memberId(),
-                view.memberName(),
-                view.profileUrl(),
-                view.memberCreatedDate(),
-                view.reviewCreatedDate(),
-                view.rating(),
-                view.content()
-        );
-    }
-
-    private ReservedDateResponse toResponse(ReservedDateView view) {
-        return new ReservedDateResponse(view.start(), view.end());
+        return ResponseEntity.ok(AccommodationQueryMapper.toResponse(result));
     }
 
     @GetMapping("/{id}/price")
@@ -173,10 +73,6 @@ public class AccommodationQueryController {
             @RequestParam("date") LocalDate date
     ) {
         AccommodationPriceView result = readAccommodationsUseCase.getAccommodationPrice(accommodationId, date);
-        return ResponseEntity.ok(toResponse(result));
-    }
-
-    private AccommodationPriceResponse toResponse(AccommodationPriceView view) {
-        return new AccommodationPriceResponse(view.accommodationId(), view.date(), view.price());
+        return ResponseEntity.ok(AccommodationQueryMapper.toResponse(result));
     }
 }
