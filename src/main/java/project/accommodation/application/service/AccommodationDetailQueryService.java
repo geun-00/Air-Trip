@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.accommodation.application.in.query.GetAccommodationDetailQueryUseCase;
+import project.accommodation.application.in.query.ReadAccommodationDetailUseCase;
 import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
 import project.accommodation.application.in.query.model.AccommodationDetailView;
 import project.accommodation.application.out.query.LoadAccommodationCommonInfoPort;
@@ -20,7 +20,7 @@ import static project.accommodation.application.in.query.model.AccommodationDeta
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AccommodationDetailQueryService implements GetAccommodationDetailQueryUseCase {
+public class AccommodationDetailQueryService implements ReadAccommodationDetailUseCase {
 
     private final ApplicationEventPublisher eventPublisher;
     private final LoadReservedDatesPort loadReservedDatesPort;

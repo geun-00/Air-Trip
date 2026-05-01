@@ -1,11 +1,10 @@
 package project.accommodation.application.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.accommodation.application.in.query.GetAccommodationPriceQueryUseCase;
-import project.accommodation.application.in.query.GetMainAccommodationsQueryUseCase;
-import project.accommodation.application.in.query.SearchAccommodationsQueryUseCase;
+import project.accommodation.application.in.query.ReadAccommodationsUseCase;
 import project.accommodation.application.in.query.model.AccommodationPriceView;
 import project.accommodation.application.in.query.model.AccommodationSearchQuery;
 import project.accommodation.application.in.query.model.FilteredAccommodationView;
@@ -15,7 +14,6 @@ import project.accommodation.application.out.query.GetMainAccommodationsPort;
 import project.accommodation.application.out.query.SearchAccommodationsPort;
 import project.accommodation.application.out.query.model.MainAccommodationsCondition;
 import project.accommodation.application.out.query.model.SearchAccommodationsCondition;
-import project.common.adapter.in.web.response.PageResponse;
 import project.common.domain.StayDatePolicy;
 import project.infrastructure.time.StayDatePolicyProvider;
 
@@ -25,9 +23,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AccommodationCatalogQueryService implements GetMainAccommodationsQueryUseCase,
-                                                         SearchAccommodationsQueryUseCase,
-                                                         GetAccommodationPriceQueryUseCase {
+public class AccommodationQueryService implements ReadAccommodationsUseCase {
 
     private final StayDatePolicyProvider stayDatePolicyProvider;
     private final SearchAccommodationsPort searchAccommodationsPort;
@@ -43,7 +39,7 @@ public class AccommodationCatalogQueryService implements GetMainAccommodationsQu
     }
 
     @Override
-    public PageResponse<FilteredAccommodationView> getFilteredPagingAccommodations(
+    public Page<FilteredAccommodationView> getFilteredPagingAccommodations(
             AccommodationSearchQuery searchQuery,
             Long memberId
     ) {

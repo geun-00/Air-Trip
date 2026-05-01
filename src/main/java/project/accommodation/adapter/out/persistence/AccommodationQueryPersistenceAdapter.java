@@ -14,7 +14,6 @@ import project.accommodation.application.out.query.SearchAccommodationsPort;
 import project.accommodation.application.out.query.model.MainAccommodationsCondition;
 import project.accommodation.application.out.query.model.SearchAccommodationsCondition;
 import project.accommodation.domain.exception.AccommodationExceptions;
-import project.common.adapter.in.web.response.PageResponse;
 import project.common.domain.StayDatePolicy;
 import project.wishlist.domain.WishlistName;
 
@@ -73,10 +72,9 @@ public class AccommodationQueryPersistenceAdapter implements GetMainAccommodatio
     }
 
     @Override
-    public PageResponse<FilteredAccommodationView> getFilteredPagingAccommodations(SearchAccommodationsCondition condition) {
-        Page<FilteredAccommodationView> page = accommodationQueryRepository.getFilteredPagingAccommodations(condition)
-                                                                           .map(this::convertToView);
-        return PageResponse.from(page);
+    public Page<FilteredAccommodationView> getFilteredPagingAccommodations(SearchAccommodationsCondition condition) {
+        return accommodationQueryRepository.getFilteredPagingAccommodations(condition)
+                                           .map(this::convertToView);
     }
 
     @Override

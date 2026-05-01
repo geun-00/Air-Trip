@@ -7,10 +7,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import project.accommodation.adapter.in.web.AccommodationQueryController;
-import project.accommodation.application.in.query.GetAccommodationDetailQueryUseCase;
-import project.accommodation.application.in.query.GetAccommodationPriceQueryUseCase;
-import project.accommodation.application.in.query.GetMainAccommodationsQueryUseCase;
-import project.accommodation.application.in.query.SearchAccommodationsQueryUseCase;
+import project.accommodation.application.in.query.ReadAccommodationDetailUseCase;
+import project.accommodation.application.in.query.ReadAccommodationsUseCase;
 import project.accommodation.application.in.query.model.AccommodationDetailView;
 import project.accommodation.application.in.query.model.AccommodationPriceView;
 import project.accommodation.application.in.query.model.DetailImageView;
@@ -18,7 +16,6 @@ import project.accommodation.application.in.query.model.DetailReviewView;
 import project.accommodation.application.in.query.model.FilteredAccommodationView;
 import project.accommodation.application.in.query.model.MainAccommodationItemView;
 import project.accommodation.application.in.query.model.MainAccommodationView;
-import project.common.adapter.in.web.response.PageResponse;
 import project.controller.RestDocsTestSupport;
 
 import java.time.LocalDate;
@@ -52,16 +49,10 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
     private static final String ACCOMMODATION_API_TAG = "Accommodation API";
 
     @MockitoBean
-    GetMainAccommodationsQueryUseCase getMainAccommodationsQueryUseCase;
+    ReadAccommodationsUseCase readAccommodationsUseCase;
 
     @MockitoBean
-    SearchAccommodationsQueryUseCase searchAccommodationsQueryUseCase;
-
-    @MockitoBean
-    GetAccommodationDetailQueryUseCase getAccommodationDetailQueryUseCase;
-
-    @MockitoBean
-    GetAccommodationPriceQueryUseCase getAccommodationPriceQueryUseCase;
+    ReadAccommodationDetailUseCase readAccommodationDetailUseCase;
 
     @Test
     @DisplayName("메인 페이지 숙소 목록 조회")
@@ -82,7 +73,7 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
                 new MainAccommodationView("경기도", "code-2", gyeonggiAcc)
         );
 
-        given(getMainAccommodationsQueryUseCase.getAccommodations(any())).willReturn(result);
+        given(readAccommodationsUseCase.getAccommodations(any())).willReturn(result);
 
         //when
         //then
@@ -155,13 +146,13 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
                         List.of("https://example.com/c.jpg", "https://example.com/d.jpg"), true, 1L, "my-wishlist-1")
         );
 
-        PageResponse<FilteredAccommodationView> response = PageResponse.from(new PageImpl<>(
+        PageImpl<FilteredAccommodationView> response = new PageImpl<>(
                 dtos,
                 PageRequest.of(0, 15),
                 dtos.size()
-        ));
+        );
 
-        given(searchAccommodationsQueryUseCase.getFilteredPagingAccommodations(any(), any()))
+        given(readAccommodationsUseCase.getFilteredPagingAccommodations(any(), any()))
                 .willReturn(response);
 
         //when
@@ -282,7 +273,7 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
                                                                        55000, true, 1L, "my-wishlist-1", 4.8, detailImageDto, amenities, reviewDtos, reservedDates
         );
 
-        given(getAccommodationDetailQueryUseCase.getDetailAccommodation(any(), any())).willReturn(response);
+        given(readAccommodationDetailUseCase.getDetailAccommodation(any(), any())).willReturn(response);
 
         //when
         //then
@@ -428,7 +419,7 @@ class AccommodationQueryControllerTest extends RestDocsTestSupport {
         LocalDate date = LocalDate.now();
 
         AccommodationPriceView result = new AccommodationPriceView(accommodationId, date, 130000);
-        given(getAccommodationPriceQueryUseCase.getAccommodationPrice(any(), any())).willReturn(result);
+        given(readAccommodationsUseCase.getAccommodationPrice(any(), any())).willReturn(result);
 
         //when
         //then

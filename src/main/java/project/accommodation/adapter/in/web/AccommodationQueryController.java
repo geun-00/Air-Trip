@@ -17,10 +17,8 @@ import project.accommodation.adapter.in.web.response.DetailAccommodationResponse
 import project.accommodation.adapter.in.web.response.FilteredAccommodationResponse;
 import project.accommodation.adapter.in.web.response.MainAccommodationResponse;
 import project.accommodation.adapter.in.web.response.MainAccommodationsResponse;
-import project.accommodation.application.in.query.GetAccommodationDetailQueryUseCase;
-import project.accommodation.application.in.query.GetAccommodationPriceQueryUseCase;
-import project.accommodation.application.in.query.GetMainAccommodationsQueryUseCase;
-import project.accommodation.application.in.query.SearchAccommodationsQueryUseCase;
+import project.accommodation.application.in.query.ReadAccommodationDetailUseCase;
+import project.accommodation.application.in.query.ReadAccommodationsUseCase;
 import project.accommodation.application.in.query.model.AccommodationDetailView;
 import project.accommodation.application.in.query.model.AccommodationPriceView;
 import project.accommodation.application.in.query.model.AccommodationSearchQuery;
@@ -45,17 +43,15 @@ import static project.accommodation.application.in.query.model.AccommodationDeta
 @RequestMapping("/api/accommodations")
 public class AccommodationQueryController {
 
-    private final SearchAccommodationsQueryUseCase searchAccommodationsQueryUseCase;
-    private final GetMainAccommodationsQueryUseCase getMainAccommodationsQueryUseCase;
-    private final GetAccommodationPriceQueryUseCase getAccommodationPriceQueryUseCase;
-    private final GetAccommodationDetailQueryUseCase getAccommodationDetailQueryUseCase;
+    private final ReadAccommodationsUseCase readAccommodationsUseCase;
+    private final ReadAccommodationDetailUseCase readAccommodationDetailUseCase;
 
     @GetMapping
     public ResponseEntity<List<MainAccommodationResponse>> getAccommodations(@CurrentMemberId(required = false) Long memberId) {
-        List<MainAccommodationResponse> result = getMainAccommodationsQueryUseCase.getAccommodations(memberId)
-                                                                                  .stream()
-                                                                                  .map(this::toResponse)
-                                                                                  .toList();
+        List<MainAccommodationResponse> result = readAccommodationsUseCase.getAccommodations(memberId)
+                                                                          .stream()
+                                                                          .map(this::toResponse)
+                                                                          .toList();
         return ResponseEntity.ok(result);
     }
 
@@ -96,8 +92,10 @@ public class AccommodationQueryController {
                 searchRequest.priceLoe(),
                 pageable
         );
-        PageResponse<FilteredAccommodationResponse> result = searchAccommodationsQueryUseCase.getFilteredPagingAccommodations(searchQuery, memberId)
-                                                                                             .map(this::toResponse);
+        PageResponse<FilteredAccommodationResponse> result = PageResponse.from(
+                readAccommodationsUseCase.getFilteredPagingAccommodations(searchQuery, memberId)
+                                         .map(this::toResponse)
+        );
         return ResponseEntity.ok(result);
     }
 
@@ -120,7 +118,7 @@ public class AccommodationQueryController {
             @PathVariable("id") Long accId,
             @CurrentMemberId(required = false) Long memberId
     ) {
-        AccommodationDetailView result = getAccommodationDetailQueryUseCase.getDetailAccommodation(accId, memberId);
+        AccommodationDetailView result = readAccommodationDetailUseCase.getDetailAccommodation(accId, memberId);
         return ResponseEntity.ok(toResponse(result));
     }
 
@@ -174,7 +172,7 @@ public class AccommodationQueryController {
             @PathVariable("id") Long accommodationId,
             @RequestParam("date") LocalDate date
     ) {
-        AccommodationPriceView result = getAccommodationPriceQueryUseCase.getAccommodationPrice(accommodationId, date);
+        AccommodationPriceView result = readAccommodationsUseCase.getAccommodationPrice(accommodationId, date);
         return ResponseEntity.ok(toResponse(result));
     }
 
