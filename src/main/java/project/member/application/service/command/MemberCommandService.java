@@ -16,7 +16,7 @@ import project.member.application.in.command.model.EditProfileResult;
 import project.member.application.in.command.model.ProfileImageChange;
 import project.member.application.in.command.model.RegisterMemberCommand;
 import project.member.application.in.command.model.RegisterSocialMemberCommand;
-import project.member.application.out.command.LoadMemberPort;
+import project.member.application.out.command.ReadMemberPort;
 import project.member.application.out.command.SaveMemberPort;
 import project.member.domain.Member;
 import project.member.domain.SocialType;
@@ -32,7 +32,7 @@ public class MemberCommandService implements ManageMemberUseCase,
                                              RegisterSocialMemberUseCase {
 
     private final SaveMemberPort saveMemberPort;
-    private final LoadMemberPort loadMemberPort;
+    private final ReadMemberPort readMemberPort;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
     private final ProfileImageChange.Handler profileImageChangeHandler;
@@ -56,7 +56,7 @@ public class MemberCommandService implements ManageMemberUseCase,
     public void registerSocial(RegisterSocialMemberCommand command) {
         SocialType socialType = SocialType.from(command.provider());
 
-        if (loadMemberPort.existsByEmailAndSocialType(command.email(), socialType)) {
+        if (readMemberPort.existsByEmailAndSocialType(command.email(), socialType)) {
             return;
         }
 
@@ -80,7 +80,7 @@ public class MemberCommandService implements ManageMemberUseCase,
 
     @Override
     public void registerAdmin(String email, String password) {
-        if (loadMemberPort.existsByEmail(email)) {
+        if (readMemberPort.existsByEmail(email)) {
             return;
         }
 
@@ -90,7 +90,7 @@ public class MemberCommandService implements ManageMemberUseCase,
 
     @Override
     public EditProfileResult editMyProfile(EditMyProfileCommand command) {
-        Member member = loadMemberPort.loadById(command.memberId());
+        Member member = readMemberPort.getById(command.memberId());
 
         command.profileImageChange()
                .handleWith(command.memberId(), member.getProfileUrl(), profileImageChangeHandler);
@@ -102,7 +102,7 @@ public class MemberCommandService implements ManageMemberUseCase,
     }
 
     private void validateExistsEmail(String email) {
-        if (loadMemberPort.existsByEmail(email)) {
+        if (readMemberPort.existsByEmail(email)) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
     }

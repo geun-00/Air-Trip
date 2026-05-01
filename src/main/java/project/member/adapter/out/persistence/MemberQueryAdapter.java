@@ -12,8 +12,7 @@ import project.member.application.in.query.model.ChatMemberSearchView;
 import project.member.application.in.query.model.ChatMembersSearchView;
 import project.member.application.in.query.model.DefaultProfileView;
 import project.member.application.in.query.model.TripHistoryView;
-import project.member.application.out.query.GetMemberProfilePort;
-import project.member.application.out.query.GetMemberTripsHistoryPort;
+import project.member.application.out.query.ReadMemberProfilePort;
 import project.member.application.out.query.SearchMembersPort;
 import project.member.domain.exception.MemberExceptions;
 
@@ -21,9 +20,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class MemberQueryPersistenceAdapter implements GetMemberProfilePort,
-                                                      SearchMembersPort,
-                                                      GetMemberTripsHistoryPort {
+public class MemberQueryAdapter implements ReadMemberProfilePort, SearchMembersPort {
 
     private final MemberQueryRepository memberQueryRepository;
 

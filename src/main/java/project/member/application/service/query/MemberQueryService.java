@@ -10,8 +10,7 @@ import project.member.application.in.query.SearchMembersUseCase;
 import project.member.application.in.query.model.ChatMembersSearchView;
 import project.member.application.in.query.model.DefaultProfileView;
 import project.member.application.in.query.model.TripHistoryView;
-import project.member.application.out.query.GetMemberProfilePort;
-import project.member.application.out.query.GetMemberTripsHistoryPort;
+import project.member.application.out.query.ReadMemberProfilePort;
 import project.member.application.out.query.SearchMembersPort;
 
 @Service
@@ -21,12 +20,11 @@ public class MemberQueryService implements ReadMemberProfileUseCase,
                                            SearchMembersUseCase {
 
     private final SearchMembersPort searchMembersPort;
-    private final GetMemberProfilePort getMemberProfilePort;
-    private final GetMemberTripsHistoryPort getMemberTripsHistoryPort;
+    private final ReadMemberProfilePort readMemberProfilePort;
 
     @Override
     public DefaultProfileView getMyProfile(Long memberId) {
-        return getMemberProfilePort.getDefaultProfile(memberId);
+        return readMemberProfilePort.getDefaultProfile(memberId);
     }
 
     @Override
@@ -36,6 +34,6 @@ public class MemberQueryService implements ReadMemberProfileUseCase,
 
     @Override
     public PageResponse<TripHistoryView> getTripsHistory(Long memberId, Pageable pageable) {
-        return getMemberTripsHistoryPort.getTripsHistory(memberId, pageable);
+        return readMemberProfilePort.getTripsHistory(memberId, pageable);
     }
 }

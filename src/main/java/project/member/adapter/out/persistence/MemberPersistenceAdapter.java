@@ -3,7 +3,7 @@ package project.member.adapter.out.persistence;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import project.member.application.out.command.LoadMemberPort;
+import project.member.application.out.command.ReadMemberPort;
 import project.member.application.out.command.SaveMemberPort;
 import project.member.domain.Email;
 import project.member.domain.Member;
@@ -12,25 +12,25 @@ import project.member.domain.exception.MemberExceptions;
 
 @Repository
 @RequiredArgsConstructor
-public class MemberPersistenceAdapter implements LoadMemberPort, SaveMemberPort {
+public class MemberPersistenceAdapter implements ReadMemberPort, SaveMemberPort {
 
     private final MemberRepository memberRepository;
 
     @Override
-    public Member loadById(Long memberId) {
+    public Member getById(Long memberId) {
         return memberRepository.findById(memberId)
                                .orElseThrow(() -> MemberExceptions.notFoundById(memberId));
     }
 
     @Override
-    public Member loadByEmail(String email) {
+    public Member getByEmail(String email) {
         return memberRepository.findByEmail(new Email(email))
                                .orElseThrow(() -> MemberExceptions.notFoundByEmail(email));
     }
 
     @Override
-    public String loadMemberName(Long memberId) {
-        return loadById(memberId).getName();
+    public String getNameById(Long memberId) {
+        return getById(memberId).getName();
     }
 
     @Override

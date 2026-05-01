@@ -13,10 +13,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.member.application.in.command.ManageEmailVerificationUseCase;
-import project.member.application.out.command.LoadMemberPort;
+import project.member.application.out.command.ReadMemberPort;
 import project.member.application.out.command.ManageEmailVerificationTokenPort;
 import project.member.application.out.command.SaveMemberPort;
 import project.member.application.out.command.SendEmailPort;
+import project.member.application.out.command.model.EmailMessage;
 import project.member.domain.Member;
 
 import java.util.UUID;
@@ -34,7 +35,7 @@ public class EmailVerificationService implements ManageEmailVerificationUseCase 
     private String baseUrl;
 
     private final SendEmailPort sendEmailPort;
-    private final LoadMemberPort loadMemberPort;
+    private final ReadMemberPort readMemberPort;
     private final SaveMemberPort saveMemberPort;
     private final ManageEmailVerificationTokenPort manageEmailVerificationTokenPort;
 
@@ -42,7 +43,7 @@ public class EmailVerificationService implements ManageEmailVerificationUseCase 
     @Retryable(retryFor = MailSendException.class, backoff = @Backoff(delay = 1000))
     @Override
     public void sendEmail(Long memberId) {
-        Member member = loadMemberPort.loadById(memberId);
+        Member member = readMemberPort.getById(memberId);
 
         String token = UUID.randomUUID().toString();
         String link = buildVerificationLink(token);
@@ -53,7 +54,12 @@ public class EmailVerificationService implements ManageEmailVerificationUseCase 
         int retryCount = RetrySynchronizationManager.getContext().getRetryCount();
         log.debug("이메일 인증 링크 전송: {}, 시도 횟수 {}", email, retryCount);
 
-        sendEmailPort.sendHtml(email, subject, html, "no-reply@air-trip.com");
+        sendEmailPort.send(new EmailMessage(
+                email,
+                subject,
+                html,
+                "no-reply@air-trip.com"
+        ));
         manageEmailVerificationTokenPort.save(token, memberId);
 
         log.debug("이메일 인증 링크 전송 성공: {}", email);
@@ -142,18 +148,16 @@ public class EmailVerificationService implements ManageEmailVerificationUseCase 
     @Transactional
     @Override
     public String verifyToken(String token) {
-        Long memberId = manageEmailVerificationTokenPort.findMemberIdByToken(token);
+        return manageEmailVerificationTokenPort.findMemberIdByToken(token)
+                                               .map(memberId -> {
+                                                   Member member = readMemberPort.getById(memberId);
+                                                   member.verifyEmail();
+                                                   saveMemberPort.save(member);
+                                                   manageEmailVerificationTokenPort.deleteByToken(token);
 
-        if (memberId == null) {
-            return buildVerificationRedirectUrl(false);
-        }
-
-        Member member = loadMemberPort.loadById(memberId);
-        member.verifyEmail();
-        saveMemberPort.save(member);
-        manageEmailVerificationTokenPort.deleteByToken(token);
-
-        return buildVerificationRedirectUrl(true);
+                                                   return buildVerificationRedirectUrl(true);
+                                               })
+                                               .orElseGet(() -> buildVerificationRedirectUrl(false));
     }
 
     private String buildVerificationRedirectUrl(boolean success) {

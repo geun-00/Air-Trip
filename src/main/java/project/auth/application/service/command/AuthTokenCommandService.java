@@ -18,7 +18,7 @@ import project.auth.application.out.command.model.AuthTokenClaims;
 import project.auth.application.out.command.model.IssuedAuthTokens;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
-import project.member.application.out.command.LoadMemberPort;
+import project.member.application.out.command.ReadMemberPort;
 import project.member.domain.Member;
 import project.member.domain.PasswordMatcher;
 
@@ -30,7 +30,7 @@ public class AuthTokenCommandService implements IssueAuthTokenUseCase,
     private static final String LOCAL_LOGIN_PRINCIPAL_NAME = "local";
 
     private final AuthTokenPort authTokenPort;
-    private final LoadMemberPort loadMemberPort;
+    private final ReadMemberPort readMemberPort;
     private final PasswordMatcher passwordMatcher;
     private final ApplicationEventPublisher eventPublisher;
     private final ManageRefreshTokenPort manageRefreshTokenPort;
@@ -38,7 +38,7 @@ public class AuthTokenCommandService implements IssueAuthTokenUseCase,
 
     @Override
     public AuthTokenResult issue(IssueAuthTokenCommand command) {
-        Member member = loadMemberPort.loadByEmail(command.email());
+        Member member = readMemberPort.getByEmail(command.email());
         return issueToken(member, command.principalName());
     }
 
@@ -51,7 +51,7 @@ public class AuthTokenCommandService implements IssueAuthTokenUseCase,
 
     private Member loadMemberForLogin(String email) {
         try {
-            return loadMemberPort.loadByEmail(email);
+            return readMemberPort.getByEmail(email);
         } catch (BusinessException exception) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
@@ -69,7 +69,7 @@ public class AuthTokenCommandService implements IssueAuthTokenUseCase,
         AuthTokenClaims claims = authTokenPort.loadClaims(refreshToken);
         manageRefreshTokenPort.delete(refreshToken);
 
-        Member member = loadMemberPort.loadById(claims.memberId());
+        Member member = readMemberPort.getById(claims.memberId());
         return issueToken(member, claims.principalName());
     }
 
@@ -99,7 +99,7 @@ public class AuthTokenCommandService implements IssueAuthTokenUseCase,
         AuthTokenClaims claims = authTokenPort.loadClaims(refreshToken);
         manageRefreshTokenPort.delete(refreshToken);
 
-        Member member = loadMemberPort.loadById(claims.memberId());
+        Member member = readMemberPort.getById(claims.memberId());
         eventPublisher.publishEvent(new OAuthLogoutEvent(member.getSocialType(), claims.principalName()));
     }
 

@@ -23,7 +23,7 @@ import project.chat.application.out.command.model.SaveChatRequestCommand;
 import project.chat.application.out.query.model.ChatRoomInfoView;
 import project.chat.domain.ChatRoom;
 import project.chat.domain.exception.ChatExceptions;
-import project.member.application.out.command.LoadMemberPort;
+import project.member.application.out.command.ReadMemberPort;
 import project.member.domain.Member;
 
 import java.time.Duration;
@@ -33,7 +33,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class ChatRequestCommandService implements RequestChatUseCase, AcceptChatRequestUseCase, RejectChatRequestUseCase {
 
-    private final LoadMemberPort loadMemberPort;
+    private final ReadMemberPort readMemberPort;
     private final ChatRequestPort chatRequestPort;
     private final LoadChatRoomPort loadChatRoomPort;
     private final SaveChatRoomPort saveChatRoomPort;
@@ -47,8 +47,8 @@ public class ChatRequestCommandService implements RequestChatUseCase, AcceptChat
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiresAt = now.plus(Duration.ofDays(1));
 
-        Member sender = loadMemberPort.loadById(command.senderId());
-        Member receiver = loadMemberPort.loadById(command.receiverId());
+        Member sender = readMemberPort.getById(command.senderId());
+        Member receiver = readMemberPort.getById(command.receiverId());
 
         ChatRequest result = chatRequestPort.save(new SaveChatRequestCommand(
                 sender.getId(),

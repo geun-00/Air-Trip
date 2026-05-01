@@ -32,8 +32,8 @@ import java.util.List;
 @RequestMapping("/api/members")
 public class MemberQueryController {
 
-    private final ReadMemberProfileUseCase readMemberProfileUseCase;
     private final SearchMembersUseCase searchMembersUseCase;
+    private final ReadMemberProfileUseCase readMemberProfileUseCase;
     private final ReadViewedAccommodationsUseCase readViewedAccommodationsUseCase;
 
     @GetMapping("/me")

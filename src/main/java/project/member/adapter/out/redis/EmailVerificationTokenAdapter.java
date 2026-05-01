@@ -5,6 +5,8 @@ import org.springframework.stereotype.Component;
 import project.member.adapter.out.redis.model.EmailVerification;
 import project.member.application.out.command.ManageEmailVerificationTokenPort;
 
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class EmailVerificationTokenAdapter implements ManageEmailVerificationTokenPort {
@@ -17,10 +19,9 @@ public class EmailVerificationTokenAdapter implements ManageEmailVerificationTok
     }
 
     @Override
-    public Long findMemberIdByToken(String token) {
+    public Optional<Long> findMemberIdByToken(String token) {
         return emailVerificationRepository.findById(token)
-                                          .map(EmailVerification::getMemberId)
-                                          .orElse(null);
+                                          .map(EmailVerification::getMemberId);
     }
 
     @Override
