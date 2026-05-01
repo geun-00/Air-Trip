@@ -8,7 +8,7 @@ import project.accommodation.adapter.out.persistence.model.ImageDataRow;
 import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
 import project.accommodation.application.in.query.model.DetailImageView;
 import project.accommodation.application.in.query.model.DetailReviewView;
-import project.accommodation.application.out.query.LoadAccommodationCommonInfoSourcePort;
+import project.accommodation.application.out.query.ReadAccommodationCommonInfoSourcePort;
 import project.accommodation.domain.exception.AccommodationExceptions;
 import project.common.domain.StayDatePolicy;
 import project.review.adapter.out.persistence.ReviewQueryRepository;
@@ -22,14 +22,14 @@ import static java.util.stream.Collectors.toMap;
 
 @Repository
 @RequiredArgsConstructor
-public class AccommodationCommonInfoPersistenceAdapter implements LoadAccommodationCommonInfoSourcePort {
+public class AccommodationCommonInfoPersistenceAdapter implements ReadAccommodationCommonInfoSourcePort {
 
     private final ReviewQueryRepository reviewQueryRepository;
     private final AccommodationRepository accommodationRepository;
     private final AccommodationQueryRepository accommodationQueryRepository;
 
     @Override
-    public AccommodationCommonInfoView loadAccommodationCommonInfo(Long accommodationId, StayDatePolicy stayDatePolicy) {
+    public AccommodationCommonInfoView getByIdAndStayDatePolicy(Long accommodationId, StayDatePolicy stayDatePolicy) {
         DetailAccommodationRow detail = accommodationQueryRepository.findAccommodation(accommodationId, null, stayDatePolicy)
                                                                     .orElseThrow(() -> AccommodationExceptions.notFoundById(accommodationId));
         List<String> amenities = accommodationRepository.findAmenitiesByAccommodationId(accommodationId).stream()
@@ -43,7 +43,7 @@ public class AccommodationCommonInfoPersistenceAdapter implements LoadAccommodat
 
 
     @Override
-    public Map<Long, AccommodationCommonInfoView> loadAccommodationCommonInfos(List<Long> accommodationIds, StayDatePolicy stayDatePolicy) {
+    public Map<Long, AccommodationCommonInfoView> getAllByIdsAndStayDatePolicy(List<Long> accommodationIds, StayDatePolicy stayDatePolicy) {
         Map<Long, DetailAccommodationRow> detailMap = accommodationQueryRepository.findAccommodations(accommodationIds, stayDatePolicy)
                                                                                   .stream()
                                                                                   .collect(toMap(

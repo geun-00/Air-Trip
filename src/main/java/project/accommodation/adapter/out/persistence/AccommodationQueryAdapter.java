@@ -8,9 +8,7 @@ import project.accommodation.adapter.out.persistence.model.MainAccommodationRow;
 import project.accommodation.application.in.query.model.FilteredAccommodationView;
 import project.accommodation.application.in.query.model.MainAccommodationItemView;
 import project.accommodation.application.in.query.model.MainAccommodationView;
-import project.accommodation.application.out.query.GetAccommodationPricePort;
-import project.accommodation.application.out.query.GetMainAccommodationsPort;
-import project.accommodation.application.out.query.SearchAccommodationsPort;
+import project.accommodation.application.out.query.ReadAccommodationsPort;
 import project.accommodation.application.out.query.model.MainAccommodationsCondition;
 import project.accommodation.application.out.query.model.SearchAccommodationsCondition;
 import project.accommodation.domain.exception.AccommodationExceptions;
@@ -25,9 +23,7 @@ import static java.util.stream.Collectors.toList;
 
 @Repository
 @RequiredArgsConstructor
-public class AccommodationQueryPersistenceAdapter implements GetMainAccommodationsPort,
-                                                             SearchAccommodationsPort,
-                                                             GetAccommodationPricePort {
+public class AccommodationQueryAdapter implements ReadAccommodationsPort {
 
     private final AccommodationQueryRepository accommodationQueryRepository;
     private final AccommodationRepository accommodationRepository;

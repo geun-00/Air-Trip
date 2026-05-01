@@ -3,7 +3,7 @@ package project.reservation.application.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.accommodation.application.out.query.LoadAccommodationPort;
+import project.accommodation.application.out.query.ReadAccommodationPort;
 import project.accommodation.domain.Accommodation;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
@@ -27,14 +27,14 @@ public class ReservationCommandService implements CreateReservationUseCase {
     private final ReadMemberPort readMemberPort;
     private final SaveReservationPort saveReservationPort;
     private final LoadReservationPort loadReservationPort;
-    private final LoadAccommodationPort loadAccommodationPort;
+    private final ReadAccommodationPort readAccommodationPort;
 
     @Override
     public CreateReservationResult createReservation(CreateReservationCommand command) {
         Member member = readMemberPort.getById(command.memberId());
         member.validateEmailVerified();
 
-        Accommodation accommodation = loadAccommodationPort.loadAccommodation(command.accommodationId());
+        Accommodation accommodation = readAccommodationPort.getById(command.accommodationId());
 
         LocalDateTime startDate = command.startDate().atStartOfDay();
         LocalDateTime endDate = command.endDate().plusDays(1).atStartOfDay();
@@ -67,7 +67,7 @@ public class ReservationCommandService implements CreateReservationUseCase {
     }
 
     private CreateReservationResult toResult(Reservation reservation, Accommodation accommodation) {
-        String thumbnailUrl = loadAccommodationPort.loadThumbnailUrl(accommodation.getId());
+        String thumbnailUrl = readAccommodationPort.getThumbnailUrlById(accommodation.getId());
 
         return new CreateReservationResult(
                 reservation.getId(),
