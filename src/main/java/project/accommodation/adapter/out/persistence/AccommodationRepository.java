@@ -1,9 +1,9 @@
 package project.accommodation.adapter.out.persistence;
 
 import jakarta.persistence.LockModeType;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 import project.accommodation.adapter.out.persistence.model.AmenityDataRow;
 import project.accommodation.adapter.out.persistence.model.ImageDataRow;
@@ -16,7 +16,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface AccommodationRepository extends JpaRepository<Accommodation, Long> {
+public interface AccommodationRepository extends Repository<Accommodation, Long> {
+
+    List<Accommodation> saveAll(Iterable<Accommodation> accommodations);
+
+    Optional<Accommodation> findById(Long accommodationId);
+
+    boolean existsById(Long accommodationId);
 
     @Query("select a.contentId as contentId, a.modifiedTime as modifiedTime from Accommodation a where a.contentId in :contentIds")
     List<AccommodationModifiedTimeRow> findModifiedTimesByContentIdIn(@Param("contentIds") List<String> contentIds);

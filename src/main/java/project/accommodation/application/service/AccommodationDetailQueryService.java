@@ -4,12 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.accommodation.application.in.query.GetAccommodationDetailQueryUseCase;
+import project.accommodation.application.in.query.ReadAccommodationDetailUseCase;
 import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
 import project.accommodation.application.in.query.model.AccommodationDetailView;
-import project.accommodation.application.out.query.LoadAccommodationCommonInfoPort;
-import project.accommodation.application.out.query.LoadAccommodationWishlistPort;
-import project.accommodation.application.out.query.LoadReservedDatesPort;
+import project.accommodation.application.out.query.ReadAccommodationCommonInfoPort;
+import project.accommodation.application.out.query.ReadAccommodationWishlistPort;
+import project.accommodation.application.out.query.ReadReservedDatesPort;
 import project.accommodation.application.service.model.AccommodationWishlistState;
 import project.history.application.event.ViewHistoryEvent;
 
@@ -20,22 +20,54 @@ import static project.accommodation.application.in.query.model.AccommodationDeta
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AccommodationDetailQueryService implements GetAccommodationDetailQueryUseCase {
+public class AccommodationDetailQueryService implements ReadAccommodationDetailUseCase {
 
     private final ApplicationEventPublisher eventPublisher;
-    private final LoadReservedDatesPort loadReservedDatesPort;
-    private final LoadAccommodationWishlistPort loadAccommodationWishlistPort;
-    private final LoadAccommodationCommonInfoPort loadAccommodationCommonInfoPort;
+    private final ReadReservedDatesPort readReservedDatesPort;
+    private final ReadAccommodationWishlistPort readAccommodationWishlistPort;
+    private final ReadAccommodationCommonInfoPort readAccommodationCommonInfoPort;
 
     @Override
     public AccommodationDetailView getDetailAccommodation(Long accommodationId, Long memberId) {
-        AccommodationCommonInfoView commonInfo = loadAccommodationCommonInfoPort.loadAccommodationCommonInfo(accommodationId);
-        AccommodationWishlistState wishlistState = loadWishlistState(accommodationId, memberId);
-        List<ReservedDateView> reservedDates = loadReservedDates(accommodationId);
+        AccommodationCommonInfoView commonInfo = readAccommodationCommonInfoPort.getById(accommodationId);
+        AccommodationWishlistState wishlistState = getWishlistState(accommodationId, memberId);
+        List<ReservedDateView> reservedDates = getReservedDates(accommodationId);
 
         publishViewHistory(accommodationId, memberId);
 
-        // TODO : 조립 매퍼 클래스 사용
+        return toDetailView(commonInfo, wishlistState, reservedDates);
+    }
+
+    private AccommodationWishlistState getWishlistState(Long accommodationId, Long memberId) {
+        if (memberId == null) {
+            return AccommodationWishlistState.empty();
+        }
+
+        return readAccommodationWishlistPort.findByAccommodationIdAndMemberId(accommodationId, memberId)
+                                            .map(AccommodationWishlistState::from)
+                                            .orElseGet(AccommodationWishlistState::empty);
+    }
+
+    private List<ReservedDateView> getReservedDates(Long accommodationId) {
+        return readReservedDatesPort.getByAccommodationId(accommodationId)
+                                    .stream()
+                                    .map(date -> new ReservedDateView(date.startDate(), date.endDate()))
+                                    .toList();
+    }
+
+    private void publishViewHistory(Long accommodationId, Long memberId) {
+        if (memberId == null) {
+            return;
+        }
+
+        eventPublisher.publishEvent(new ViewHistoryEvent(accommodationId, memberId));
+    }
+
+    private AccommodationDetailView toDetailView(
+            AccommodationCommonInfoView commonInfo,
+            AccommodationWishlistState wishlistState,
+            List<ReservedDateView> reservedDates
+    ) {
         return new AccommodationDetailView(
                 commonInfo.getAccommodationId(),
                 commonInfo.getTitle(),
@@ -58,30 +90,5 @@ public class AccommodationDetailQueryService implements GetAccommodationDetailQu
                 commonInfo.getReviews(),
                 reservedDates
         );
-    }
-
-    private AccommodationWishlistState loadWishlistState(Long accommodationId, Long memberId) {
-        if (memberId == null) {
-            return AccommodationWishlistState.empty();
-        }
-
-        return loadAccommodationWishlistPort.loadWishlistInfo(accommodationId, memberId)
-                                            .map(AccommodationWishlistState::from)
-                                            .orElseGet(AccommodationWishlistState::empty);
-    }
-
-    private List<ReservedDateView> loadReservedDates(Long accommodationId) {
-        return loadReservedDatesPort.loadReservedDates(accommodationId)
-                                    .stream()
-                                    .map(date -> new ReservedDateView(date.startDate(), date.endDate()))
-                                    .toList();
-    }
-
-    private void publishViewHistory(Long accommodationId, Long memberId) {
-        if (memberId == null) {
-            return;
-        }
-
-        eventPublisher.publishEvent(new ViewHistoryEvent(accommodationId, memberId));
     }
 }

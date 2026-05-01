@@ -3,7 +3,7 @@ package project.wishlist.adapter.out.persistence;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import project.accommodation.adapter.out.persistence.model.AccommodationImageRow;
-import project.accommodation.application.out.query.LoadAccommodationWishlistPort;
+import project.accommodation.application.out.query.ReadAccommodationWishlistPort;
 import project.accommodation.application.out.query.model.WishlistInfoView;
 import project.wishlist.adapter.out.persistence.model.WishlistDetailRow;
 import project.wishlist.adapter.out.persistence.model.WishlistInfoRow;
@@ -27,20 +27,20 @@ import static java.util.stream.Collectors.toMap;
 
 @Repository
 @RequiredArgsConstructor
-public class WishlistQueryPersistenceAdapter implements LoadAccommodationWishlistPort,
+public class WishlistQueryPersistenceAdapter implements ReadAccommodationWishlistPort,
                                                         LoadWishlistDetailsPort,
                                                         LoadWishlistsPort {
 
     private final WishlistQueryRepository wishlistQueryRepository;
 
     @Override
-    public Optional<WishlistInfoView> loadWishlistInfo(Long accommodationId, Long memberId) {
+    public Optional<WishlistInfoView> findByAccommodationIdAndMemberId(Long accommodationId, Long memberId) {
         return wishlistQueryRepository.getWishlistInfo(accommodationId, memberId)
                                       .map(this::toView);
     }
 
     @Override
-    public Map<Long, WishlistInfoView> loadWishlistInfos(List<Long> accommodationIds, Long memberId) {
+    public Map<Long, WishlistInfoView> getAllByAccommodationIdsAndMemberId(List<Long> accommodationIds, Long memberId) {
         return wishlistQueryRepository.getWishlistInfos(accommodationIds, memberId)
                                       .stream()
                                       .map(this::toView)

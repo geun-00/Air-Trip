@@ -3,7 +3,7 @@ package project.payment.application.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.accommodation.application.out.query.LoadAccommodationPort;
+import project.accommodation.application.out.query.ReadAccommodationPort;
 import project.accommodation.domain.Accommodation;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
@@ -18,12 +18,12 @@ public class PaymentProcessor {
 
     private final SavePaymentPort savePaymentPort;
     private final LoadReservationPort loadReservationPort;
-    private final LoadAccommodationPort loadAccommodationPort;
+    private final ReadAccommodationPort readAccommodationPort;
 
     @Transactional
     public void process(Long reservationId, PaymentResult paymentResult) {
         Reservation reservation = loadReservationPort.loadReservationWithLock(reservationId);
-        Accommodation accommodation = loadAccommodationPort.loadAccommodationWithLock(reservation.getAccommodationId());
+        Accommodation accommodation = readAccommodationPort.getByIdWithLock(reservation.getAccommodationId());
 
         if (loadReservationPort.existsConfirmedReservation(
                 accommodation.getId(),

@@ -2,19 +2,19 @@ package project.reservation.adapter.out.persistence;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import project.accommodation.application.out.query.LoadReservedDatesPort;
+import project.accommodation.application.out.query.ReadReservedDatesPort;
 import project.accommodation.application.out.query.model.ReservedDateRangeView;
 
 import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class ReservationQueryPersistenceAdapter implements LoadReservedDatesPort {
+public class ReservationQueryPersistenceAdapter implements ReadReservedDatesPort {
 
     private final ReservationQueryRepository reservationQueryRepository;
 
     @Override
-    public List<ReservedDateRangeView> loadReservedDates(Long accommodationId) {
+    public List<ReservedDateRangeView> getByAccommodationId(Long accommodationId) {
         return reservationQueryRepository.findReservedDatesByAccommodationId(accommodationId)
                                          .stream()
                                          .map(row -> new ReservedDateRangeView(

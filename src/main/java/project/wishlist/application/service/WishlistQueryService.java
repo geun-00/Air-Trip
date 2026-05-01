@@ -3,7 +3,7 @@ package project.wishlist.application.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.accommodation.application.out.query.LoadAccommodationPort;
+import project.accommodation.application.out.query.ReadAccommodationPort;
 import project.wishlist.application.in.query.GetWishlistDetailsQueryUseCase;
 import project.wishlist.application.in.query.GetWishlistsQueryUseCase;
 import project.wishlist.application.in.query.model.WishlistDetailView;
@@ -24,7 +24,7 @@ public class WishlistQueryService implements GetWishlistDetailsQueryUseCase,
 
     private final LoadWishlistsPort loadWishlistsPort;
     private final LoadWishlistDetailsPort loadWishlistDetailsPort;
-    private final LoadAccommodationPort loadAccommodationPort;
+    private final ReadAccommodationPort readAccommodationPort;
 
     @Override
     public List<WishlistDetailView> getWishlistDetails(Long wishlistId, Long memberId) {
@@ -34,7 +34,7 @@ public class WishlistQueryService implements GetWishlistDetailsQueryUseCase,
     @Override
     public List<WishlistView> getWishlists(Long memberId) {
         List<WishlistSummaryView> wishlists = loadWishlistsPort.loadWishlists(memberId);
-        Map<Long, String> thumbnailUrls = loadAccommodationPort.loadThumbnailUrls(recentAccommodationIds(wishlists));
+        Map<Long, String> thumbnailUrls = readAccommodationPort.getThumbnailUrlsByIds(recentAccommodationIds(wishlists));
 
         return wishlists.stream()
                         .map(wishlist -> new WishlistView(

@@ -6,9 +6,7 @@ import project.accommodation.adapter.out.persistence.model.AmenityDataRow;
 import project.accommodation.adapter.out.persistence.model.DetailAccommodationRow;
 import project.accommodation.adapter.out.persistence.model.ImageDataRow;
 import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
-import project.accommodation.application.in.query.model.DetailImageView;
-import project.accommodation.application.in.query.model.DetailReviewView;
-import project.accommodation.application.out.query.LoadAccommodationCommonInfoSourcePort;
+import project.accommodation.application.out.query.ReadAccommodationCommonInfoSourcePort;
 import project.accommodation.domain.exception.AccommodationExceptions;
 import project.common.domain.StayDatePolicy;
 import project.review.adapter.out.persistence.ReviewQueryRepository;
@@ -19,17 +17,18 @@ import java.util.Map;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
+import static project.accommodation.adapter.out.persistence.AccommodationCommonInfoViewMapper.toView;
 
 @Repository
 @RequiredArgsConstructor
-public class AccommodationCommonInfoPersistenceAdapter implements LoadAccommodationCommonInfoSourcePort {
+public class AccommodationCommonInfoPersistenceAdapter implements ReadAccommodationCommonInfoSourcePort {
 
     private final ReviewQueryRepository reviewQueryRepository;
     private final AccommodationRepository accommodationRepository;
     private final AccommodationQueryRepository accommodationQueryRepository;
 
     @Override
-    public AccommodationCommonInfoView loadAccommodationCommonInfo(Long accommodationId, StayDatePolicy stayDatePolicy) {
+    public AccommodationCommonInfoView getByIdAndStayDatePolicy(Long accommodationId, StayDatePolicy stayDatePolicy) {
         DetailAccommodationRow detail = accommodationQueryRepository.findAccommodation(accommodationId, null, stayDatePolicy)
                                                                     .orElseThrow(() -> AccommodationExceptions.notFoundById(accommodationId));
         List<String> amenities = accommodationRepository.findAmenitiesByAccommodationId(accommodationId).stream()
@@ -41,9 +40,8 @@ public class AccommodationCommonInfoPersistenceAdapter implements LoadAccommodat
         return toView(detail, amenities, images, reviews);
     }
 
-
     @Override
-    public Map<Long, AccommodationCommonInfoView> loadAccommodationCommonInfos(List<Long> accommodationIds, StayDatePolicy stayDatePolicy) {
+    public Map<Long, AccommodationCommonInfoView> getAllByIdsAndStayDatePolicy(List<Long> accommodationIds, StayDatePolicy stayDatePolicy) {
         Map<Long, DetailAccommodationRow> detailMap = accommodationQueryRepository.findAccommodations(accommodationIds, stayDatePolicy)
                                                                                   .stream()
                                                                                   .collect(toMap(
@@ -77,62 +75,5 @@ public class AccommodationCommonInfoPersistenceAdapter implements LoadAccommodat
                                                reviewsMap.getOrDefault(id, List.of())
                                        )
                                ));
-    }
-
-    private AccommodationCommonInfoView toView(
-            DetailAccommodationRow detail,
-            List<String> amenities,
-            List<ImageDataRow> images,
-            List<DetailReviewRow> reviews
-    ) {
-        String thumbnail = getThumbnail(images);
-        List<String> others = getOtherImages(images);
-
-        return new AccommodationCommonInfoView(
-                detail.accommodationId(),
-                detail.title(),
-                detail.capacity().value(),
-                detail.address(),
-                detail.mapX(),
-                detail.mapY(),
-                detail.checkIn(),
-                detail.checkOut(),
-                detail.description(),
-                detail.number(),
-                detail.refundRegulation(),
-                detail.price(),
-                detail.avgRate(),
-                new DetailImageView(thumbnail, others), amenities,
-                toView(reviews)
-        );
-    }
-
-    private String getThumbnail(List<ImageDataRow> images) {
-        return images.stream()
-                     .filter(ImageDataRow::getThumbnail)
-                     .map(ImageDataRow::getImageUrl)
-                     .findFirst()
-                     .orElse(null);
-    }
-
-    private List<String> getOtherImages(List<ImageDataRow> images) {
-        return images.stream()
-                     .filter(row -> !row.getThumbnail())
-                     .map(ImageDataRow::getImageUrl)
-                     .toList();
-    }
-
-    private List<DetailReviewView> toView(List<DetailReviewRow> reviews) {
-        return reviews.stream()
-                      .map(row -> new DetailReviewView(
-                              row.memberId(),
-                              row.memberName(),
-                              row.profileUrl(),
-                              row.memberCreatedDate(),
-                              row.reviewCreatedDate(),
-                              row.rating().value(),
-                              row.content()
-                      ))
-                      .toList();
     }
 }

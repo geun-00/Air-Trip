@@ -5,8 +5,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
 import project.accommodation.application.out.command.EvictAccommodationCommonInfoPort;
-import project.accommodation.application.out.query.LoadAccommodationCommonInfoPort;
-import project.accommodation.application.out.query.LoadAccommodationCommonInfoSourcePort;
+import project.accommodation.application.out.query.ReadAccommodationCommonInfoPort;
+import project.accommodation.application.out.query.ReadAccommodationCommonInfoSourcePort;
 import project.infrastructure.time.StayDatePolicyProvider;
 
 import java.time.Duration;
@@ -21,15 +21,15 @@ import static java.util.stream.Collectors.toMap;
 
 @Repository
 @RequiredArgsConstructor
-public class AccommodationCommonInfoCacheAdapter implements LoadAccommodationCommonInfoPort,
+public class AccommodationCommonInfoCacheAdapter implements ReadAccommodationCommonInfoPort,
                                                             EvictAccommodationCommonInfoPort {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final StayDatePolicyProvider stayDatePolicyProvider;
-    private final LoadAccommodationCommonInfoSourcePort loadAccommodationCommonInfoSourcePort;
+    private final ReadAccommodationCommonInfoSourcePort readAccommodationCommonInfoSourcePort;
 
     @Override
-    public AccommodationCommonInfoView loadAccommodationCommonInfo(Long accommodationId) {
+    public AccommodationCommonInfoView getById(Long accommodationId) {
         String key = buildKey(accommodationId);
 
         Object cached = redisTemplate.opsForValue().get(key);
@@ -37,7 +37,7 @@ public class AccommodationCommonInfoCacheAdapter implements LoadAccommodationCom
             return (AccommodationCommonInfoView) cached;
         }
 
-        AccommodationCommonInfoView commonInfo = loadAccommodationCommonInfoSourcePort.loadAccommodationCommonInfo(
+        AccommodationCommonInfoView commonInfo = readAccommodationCommonInfoSourcePort.getByIdAndStayDatePolicy(
                 accommodationId,
                 stayDatePolicyProvider.todayStayDatePolicy()
         );
@@ -49,7 +49,7 @@ public class AccommodationCommonInfoCacheAdapter implements LoadAccommodationCom
     }
 
     @Override
-    public Map<Long, AccommodationCommonInfoView> loadAccommodationCommonInfos(List<Long> accommodationIds) {
+    public Map<Long, AccommodationCommonInfoView> getAllByIds(List<Long> accommodationIds) {
         List<String> keys = accommodationIds.stream()
                                             .map(this::buildKey)
                                             .toList();
@@ -72,7 +72,7 @@ public class AccommodationCommonInfoCacheAdapter implements LoadAccommodationCom
 
         if (!missedIds.isEmpty()) {
             Map<Long, AccommodationCommonInfoView> fetched =
-                    loadAccommodationCommonInfoSourcePort.loadAccommodationCommonInfos(
+                    readAccommodationCommonInfoSourcePort.getAllByIdsAndStayDatePolicy(
                             missedIds,
                             stayDatePolicyProvider.todayStayDatePolicy()
                     );
@@ -87,7 +87,7 @@ public class AccommodationCommonInfoCacheAdapter implements LoadAccommodationCom
     }
 
     @Override
-    public void evictAccommodationCommonInfo(Long accommodationId) {
+    public void evictByAccommodationId(Long accommodationId) {
         redisTemplate.delete(buildKey(accommodationId));
     }
 

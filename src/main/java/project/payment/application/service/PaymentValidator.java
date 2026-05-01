@@ -3,7 +3,7 @@ package project.payment.application.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.accommodation.application.out.query.LoadAccommodationPort;
+import project.accommodation.application.out.query.ReadAccommodationPort;
 import project.accommodation.domain.Accommodation;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
@@ -18,14 +18,14 @@ public class PaymentValidator {
 
     private final LoadTempPaymentPort loadTempPaymentPort;
     private final LoadReservationPort loadReservationPort;
-    private final LoadAccommodationPort loadAccommodationPort;
+    private final ReadAccommodationPort readAccommodationPort;
 
     @Transactional(readOnly = true)
     public void validate(ConfirmPaymentCommand command, Long memberId) {
         verifyTempPayment(command.orderId(), command.amount());
 
         Reservation reservation = loadReservationPort.loadOwnerReservation(command.reservationId(), memberId);
-        Accommodation accommodation = loadAccommodationPort.loadAccommodation(reservation.getAccommodationId());
+        Accommodation accommodation = readAccommodationPort.getById(reservation.getAccommodationId());
 
         if (loadReservationPort.existsConfirmedReservation(
                 accommodation.getId(),

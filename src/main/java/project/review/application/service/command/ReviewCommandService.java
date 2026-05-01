@@ -45,7 +45,7 @@ public class ReviewCommandService implements CreateReviewUseCase,
                 command.content()
         ));
 
-        evictAccommodationCommonInfoPort.evictAccommodationCommonInfo(reservation.getAccommodationId());
+        evictAccommodationCommonInfoPort.evictByAccommodationId(reservation.getAccommodationId());
     }
 
     @Override
@@ -66,6 +66,6 @@ public class ReviewCommandService implements CreateReviewUseCase,
 
     private void evictAccommodationCommonInfo(Long reservationId) {
         Reservation reservation = loadReservationPort.loadReservation(reservationId);
-        evictAccommodationCommonInfoPort.evictAccommodationCommonInfo(reservation.getAccommodationId());
+        evictAccommodationCommonInfoPort.evictByAccommodationId(reservation.getAccommodationId());
     }
 }

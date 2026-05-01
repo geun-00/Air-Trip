@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.accommodation.application.in.query.model.AccommodationCommonInfoView;
-import project.accommodation.application.out.query.LoadAccommodationCommonInfoPort;
-import project.accommodation.application.out.query.LoadAccommodationWishlistPort;
+import project.accommodation.application.out.query.ReadAccommodationCommonInfoPort;
+import project.accommodation.application.out.query.ReadAccommodationWishlistPort;
 import project.accommodation.application.out.query.model.WishlistInfoView;
 import project.accommodation.application.service.model.AccommodationWishlistState;
 import project.history.application.in.query.GetRecentViewHistoryUseCase;
@@ -30,8 +30,8 @@ import static java.util.stream.Collectors.toMap;
 public class ViewedAccommodationQueryService implements ReadViewedAccommodationsUseCase {
 
     private final GetRecentViewHistoryUseCase getRecentViewHistoryUseCase;
-    private final LoadAccommodationWishlistPort loadAccommodationWishlistPort;
-    private final LoadAccommodationCommonInfoPort loadAccommodationCommonInfoPort;
+    private final ReadAccommodationWishlistPort readAccommodationWishlistPort;
+    private final ReadAccommodationCommonInfoPort readAccommodationCommonInfoPort;
 
     @Override
     public List<ViewHistoryGroupView> getRecentViewAccommodations(Long memberId) {
@@ -43,8 +43,8 @@ public class ViewedAccommodationQueryService implements ReadViewedAccommodations
 
         List<Long> accommodationIds = extractIds(recentViewHistories);
         Map<Long, LocalDateTime> viewedAtMap = toViewedAtMap(recentViewHistories);
-        Map<Long, WishlistInfoView> wishlistMap = loadAccommodationWishlistPort.loadWishlistInfos(accommodationIds, memberId);
-        Map<Long, AccommodationCommonInfoView> commonInfoMap = loadAccommodationCommonInfoPort.loadAccommodationCommonInfos(accommodationIds);
+        Map<Long, WishlistInfoView> wishlistMap = readAccommodationWishlistPort.getAllByAccommodationIdsAndMemberId(accommodationIds, memberId);
+        Map<Long, AccommodationCommonInfoView> commonInfoMap = readAccommodationCommonInfoPort.getAllByIds(accommodationIds);
 
         List<ViewHistoryAccommodationView> recentViewAccommodations = accommodationIds.stream()
                                                                                       .map(accommodationId -> toView(

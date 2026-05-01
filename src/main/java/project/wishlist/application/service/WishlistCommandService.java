@@ -3,7 +3,7 @@ package project.wishlist.application.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.accommodation.application.out.query.LoadAccommodationPort;
+import project.accommodation.application.out.query.ReadAccommodationPort;
 import project.accommodation.domain.exception.AccommodationExceptions;
 import project.wishlist.application.in.command.AddAccommodationToWishlistUseCase;
 import project.wishlist.application.in.command.CreateWishlistUseCase;
@@ -35,7 +35,7 @@ public class WishlistCommandService implements CreateWishlistUseCase,
     private final LoadWishlistPort loadWishlistPort;
     private final SaveWishlistPort saveWishlistPort;
     private final DeleteWishlistPort deleteWishlistPort;
-    private final LoadAccommodationPort loadAccommodationPort;
+    private final ReadAccommodationPort readAccommodationPort;
 
     @Override
     public CreateWishlistResult createWishlist(CreateWishlistCommand command) {
@@ -62,7 +62,7 @@ public class WishlistCommandService implements CreateWishlistUseCase,
     }
 
     private void validateAccommodationExists(Long accommodationId) {
-        if (!loadAccommodationPort.existsAccommodation(accommodationId)) {
+        if (!readAccommodationPort.existsById(accommodationId)) {
             throw AccommodationExceptions.notFoundById(accommodationId);
         }
     }
