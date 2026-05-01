@@ -1,4 +1,4 @@
-package project.member.adapter.out.event;
+package project.member.adapter.in.event;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;

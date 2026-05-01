@@ -3,13 +3,13 @@ package project.member.application.out.command;
 import project.member.domain.Member;
 import project.member.domain.SocialType;
 
-public interface LoadMemberPort {
+public interface ReadMemberPort {
 
-    Member loadById(Long memberId);
+    Member getById(Long memberId);
 
-    Member loadByEmail(String email);
+    Member getByEmail(String email);
 
-    String loadMemberName(Long memberId);
+    String getNameById(Long memberId);
 
     boolean existsByEmail(String email);
 

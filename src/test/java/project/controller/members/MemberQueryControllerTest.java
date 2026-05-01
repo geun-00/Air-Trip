@@ -6,15 +6,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import project.common.adapter.in.web.response.PageResponse;
 import project.controller.RestDocsTestSupport;
 import project.member.adapter.in.web.MemberQueryController;
 import project.member.adapter.in.web.response.DefaultProfileResponse;
 import project.member.adapter.in.web.response.TripHistoryResponse;
-import project.member.application.in.query.GetMyProfileQueryUseCase;
-import project.member.application.in.query.GetMyTripsHistoryQueryUseCase;
-import project.member.application.in.query.GetRecentViewAccommodationsQueryUseCase;
-import project.member.application.in.query.SearchMembersByNameQueryUseCase;
+import project.member.application.in.query.ReadMemberProfileUseCase;
+import project.member.application.in.query.ReadViewedAccommodationsUseCase;
+import project.member.application.in.query.SearchMembersUseCase;
 import project.member.application.in.query.model.ChatMemberSearchView;
 import project.member.application.in.query.model.ChatMembersSearchView;
 import project.member.application.in.query.model.DefaultProfileView;
@@ -55,13 +53,11 @@ class MemberQueryControllerTest extends RestDocsTestSupport {
     private static final String MEMBER_API_TAG = "Member API";
 
     @MockitoBean
-    GetMyProfileQueryUseCase getMyProfileQueryUseCase;
+    ReadMemberProfileUseCase readMemberProfileUseCase;
     @MockitoBean
-    SearchMembersByNameQueryUseCase searchMembersByNameQueryUseCase;
+    SearchMembersUseCase searchMembersUseCase;
     @MockitoBean
-    GetMyTripsHistoryQueryUseCase getMyTripsHistoryQueryUseCase;
-    @MockitoBean
-    GetRecentViewAccommodationsQueryUseCase getRecentViewAccommodationsQueryUseCase;
+    ReadViewedAccommodationsUseCase readViewedAccommodationsUseCase;
 
     @Test
     @DisplayName("내 기본 정보 조회")
@@ -75,7 +71,7 @@ class MemberQueryControllerTest extends RestDocsTestSupport {
                 profile.aboutMe(),
                 profile.isEmailVerified()
         );
-        given(getMyProfileQueryUseCase.getMyProfile(anyLong())).willReturn(profile);
+        given(readMemberProfileUseCase.getMyProfile(anyLong())).willReturn(profile);
 
         mockMvc.perform(get("/api/members/me")
                        .header(AUTHORIZATION, "Bearer {access-token}")
@@ -130,7 +126,7 @@ class MemberQueryControllerTest extends RestDocsTestSupport {
                 new ChatMemberSearchView(2L, "kim-2", now.minusDays(6), "https://example-b.com"),
                 new ChatMemberSearchView(3L, "kim-3", now.minusDays(7), "https://example-c.com")
         );
-        given(searchMembersByNameQueryUseCase.findMembersByName(anyString())).willReturn(new ChatMembersSearchView(members));
+        given(searchMembersUseCase.findMembersByName(anyString())).willReturn(new ChatMembersSearchView(members));
 
         mockMvc.perform(get("/api/members/search")
                        .param("name", "kim"))
@@ -183,12 +179,12 @@ class MemberQueryControllerTest extends RestDocsTestSupport {
                 new TripHistoryResponse(2L, 2L, "https://example-b.com", "title-B", now.minusDays(10), now.minusDays(9), false),
                 new TripHistoryResponse(3L, 3L, "https://example-c.com", "title-C", now.minusDays(7), now.minusDays(4), true)
         );
-        PageResponse<TripHistoryView> response = PageResponse.from(new PageImpl<>(
+        PageImpl<TripHistoryView> response = new PageImpl<>(
                 tripHistories,
                 PageRequest.of(0, 10),
                 dtos.size()
-        ));
-        given(getMyTripsHistoryQueryUseCase.getTripsHistory(anyLong(), any())).willReturn(response);
+        );
+        given(readMemberProfileUseCase.getTripsHistory(anyLong(), any())).willReturn(response);
 
         mockMvc.perform(get("/api/members/me/trips/past")
                        .header(AUTHORIZATION, "Bearer {access-token}")
@@ -280,7 +276,7 @@ class MemberQueryControllerTest extends RestDocsTestSupport {
         List<ViewHistoryAccommodationView> yesterdays = List.of(new ViewHistoryAccommodationView(yesterday.minusHours(1), 4L, "호텔D", 4.0, "https://example.com/d.jpg", false, null, null), new ViewHistoryAccommodationView(yesterday.minusHours(2), 5L, "호텔E", 3.9, "https://example.com/e.jpg", true, 5L, "my-wishlist-5"));
 
         List<ViewHistoryGroupView> result = List.of(new ViewHistoryGroupView(today.toLocalDate(), todays), new ViewHistoryGroupView(yesterday.toLocalDate(), yesterdays));
-        given(getRecentViewAccommodationsQueryUseCase.getRecentViewAccommodations(any())).willReturn(result);
+        given(readViewedAccommodationsUseCase.getRecentViewAccommodations(any())).willReturn(result);
 
         //when
         //then

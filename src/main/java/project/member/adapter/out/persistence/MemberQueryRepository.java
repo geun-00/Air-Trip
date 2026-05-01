@@ -56,7 +56,7 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
                 .fetch();
     }
 
-    // TODO : Mybatis 마이그레이션 가능
+    // Mybatis 마이그레이션 가능
     private BooleanExpression memberNameContains(String name) {
         return Expressions.stringTemplate("cast({0} as string)", member.name)
                           .contains(name);

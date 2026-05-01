@@ -8,7 +8,7 @@ import project.member.application.out.command.ManageMemberProfileImagePort;
 
 @Component
 @RequiredArgsConstructor
-public class ManageMemberProfileImageAdapter implements ManageMemberProfileImagePort {
+public class MemberProfileImageStorageAdapter implements ManageMemberProfileImagePort {
 
     private final S3Uploader s3Uploader;
 

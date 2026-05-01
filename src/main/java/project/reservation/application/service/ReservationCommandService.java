@@ -7,7 +7,7 @@ import project.accommodation.application.out.query.LoadAccommodationPort;
 import project.accommodation.domain.Accommodation;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
-import project.member.application.out.command.LoadMemberPort;
+import project.member.application.out.command.ReadMemberPort;
 import project.member.domain.Member;
 import project.reservation.application.in.command.CreateReservationUseCase;
 import project.reservation.application.in.command.model.CreateReservationCommand;
@@ -24,14 +24,14 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class ReservationCommandService implements CreateReservationUseCase {
 
-    private final LoadMemberPort loadMemberPort;
+    private final ReadMemberPort readMemberPort;
     private final SaveReservationPort saveReservationPort;
     private final LoadReservationPort loadReservationPort;
     private final LoadAccommodationPort loadAccommodationPort;
 
     @Override
     public CreateReservationResult createReservation(CreateReservationCommand command) {
-        Member member = loadMemberPort.loadById(command.memberId());
+        Member member = readMemberPort.getById(command.memberId());
         member.validateEmailVerified();
 
         Accommodation accommodation = loadAccommodationPort.loadAccommodation(command.accommodationId());

@@ -16,14 +16,14 @@ import project.chat.application.out.command.ChatRoomStatePort;
 import project.chat.application.out.command.LoadChatRoomPort;
 import project.chat.application.out.query.model.ChatRoomInfoView;
 import project.chat.domain.ChatRoom;
-import project.member.application.out.command.LoadMemberPort;
+import project.member.application.out.command.ReadMemberPort;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class ChatRoomCommandService implements UpdateChatRoomNameUseCase, LeaveChatRoomUseCase, MarkChatRoomAsReadUseCase {
 
-    private final LoadMemberPort loadMemberPort;
+    private final ReadMemberPort readMemberPort;
     private final LoadChatRoomPort loadChatRoomPort;
     private final ChatRoomStatePort chatRoomStatePort;
     private final ApplicationEventPublisher eventPublisher;
@@ -61,7 +61,7 @@ public class ChatRoomCommandService implements UpdateChatRoomNameUseCase, LeaveC
         updateLastReadMessage(command.roomId(), chatRoom, command.memberId());
         chatRoomStatePort.removeRoomMember(command.roomId(), command.memberId());
 
-        String memberName = loadMemberPort.loadMemberName(command.memberId());
+        String memberName = readMemberPort.getNameById(command.memberId());
 
         eventPublisher.publishEvent(new ChatLeaveEvent(memberName, command.roomId()));
     }

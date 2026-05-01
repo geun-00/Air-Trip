@@ -9,7 +9,7 @@ import project.chat.application.out.command.ChatRoomStatePort;
 import project.chat.application.out.command.model.ChatMessagePayload;
 import project.chat.application.service.ChatRoomParticipationChecker;
 import project.chat.domain.exception.ChatExceptions;
-import project.member.application.out.command.LoadMemberPort;
+import project.member.application.out.command.ReadMemberPort;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ChatMessageCommandService implements SendChatMessageUseCase {
 
-    private final LoadMemberPort loadMemberPort;
+    private final ReadMemberPort readMemberPort;
     private final ChatRoomStatePort chatRoomStatePort;
     private final ChatMessageDeliveryPort chatMessageDeliveryPort;
     private final ChatRoomParticipationChecker chatRoomParticipationChecker;
@@ -28,7 +28,7 @@ public class ChatMessageCommandService implements SendChatMessageUseCase {
     public void sendMessage(SendChatMessageCommand command) {
         validateMessageDelivery(command.roomId(), command.senderId());
 
-        String senderName = loadMemberPort.loadMemberName(command.senderId());
+        String senderName = readMemberPort.getNameById(command.senderId());
 
         ChatMessagePayload message = new ChatMessagePayload(
                 UUID.randomUUID().toString(),
