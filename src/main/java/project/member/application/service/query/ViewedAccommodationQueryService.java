@@ -47,22 +47,12 @@ public class ViewedAccommodationQueryService implements ReadViewedAccommodations
         Map<Long, AccommodationCommonInfoView> commonInfoMap = loadAccommodationCommonInfoPort.loadAccommodationCommonInfos(accommodationIds);
 
         List<ViewHistoryAccommodationView> recentViewAccommodations = accommodationIds.stream()
-                                                                                      .map(accommodationId -> {
-                                                                                          LocalDateTime viewedAt = viewedAtMap.get(accommodationId);
-                                                                                          AccommodationWishlistState wishlistState = AccommodationWishlistState.from(wishlistMap.get(accommodationId));
-                                                                                          AccommodationCommonInfoView commonInfo = commonInfoMap.get(accommodationId);
-
-                                                                                          return new ViewHistoryAccommodationView(
-                                                                                                  viewedAt,
-                                                                                                  accommodationId,
-                                                                                                  commonInfo.getTitle(),
-                                                                                                  commonInfo.getAvgRate(),
-                                                                                                  commonInfo.getImages().thumbnail(),
-                                                                                                  wishlistState.isInWishlist(),
-                                                                                                  wishlistState.wishlistId(),
-                                                                                                  wishlistState.wishlistName()
-                                                                                          );
-                                                                                      })
+                                                                                      .map(accommodationId -> toView(
+                                                                                              accommodationId,
+                                                                                              viewedAtMap.get(accommodationId),
+                                                                                              wishlistMap.get(accommodationId),
+                                                                                              commonInfoMap.get(accommodationId)
+                                                                                      ))
                                                                                       .toList();
         return groupByViewedDate(recentViewAccommodations);
     }
@@ -81,6 +71,25 @@ public class ViewedAccommodationQueryService implements ReadViewedAccommodations
                                           (first, second) -> first,
                                           LinkedHashMap::new
                                   ));
+    }
+
+    private ViewHistoryAccommodationView toView(
+            Long accommodationId,
+            LocalDateTime viewedAt,
+            WishlistInfoView wishlistInfo,
+            AccommodationCommonInfoView commonInfo
+    ) {
+        AccommodationWishlistState wishlistState = AccommodationWishlistState.from(wishlistInfo);
+        return new ViewHistoryAccommodationView(
+                viewedAt,
+                accommodationId,
+                commonInfo.getTitle(),
+                commonInfo.getAvgRate(),
+                commonInfo.getImages().thumbnail(),
+                wishlistState.isInWishlist(),
+                wishlistState.wishlistId(),
+                wishlistState.wishlistName()
+        );
     }
 
     private List<ViewHistoryGroupView> groupByViewedDate(List<ViewHistoryAccommodationView> recentViewAccommodations) {

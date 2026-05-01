@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import project.common.application.model.UploadFile;
 import project.common.exception.ImageUploadException;
 import project.member.application.in.command.UploadMemberProfileImageUseCase;
 import project.member.application.in.command.model.ProfileImageSource;
@@ -46,7 +47,7 @@ public class MemberProfileImageUploadService implements UploadMemberProfileImage
         }
 
         @Override
-        public String uploadFile(project.common.application.model.UploadFile file, String key) {
+        public String uploadFile(UploadFile file, String key) {
             return manageMemberProfileImagePort.upload(file, key);
         }
     }
