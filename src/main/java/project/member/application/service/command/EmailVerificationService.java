@@ -12,8 +12,7 @@ import org.springframework.retry.support.RetrySynchronizationManager;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.member.application.in.command.SendEmailVerificationUseCase;
-import project.member.application.in.command.VerifyEmailUseCase;
+import project.member.application.in.command.ManageEmailVerificationUseCase;
 import project.member.application.out.command.LoadMemberPort;
 import project.member.application.out.command.ManageEmailVerificationTokenPort;
 import project.member.application.out.command.SaveMemberPort;
@@ -26,7 +25,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class EmailVerificationService implements SendEmailVerificationUseCase, VerifyEmailUseCase {
+public class EmailVerificationService implements ManageEmailVerificationUseCase {
 
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;

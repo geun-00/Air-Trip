@@ -9,8 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import project.auth.adapter.in.web.support.CurrentMemberId;
-import project.member.application.in.command.SendEmailVerificationUseCase;
-import project.member.application.in.command.VerifyEmailUseCase;
+import project.member.application.in.command.ManageEmailVerificationUseCase;
 
 import java.net.URI;
 
@@ -19,19 +18,18 @@ import java.net.URI;
 @RequestMapping("/api/members")
 public class EmailVerificationController {
 
-    private final VerifyEmailUseCase verifyEmailUseCase;
-    private final SendEmailVerificationUseCase sendEmailVerificationUseCase;
+    private final ManageEmailVerificationUseCase manageEmailVerificationUseCase;
 
     @PostMapping("/me/email-verification")
     public ResponseEntity<Void> sendEmail(@CurrentMemberId Long memberId) {
-        sendEmailVerificationUseCase.sendEmail(memberId);
+        manageEmailVerificationUseCase.sendEmail(memberId);
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/email-verification")
     public ResponseEntity<Void> verifyEmail(@RequestParam("token") String token) {
-        String redirectUrl = verifyEmailUseCase.verifyToken(token);
+        String redirectUrl = manageEmailVerificationUseCase.verifyToken(token);
 
         return ResponseEntity.status(HttpStatus.FOUND)
                              .location(URI.create(redirectUrl))

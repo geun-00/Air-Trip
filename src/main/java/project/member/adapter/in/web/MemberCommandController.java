@@ -17,8 +17,7 @@ import project.common.exception.ImageUploadException;
 import project.member.adapter.in.web.request.EditProfileRequest;
 import project.member.adapter.in.web.request.RegisterMemberRequest;
 import project.member.adapter.in.web.response.EditProfileResponse;
-import project.member.application.in.command.EditMyProfileUseCase;
-import project.member.application.in.command.RegisterMemberUseCase;
+import project.member.application.in.command.ManageMemberUseCase;
 import project.member.application.in.command.model.EditMyProfileCommand;
 import project.member.application.in.command.model.EditProfileResult;
 import project.member.application.in.command.model.ProfileImageChange;
@@ -31,12 +30,11 @@ import java.io.IOException;
 @RequestMapping("/api/members")
 public class MemberCommandController {
 
-    private final EditMyProfileUseCase editMyProfileUseCase;
-    private final RegisterMemberUseCase registerMemberUseCase;
+    private final ManageMemberUseCase manageMemberUseCase;
 
     @PostMapping
     public ResponseEntity<Void> signup(@Valid @RequestBody RegisterMemberRequest request) {
-        registerMemberUseCase.register(new RegisterMemberCommand(
+        manageMemberUseCase.register(new RegisterMemberCommand(
                 request.name(),
                 request.email(),
                 request.number(),
@@ -53,7 +51,7 @@ public class MemberCommandController {
             @RequestPart(value = "profileImage", required = false) MultipartFile imageFile,
             @Valid @RequestPart("editProfileRequest") EditProfileRequest request
     ) {
-        EditProfileResult result = editMyProfileUseCase.editMyProfile(new EditMyProfileCommand(
+        EditProfileResult result = manageMemberUseCase.editMyProfile(new EditMyProfileCommand(
                 memberId,
                 toProfileImageChange(request.isProfileImageChanged(), imageFile),
                 request.name(),

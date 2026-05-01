@@ -8,9 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import project.common.exception.BusinessException;
 import project.common.exception.ErrorCode;
 import project.member.application.event.MemberImageUploadEvent;
-import project.member.application.in.command.EditMyProfileUseCase;
+import project.member.application.in.command.ManageMemberUseCase;
 import project.member.application.in.command.RegisterAdminMemberUseCase;
-import project.member.application.in.command.RegisterMemberUseCase;
 import project.member.application.in.command.RegisterSocialMemberUseCase;
 import project.member.application.in.command.model.EditMyProfileCommand;
 import project.member.application.in.command.model.EditProfileResult;
@@ -28,10 +27,9 @@ import project.member.domain.support.SocialMemberCreateSpec;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class MemberCommandService implements RegisterMemberUseCase,
+public class MemberCommandService implements ManageMemberUseCase,
                                              RegisterAdminMemberUseCase,
-                                             RegisterSocialMemberUseCase,
-                                             EditMyProfileUseCase {
+                                             RegisterSocialMemberUseCase {
 
     private final SaveMemberPort saveMemberPort;
     private final LoadMemberPort loadMemberPort;

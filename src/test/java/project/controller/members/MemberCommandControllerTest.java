@@ -11,9 +11,8 @@ import project.controller.RestDocsTestSupport;
 import project.member.adapter.in.web.MemberCommandController;
 import project.member.adapter.in.web.request.EditProfileRequest;
 import project.member.adapter.in.web.request.RegisterMemberRequest;
-import project.member.application.in.command.RegisterMemberUseCase;
+import project.member.application.in.command.ManageMemberUseCase;
 import project.member.application.in.command.model.EditProfileResult;
-import project.member.application.in.command.EditMyProfileUseCase;
 import project.security.WithMockMember;
 
 import java.time.LocalDate;
@@ -44,10 +43,7 @@ class MemberCommandControllerTest extends RestDocsTestSupport {
     private static final String MEMBER_API_TAG = "Member API";
 
     @MockitoBean
-    EditMyProfileUseCase editMyProfileUseCase;
-
-    @MockitoBean
-    RegisterMemberUseCase registerMemberUseCase;
+    ManageMemberUseCase manageMemberUseCase;
 
     @Test
     @DisplayName("REST 회원 가입")
@@ -97,7 +93,7 @@ class MemberCommandControllerTest extends RestDocsTestSupport {
         MockMultipartFile editProfileRequest = new MockMultipartFile("editProfileRequest", "test-request", MediaType.APPLICATION_JSON_VALUE, creatJson(reqDto).getBytes());
 
         EditProfileResult result = new EditProfileResult("Antonio Cui", "https://example.com/a.jpg", "Accumsan luctus fringilla cubilia tempor auctor ullamcorper.");
-        given(editMyProfileUseCase.editMyProfile(any())).willReturn(result);
+        given(manageMemberUseCase.editMyProfile(any())).willReturn(result);
 
         mockMvc.perform(multipart("/api/members/me")
                        .file(imageFile)

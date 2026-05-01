@@ -6,8 +6,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import project.controller.RestDocsTestSupport;
 import project.member.adapter.in.web.EmailVerificationController;
-import project.member.application.in.command.SendEmailVerificationUseCase;
-import project.member.application.in.command.VerifyEmailUseCase;
+import project.member.application.in.command.ManageEmailVerificationUseCase;
 import project.security.WithMockMember;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
@@ -31,8 +30,8 @@ class EmailVerificationControllerTest extends RestDocsTestSupport {
 
     private static final String MEMBER_API_TAG = "Member API";
 
-    @MockitoBean VerifyEmailUseCase verifyEmailUseCase;
-    @MockitoBean SendEmailVerificationUseCase sendEmailVerificationUseCase;
+    @MockitoBean
+    ManageEmailVerificationUseCase manageEmailVerificationUseCase;
 
     @Test
     @DisplayName("이메일 인증 요청")
@@ -62,7 +61,7 @@ class EmailVerificationControllerTest extends RestDocsTestSupport {
     @DisplayName("이메일 인증 토큰 검증")
     void verifyEmail() throws Exception {
         String redirectUrl = "http://localhost:3000/users/profile?emailVerify=success";
-        given(verifyEmailUseCase.verifyToken(anyString())).willReturn(redirectUrl);
+        given(manageEmailVerificationUseCase.verifyToken(anyString())).willReturn(redirectUrl);
 
         mockMvc.perform(get("/api/members/email-verification")
                        .queryParam("token", "email-verification-token")

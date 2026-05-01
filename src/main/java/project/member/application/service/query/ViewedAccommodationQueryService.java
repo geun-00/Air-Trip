@@ -10,7 +10,7 @@ import project.accommodation.application.out.query.model.WishlistInfoView;
 import project.accommodation.application.service.model.AccommodationWishlistState;
 import project.history.application.in.query.GetRecentViewHistoryUseCase;
 import project.history.application.in.query.model.RecentViewHistoryView;
-import project.member.application.in.query.GetRecentViewAccommodationsQueryUseCase;
+import project.member.application.in.query.ReadViewedAccommodationsUseCase;
 import project.member.application.in.query.model.ViewHistoryAccommodationView;
 import project.member.application.in.query.model.ViewHistoryGroupView;
 
@@ -27,7 +27,7 @@ import static java.util.stream.Collectors.toMap;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class RecentViewAccommodationQueryService implements GetRecentViewAccommodationsQueryUseCase {
+public class ViewedAccommodationQueryService implements ReadViewedAccommodationsUseCase {
 
     private final GetRecentViewHistoryUseCase getRecentViewHistoryUseCase;
     private final LoadAccommodationWishlistPort loadAccommodationWishlistPort;

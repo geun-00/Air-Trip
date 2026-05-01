@@ -5,9 +5,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.common.adapter.in.web.response.PageResponse;
-import project.member.application.in.query.GetMyProfileQueryUseCase;
-import project.member.application.in.query.GetMyTripsHistoryQueryUseCase;
-import project.member.application.in.query.SearchMembersByNameQueryUseCase;
+import project.member.application.in.query.ReadMemberProfileUseCase;
+import project.member.application.in.query.SearchMembersUseCase;
 import project.member.application.in.query.model.ChatMembersSearchView;
 import project.member.application.in.query.model.DefaultProfileView;
 import project.member.application.in.query.model.TripHistoryView;
@@ -18,9 +17,8 @@ import project.member.application.out.query.SearchMembersPort;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class MemberQueryService implements GetMyProfileQueryUseCase,
-                                           SearchMembersByNameQueryUseCase,
-                                           GetMyTripsHistoryQueryUseCase {
+public class MemberQueryService implements ReadMemberProfileUseCase,
+                                           SearchMembersUseCase {
 
     private final SearchMembersPort searchMembersPort;
     private final GetMemberProfilePort getMemberProfilePort;
@@ -38,7 +36,6 @@ public class MemberQueryService implements GetMyProfileQueryUseCase,
 
     @Override
     public PageResponse<TripHistoryView> getTripsHistory(Long memberId, Pageable pageable) {
-        // TODO : Pageable 의존성 제거
         return getMemberTripsHistoryPort.getTripsHistory(memberId, pageable);
     }
 }
