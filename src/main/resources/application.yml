@@ -201,7 +201,7 @@ spring:
   ai:
     vectorstore:
       mariadb:
-        schema-name: airbnb_2m
+        initialize-schema: false
 
   mail:
     properties:
