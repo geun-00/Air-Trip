@@ -1,5 +1,5 @@
 # 첫 번째 스테이지: 빌드 스테이지
-FROM gradle:jdk17 AS builder
+FROM gradle:jdk21 AS builder
 
 # 작업 디렉토리 설정
 WORKDIR /app
@@ -19,7 +19,7 @@ RUN gradle copyOasToSwagger
 RUN gradle build --no-daemon -x test
 
 # 두 번째 스테이지: 실행 스테이지
-FROM eclipse-temurin:17-jdk-jammy
+FROM eclipse-temurin:21-jre-jammy
 
 # 작업 디렉토리 설정
 WORKDIR /app
