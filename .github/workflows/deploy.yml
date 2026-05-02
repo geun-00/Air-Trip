@@ -9,7 +9,7 @@ env:
   CONTAINER_1_NAME: app-container-1        # 슬롯1(고정 이름)
   CONTAINER_2_NAME: app-container-2        # 슬롯2(고정 이름)
   CONTAINER_PORT: 8081                     # 컨테이너 내부 포트(스프링부트)
-  EC2_INSTANCE_TAG_NAME: dev-ec2-1         # 배포 대상 EC2 Name 태그
+  EC2_INSTANCE_TAG_NAME: air-trip-ec2-1         # 배포 대상 EC2 Name 태그
   DOCKER_NETWORK: common                   # 도커 네트워크
 
 concurrency:
@@ -123,9 +123,16 @@ jobs:
         id: get_instance_id
         run: |
           INSTANCE_ID=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name,Values=dev-ec2-1" "Name=instance-state-name,Values=running" \
+            --filters "Name=tag:Name,Values=${EC2_INSTANCE_TAG_NAME}" "Name=instance-state-name,Values=running" \
             --query "Reservations[].Instances[].InstanceId" --output text)
+
+          if [[ -z "${INSTANCE_ID}" || "${INSTANCE_ID}" == "None" ]]; then
+            echo "No running EC2 instance found for Name tag: ${EC2_INSTANCE_TAG_NAME}" >&2
+            exit 1
+          fi
+
           echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
+          echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
 
       # 원격(SSM)으로 Blue/Green 스위치 수행
       - name: EC2에 명령어 실행 (SSM)
@@ -134,7 +141,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          instance-ids: ${{ env.INSTANCE_ID }}
+          instance-ids: ${{ steps.get_instance_id.outputs.instance_id }}
           working-directory: /
           comment: Deploy
           command: |
