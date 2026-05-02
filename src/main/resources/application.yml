@@ -198,6 +198,11 @@ spring:
       on-profile: prod
     import: optional:file:.env[.properties], classpath:chatbot-prompt.yml
 
+  ai:
+    vectorstore:
+      mariadb:
+        initialize-schema: false
+
   mail:
     properties:
       mail:
