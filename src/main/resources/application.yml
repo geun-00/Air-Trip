@@ -198,11 +198,6 @@ spring:
       on-profile: prod
     import: optional:file:.env[.properties], classpath:chatbot-prompt.yml
 
-  ai:
-    vectorstore:
-      mariadb:
-        schema-name: airbnb_2m
-
   mail:
     properties:
       mail:
