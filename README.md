@@ -1,7 +1,8 @@
-# 🏡 AirL&J 프로젝트
+# 🏡 Air-Trip 프로젝트
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/a5b1f580-65db-4914-b5b2-e3a2a4850d95" width="400">
+  <img width="450" src="https://github.com/user-attachments/assets/20c3ccc1-28fa-4bd0-8dd1-5b0916578ab5" />
+
 
 [![hits](https://myhits.vercel.app/api/hit/https%3A%2F%2Fgithub.com%2Fgeun-00%2FAirL-J?color=blue&label=hits&size=small)](https://myhits.vercel.app)
 
@@ -9,7 +10,7 @@
 </div>
 
 <img src="https://img.shields.io/badge/프로젝트 기간-2025.07~2025.12-green?style=flat&logo=&logoColor=white" />
-<img src="https://img.shields.io/badge/마지막 리드미 수정-2026.01.25-gold?style=flat&logo=&logoColor=white" />
+<img src="https://img.shields.io/badge/마지막 리드미 수정-2026.05.03-gold?style=flat&logo=&logoColor=white" />
 
 <div>
 </div>
@@ -21,7 +22,7 @@
 
 ## 🚀 프로젝트 소개
 
-- **AirL&J**은 Airbnb를 모티브로 개발한 **숙소 예약 플랫폼**입니다.
+- **Air-Trip**은 Airbnb를 모티브로 개발한 **숙소 예약 플랫폼**입니다.
 - OpenAPI 연동으로 확보한 **실제 숙소 데이터**를 기반으로 지역, 편의시설, 가격대별 상세 검색이 가능합니다.
 - **Toss Payments 간편 결제**로 안전하고 빠른 예약이 가능하며, **위시리스트 기능**으로 마음에 드는 숙소를 저장하고 비교할 수 있습니다.
 - **WebSocket + Redis Pub/Sub** 아키텍처로 실시간 채팅을 구현하였으며, **OpenAI API**를 활용한 AI 챗봇이 숙소를 추천해 줍니다.
@@ -87,7 +88,24 @@
 
 ### 🗺️ ERD
 
-<img width="2560" height="1382" alt="AirL J" src="https://github.com/user-attachments/assets/1f360b8e-86ec-4db6-8a28-ffd605be4910" />
+<img width="2207" height="1283" alt="Air-Trip ERD" src="https://github.com/user-attachments/assets/3655d34c-585a-4247-843b-232f2960a11f" />
+
+<br>
+
+| 애그리거트 루트 | 하위 애그리거트                                  |
+|----------|-------------------------------------------|
+| 회원       | 회원 상세                                     |
+| 숙소       | 숙소 상세, 숙소 가격, 숙소 이미지, 숙소 편의시설(연관 엔티티) |
+| 채팅방      | 채팅 참여자                                    |
+| 위시리스트    | 위시리스트 숙소(연관 엔티티)                      |
+| 채팅 메시지   | -                                         |
+| 후기       | -                                         |
+| 예약       | -                                         |
+| 결제       | -                                         |
+| 지역 코드    | -                                         |
+| 편의시설     | -                                         |
+
+> JPA 엔티티 설계 시 같은 애그리거트에 속하는 엔티티는 객체 직접 참조로 연관 관계를 맺고, 다른 애그리거트에 속하는 엔티티는 PK(ID) 간접 참조로만 연결하도록 설계했습니다.
 
 ### 🌐 인프라
 
