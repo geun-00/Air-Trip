@@ -4,10 +4,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -20,12 +19,12 @@ import lombok.NoArgsConstructor;
 class AccommodationDetail {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "accommodation_detail_id", nullable = false)
+    @Column(name = "accommodation_id", nullable = false)
     private Long id;
 
+    @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "accommodation_id", nullable = false, unique = true)
+    @JoinColumn(name = "accommodation_id", nullable = false)
     private Accommodation accommodation;
 
     @Column(name = "description", columnDefinition = "TEXT")
