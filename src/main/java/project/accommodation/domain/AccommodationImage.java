@@ -8,7 +8,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -19,8 +18,7 @@ import lombok.NoArgsConstructor;
 class AccommodationImage {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "accommodation_images_seq")
-    @SequenceGenerator(name = "accommodation_images_seq", sequenceName = "accommodation_images_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "accommodation_image_id", nullable = false)
     private Long id;
 

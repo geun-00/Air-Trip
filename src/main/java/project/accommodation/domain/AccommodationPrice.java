@@ -10,7 +10,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -23,8 +22,7 @@ import project.common.domain.Season;
 class AccommodationPrice {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "accommodation_prices_seq")
-    @SequenceGenerator(name = "accommodation_prices_seq", sequenceName = "accommodation_prices_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "accommodation_price_id", nullable = false)
     private Long id;
 

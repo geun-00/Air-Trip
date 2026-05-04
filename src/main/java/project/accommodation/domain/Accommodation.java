@@ -9,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -33,8 +32,7 @@ import java.util.Set;
 public class Accommodation extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "accommodations_seq")
-    @SequenceGenerator(name = "accommodations_seq", sequenceName = "accommodations_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "accommodation_id", nullable = false)
     private Long id;
 
