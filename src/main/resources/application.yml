@@ -220,7 +220,7 @@ spring:
     properties:
       hibernate:
         highlight_sql: false
-        generate_statistics: true
+        generate_statistics: false
 
   flyway:
     baseline-on-migrate: false
