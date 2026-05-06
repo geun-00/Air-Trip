@@ -2,5 +2,5 @@ package project.chatbot.adapter.in.web.request;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record ChatbotRequest(@NotBlank String message) {
+public record AskChatbotRequest(@NotBlank String message) {
 }

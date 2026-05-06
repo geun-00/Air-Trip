@@ -1,6 +1,6 @@
-package project.chatbot.adapter.out.ai;
+package project.chatbot.adapter.out.ai.model;
 
-public record RecommendedAccommodation(
+public record RecommendedAccommodationRow(
         Long id,
         String title,
         String price,

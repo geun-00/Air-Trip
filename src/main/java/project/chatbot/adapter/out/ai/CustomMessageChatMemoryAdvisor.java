@@ -8,9 +8,10 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.util.Assert;
-import project.chatbot.adapter.in.web.response.ChatbotHistoryDto;
-import project.chatbot.application.memory.ChatbotHistoryMemory;
-import project.chatbot.application.memory.InMemoryChatbotHistoryMemory;
+import project.chatbot.adapter.out.memory.InMemoryChatbotHistoryMemory;
+import project.chatbot.application.in.query.model.ChatbotMessageView;
+import project.chatbot.application.out.command.SaveChatbotHistoryPort;
+import project.chatbot.application.out.query.LoadChatbotHistoryPort;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
@@ -22,27 +23,37 @@ import java.util.Map;
 public class CustomMessageChatMemoryAdvisor implements BaseChatMemoryAdvisor {
 
     private final ChatMemory chatMemory;
-    private final ChatbotHistoryMemory chatbotHistoryMemory; // 추가
+    private final SaveChatbotHistoryPort saveChatbotHistoryPort;
+    private final LoadChatbotHistoryPort loadChatbotHistoryPort;
 
-    private final String defaultConversationId;
     private final int order;
     private final Scheduler scheduler;
+    private final String defaultConversationId;
 
-    private CustomMessageChatMemoryAdvisor(ChatMemory chatMemory, String defaultConversationId, int order,
-                                           Scheduler scheduler, ChatbotHistoryMemory chatbotHistoryMemory) {
+    private CustomMessageChatMemoryAdvisor(
+            ChatMemory chatMemory,
+            String defaultConversationId,
+            int order,
+            Scheduler scheduler,
+            SaveChatbotHistoryPort saveChatbotHistoryPort,
+            LoadChatbotHistoryPort loadChatbotHistoryPort
+    ) {
         Assert.notNull(chatMemory, "chatMemory cannot be null");
         Assert.hasText(defaultConversationId, "defaultConversationId cannot be null or empty");
         Assert.notNull(scheduler, "scheduler cannot be null");
-        Assert.notNull(chatbotHistoryMemory, "chatbotHistoryMemory cannot be null");
+        Assert.notNull(saveChatbotHistoryPort, "saveChatbotHistoryPort cannot be null");
+        Assert.notNull(loadChatbotHistoryPort, "loadChatbotHistoryPort cannot be null");
+
         this.chatMemory = chatMemory;
         this.defaultConversationId = defaultConversationId;
         this.order = order;
         this.scheduler = scheduler;
-        this.chatbotHistoryMemory = chatbotHistoryMemory;
+        this.saveChatbotHistoryPort = saveChatbotHistoryPort;
+        this.loadChatbotHistoryPort = loadChatbotHistoryPort;
     }
 
-    public List<ChatbotHistoryDto> getMessages(String conversationId) {
-        return chatbotHistoryMemory.getMessages(conversationId);
+    public List<ChatbotMessageView> getMessages(String conversationId) {
+        return loadChatbotHistoryPort.getMessages(conversationId);
     }
 
     @Override
@@ -77,8 +88,7 @@ public class CustomMessageChatMemoryAdvisor implements BaseChatMemoryAdvisor {
         UserMessage userMessage = processedChatClientRequest.prompt().getUserMessage();
         this.chatMemory.add(conversationId, userMessage);
 
-        // 추가
-        chatbotHistoryMemory.save(conversationId, userMessage, null);
+        saveChatbotHistoryPort.save(conversationId, userMessage, null);
 
         return processedChatClientRequest;
     }
@@ -99,14 +109,13 @@ public class CustomMessageChatMemoryAdvisor implements BaseChatMemoryAdvisor {
         // 추가
         Map<String, Object> context = chatClientResponse.context();
         Map<String, Object> metadata = (Map<String, Object>) context.get("metadata");
-        assistantMessages.forEach(assistantMessage -> chatbotHistoryMemory.save(conversationId, assistantMessage, metadata));
+        assistantMessages.forEach(assistantMessage -> saveChatbotHistoryPort.save(conversationId, assistantMessage, metadata));
 
         return chatClientResponse;
     }
 
     @Override
-    public Flux<ChatClientResponse> adviseStream(ChatClientRequest chatClientRequest,
-                                                 StreamAdvisorChain streamAdvisorChain) {
+    public Flux<ChatClientResponse> adviseStream(ChatClientRequest chatClientRequest, StreamAdvisorChain streamAdvisorChain) {
         // Get the scheduler from BaseAdvisor
         Scheduler scheduler = this.getScheduler();
 
@@ -126,13 +135,12 @@ public class CustomMessageChatMemoryAdvisor implements BaseChatMemoryAdvisor {
     public static final class Builder {
 
         private String conversationId = ChatMemory.DEFAULT_CONVERSATION_ID;
-
         private int order = Advisor.DEFAULT_CHAT_MEMORY_PRECEDENCE_ORDER;
-
         private Scheduler scheduler = BaseAdvisor.DEFAULT_SCHEDULER;
 
-        private ChatMemory chatMemory;
-        private ChatbotHistoryMemory chatbotHistoryMemory; // 추가
+        private final ChatMemory chatMemory;
+        private SaveChatbotHistoryPort saveChatbotHistoryPort;
+        private LoadChatbotHistoryPort loadChatbotHistoryPort;
 
         private Builder(ChatMemory chatMemory) {
             this.chatMemory = chatMemory;
@@ -165,9 +173,10 @@ public class CustomMessageChatMemoryAdvisor implements BaseChatMemoryAdvisor {
             return this;
         }
 
-        // 추가
-        public CustomMessageChatMemoryAdvisor.Builder chatbotHistoryMemory(ChatbotHistoryMemory chatbotHistoryMemory) {
-            this.chatbotHistoryMemory = chatbotHistoryMemory;
+        public CustomMessageChatMemoryAdvisor.Builder chatbotHistoryMemory(SaveChatbotHistoryPort saveChatbotHistoryPort,
+                                                                           LoadChatbotHistoryPort loadChatbotHistoryPort) {
+            this.saveChatbotHistoryPort = saveChatbotHistoryPort;
+            this.loadChatbotHistoryPort = loadChatbotHistoryPort;
             return this;
         }
 
@@ -177,11 +186,19 @@ public class CustomMessageChatMemoryAdvisor implements BaseChatMemoryAdvisor {
          * @return the advisor
          */
         public CustomMessageChatMemoryAdvisor build() {
-            // 추가
-            if (this.chatbotHistoryMemory == null) {
-                this.chatbotHistoryMemory = new InMemoryChatbotHistoryMemory();
+            if (this.saveChatbotHistoryPort == null || this.loadChatbotHistoryPort == null) {
+                InMemoryChatbotHistoryMemory inMemory = new InMemoryChatbotHistoryMemory();
+                this.saveChatbotHistoryPort = inMemory;
+                this.loadChatbotHistoryPort = inMemory;
             }
-            return new CustomMessageChatMemoryAdvisor(this.chatMemory, this.conversationId, this.order, this.scheduler, this.chatbotHistoryMemory);
+            return new CustomMessageChatMemoryAdvisor(
+                    this.chatMemory,
+                    this.conversationId,
+                    this.order,
+                    this.scheduler,
+                    this.saveChatbotHistoryPort,
+                    this.loadChatbotHistoryPort
+            );
         }
 
     }

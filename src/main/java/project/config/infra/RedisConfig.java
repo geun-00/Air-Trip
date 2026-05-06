@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -20,10 +22,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import project.chat.adapter.out.redis.RedisSubscriber;
+import project.common.adapter.out.persistence.repository.RedisPersistenceRepository;
 import project.notification.adapter.out.RedisNotificationSubscriber;
 
 import java.time.Duration;
@@ -32,12 +36,21 @@ import java.util.Map;
 
 @Configuration
 @EnableCaching
+@EnableRedisRepositories(
+        basePackages = "project",
+        includeFilters = @ComponentScan.Filter(
+                type = FilterType.ANNOTATION,
+                classes = RedisPersistenceRepository.class
+        )
+)
 public class RedisConfig {
 
     @Bean
-    public RedisConnectionFactory redisConnectionFactory(@Value("${spring.data.redis.host}") String host,
-                                                         @Value("${spring.data.redis.port}") int port,
-                                                         @Value("${spring.data.redis.password}") String password) {
+    public RedisConnectionFactory redisConnectionFactory(
+            @Value("${spring.data.redis.host}") String host,
+            @Value("${spring.data.redis.port}") int port,
+            @Value("${spring.data.redis.password}") String password
+    ) {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
         configuration.setHostName(host);
         configuration.setPort(port);
@@ -50,9 +63,7 @@ public class RedisConfig {
     public RedisCacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
         RedisCacheConfiguration redisCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
                                                                           .entryTtl(Duration.ofMinutes(10))
-                                                                          .serializeValuesWith(
-                                                                                  RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(redisObjMapper()))
-                                                                          );
+                                                                          .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(redisObjMapper())));
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
         cacheConfigurations.put("accCommonInfo", redisCacheConfig.entryTtl(Duration.ofMinutes(30)));
 
@@ -77,19 +88,20 @@ public class RedisConfig {
         PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
                                                                     .allowIfBaseType(Object.class)
                                                                     .build();
-        return new ObjectMapper()
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL)
-                .registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                                 .activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL)
+                                 .registerModule(new JavaTimeModule())
+                                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     @Bean
-    public RedisMessageListenerContainer redisMessageListenerContainer(RedisConnectionFactory connectionFactory,
-                                                                       MessageListenerAdapter chatListenerAdapter,
-                                                                       MessageListenerAdapter notificationListenerAdapter,
-                                                                       ChannelTopic chatTopic,
-                                                                       ChannelTopic notificationTopic) {
+    public RedisMessageListenerContainer redisMessageListenerContainer(
+            RedisConnectionFactory connectionFactory,
+            MessageListenerAdapter chatListenerAdapter,
+            MessageListenerAdapter notificationListenerAdapter,
+            ChannelTopic chatTopic,
+            ChannelTopic notificationTopic
+    ) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addMessageListener(chatListenerAdapter, chatTopic);

@@ -1,5 +1,6 @@
 package project.reservation.adapter.out.persistence;
 
+import project.common.adapter.out.persistence.repository.JpaPersistenceRepository;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -9,6 +10,7 @@ import project.reservation.domain.Reservation;
 
 import java.util.Optional;
 
+@JpaPersistenceRepository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

@@ -8,8 +8,8 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.chatbot.adapter.out.ai.embed.AccommodationEmbeddingDto;
-import project.chatbot.adapter.out.ai.embed.AmenitiesDto;
+import project.chatbot.adapter.out.ai.model.AccommodationEmbeddingRow;
+import project.chatbot.adapter.out.ai.model.AmenityRow;
 import project.common.domain.DayType;
 import project.common.domain.Season;
 
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class EmbeddingService {
 
     private final EntityManager em;
@@ -32,14 +32,14 @@ public class EmbeddingService {
     public void embedAccommodations(Pageable pageable) {
         List<Long> ids = getEmbeddingTargetIds(pageable);
 
-        List<AccommodationEmbeddingDto> embeddingDtos = getEmbeddingDtos(ids);
-        Map<Long, AccommodationEmbeddingDto> baseInfoMapping = collectBaseInfo(embeddingDtos);
+        List<AccommodationEmbeddingRow> embeddingRows = getEmbeddingRows(ids);
+        Map<Long, AccommodationEmbeddingRow> baseInfoMapping = collectBaseInfo(embeddingRows);
 
-        Map<Long, Map<Season, Map<DayType, Integer>>> priceInfo = collectMetadataPrices(embeddingDtos);
+        Map<Long, Map<Season, Map<DayType, Integer>>> priceInfo = collectMetadataPrices(embeddingRows);
 
-        List<AmenitiesDto> amenitiesDtos = getAmenitiesDtos(ids);
+        List<AmenityRow> amenityRows = getAmenityRows(ids);
 
-        Map<Long, List<String>> amenitiesMapping = collectEmbedAmenities(amenitiesDtos);
+        Map<Long, List<String>> amenitiesMapping = collectEmbedAmenities(amenityRows);
 
         List<Document> documents = new ArrayList<>();
         List<Long> successIds = new ArrayList<>();
@@ -47,12 +47,12 @@ public class EmbeddingService {
 
         for (Long id : ids) {
             try {
-                AccommodationEmbeddingDto dto = baseInfoMapping.get(id);
-                if (dto == null) continue;
+                AccommodationEmbeddingRow row = baseInfoMapping.get(id);
+                if (row == null) continue;
 
                 List<String> amenities = amenitiesMapping.getOrDefault(id, List.of());
 
-                Map<String, Object> metadata = getMetadata(id, priceInfo, dto);
+                Map<String, Object> metadata = getMetadata(id, priceInfo, row);
                 String priceRange = summarizePriceRange(metadata);
 
                 String content = String.format("""
@@ -62,11 +62,11 @@ public class EmbeddingService {
                                 가격대는 %s 수준입니다.
                                 주요 편의시설로는 %s 등이 있습니다.
                                 """,
-                        dto.title(),
-                        dto.getRegion(),
-                        dto.sigunguName(),
-                        dto.description(),
-                        dto.maxPeople(),
+                        row.title(),
+                        row.getRegion(),
+                        row.sigunguName(),
+                        row.description(),
+                        row.maxPeople(),
                         priceRange,
                         amenities.isEmpty() ? "별도 정보 없음" : String.join(", ", amenities)
                 );
@@ -117,9 +117,9 @@ public class EmbeddingService {
                  .getResultList();
     }
 
-    private List<AccommodationEmbeddingDto> getEmbeddingDtos(List<Long> ids) {
+    private List<AccommodationEmbeddingRow> getEmbeddingRows(List<Long> ids) {
         return em.createQuery("""
-                         SELECT new project.chatbot.adapter.out.ai.embed.AccommodationEmbeddingDto(
+                         SELECT new project.chatbot.adapter.out.ai.model.AccommodationEmbeddingRow(
                              acc.id,
                              acc.title,
                              acc.detail.description,
@@ -136,15 +136,15 @@ public class EmbeddingService {
                          JOIN AreaCode AS childArea ON childArea.code = acc.areaCode
                          LEFT JOIN AreaCode AS parentArea ON parentArea = childArea.parent
                          WHERE acc.id IN :ids
-                         """, AccommodationEmbeddingDto.class)
+                         """, AccommodationEmbeddingRow.class)
                  .setParameter("ids", ids)
                  .getResultList();
     }
 
-    private Map<Long, AccommodationEmbeddingDto> collectBaseInfo(List<AccommodationEmbeddingDto> embeddingDtos) {
-        return embeddingDtos.stream()
+    private Map<Long, AccommodationEmbeddingRow> collectBaseInfo(List<AccommodationEmbeddingRow> embeddingRows) {
+        return embeddingRows.stream()
                             .collect(Collectors.groupingBy(
-                                    AccommodationEmbeddingDto::accommodationId,
+                                    AccommodationEmbeddingRow::accommodationId,
                                     Collectors.collectingAndThen(
                                             Collectors.toList(),
                                             list -> list.get(0)
@@ -152,23 +152,23 @@ public class EmbeddingService {
                             ));
     }
 
-    private Map<Long, Map<Season, Map<DayType, Integer>>> collectMetadataPrices(List<AccommodationEmbeddingDto> embeddingDtos) {
-        return embeddingDtos.stream()
+    private Map<Long, Map<Season, Map<DayType, Integer>>> collectMetadataPrices(List<AccommodationEmbeddingRow> embeddingRows) {
+        return embeddingRows.stream()
                             .collect(Collectors.groupingBy(
-                                    AccommodationEmbeddingDto::accommodationId,
+                                    AccommodationEmbeddingRow::accommodationId,
                                     Collectors.groupingBy(
-                                            AccommodationEmbeddingDto::season,
+                                            AccommodationEmbeddingRow::season,
                                             Collectors.toMap(
-                                                    AccommodationEmbeddingDto::dayType,
-                                                    AccommodationEmbeddingDto::price
+                                                    AccommodationEmbeddingRow::dayType,
+                                                    AccommodationEmbeddingRow::price
                                             )
                                     )
                             ));
     }
 
-    private List<AmenitiesDto> getAmenitiesDtos(List<Long> ids) {
+    private List<AmenityRow> getAmenityRows(List<Long> ids) {
         return em.createQuery("""
-                         SELECT new project.config.ai.embed.AmenitiesDto(
+                         SELECT new project.chatbot.adapter.out.ai.model.AmenityRow(
                              acc.id,
                              am.description
                          )
@@ -176,24 +176,24 @@ public class EmbeddingService {
                          LEFT JOIN AccommodationAmenity AS aa ON aa.accommodation = acc
                          JOIN Amenity AS am ON aa.amenityId = am.id
                          WHERE acc.id IN :ids
-                         """, AmenitiesDto.class)
+                         """, AmenityRow.class)
                  .setParameter("ids", ids)
                  .getResultList();
     }
 
-    private Map<Long, List<String>> collectEmbedAmenities(List<AmenitiesDto> amenitiesDtos) {
-        return amenitiesDtos.stream()
+    private Map<Long, List<String>> collectEmbedAmenities(List<AmenityRow> amenityRows) {
+        return amenityRows.stream()
                             .collect(Collectors.groupingBy(
-                                    AmenitiesDto::accommodationId,
+                                    AmenityRow::accommodationId,
                                     Collectors.mapping(
-                                            AmenitiesDto::name,
+                                            AmenityRow::name,
                                             Collectors.toList())
                             ));
     }
 
     private Map<String, Object> getMetadata(Long id,
                                             Map<Long, Map<Season, Map<DayType, Integer>>> priceInfo,
-                                            AccommodationEmbeddingDto dto) {
+                                            AccommodationEmbeddingRow row) {
 
         Map<Season, Map<DayType, Integer>> pricesMap = priceInfo.get(id);
 
@@ -207,9 +207,9 @@ public class EmbeddingService {
 
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("accId", id);
-        metadata.put("title", dto.title());
-        metadata.put("maxPeople", dto.maxPeople());
-        metadata.put("address", dto.address());
+        metadata.put("title", row.title());
+        metadata.put("maxPeople", row.maxPeople());
+        metadata.put("address", row.address());
         metadata.put("minPrice", minPrice);
         metadata.put("maxPrice", maxPrice);
 

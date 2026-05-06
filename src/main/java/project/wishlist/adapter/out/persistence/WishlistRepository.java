@@ -1,5 +1,6 @@
 package project.wishlist.adapter.out.persistence;
 
+import project.common.adapter.out.persistence.repository.JpaPersistenceRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -7,6 +8,7 @@ import project.wishlist.domain.Wishlist;
 
 import java.util.Optional;
 
+@JpaPersistenceRepository
 public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
 
     @Query("""
@@ -16,8 +18,5 @@ public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
             WHERE w.id = :wishlistId
             AND w.memberId = :memberId
             """)
-    Optional<Wishlist> findByIdAndMemberIdWithAccommodations(
-            @Param("wishlistId") Long wishlistId,
-            @Param("memberId") Long memberId
-    );
+    Optional<Wishlist> findByIdAndMemberIdWithAccommodations(@Param("wishlistId") Long wishlistId, @Param("memberId") Long memberId);
 }

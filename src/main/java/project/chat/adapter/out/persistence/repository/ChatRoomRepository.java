@@ -1,5 +1,6 @@
 package project.chat.adapter.out.persistence.repository;
 
+import project.common.adapter.out.persistence.repository.JpaPersistenceRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,6 +9,7 @@ import project.chat.domain.ChatRoom;
 import java.util.List;
 import java.util.Optional;
 
+@JpaPersistenceRepository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     @Query("""
@@ -31,10 +33,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
                 AND participant.memberId = :memberId
             )
             """)
-    Optional<ChatRoom> findByIdAndMemberIdWithParticipants(
-            @Param("roomId") Long roomId,
-            @Param("memberId") Long memberId
-    );
+    Optional<ChatRoom> findByIdAndMemberIdWithParticipants(@Param("roomId") Long roomId, @Param("memberId") Long memberId);
 
     @Query("""
             SELECT participant.memberId
@@ -54,8 +53,5 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             AND participant.isActive = true
             AND otherParticipant.isActive = true
             """)
-    boolean existsActiveChatRoom(
-            @Param("currentMemberId") Long currentMemberId,
-            @Param("otherMemberId") Long otherMemberId
-    );
+    boolean existsActiveChatRoom(@Param("currentMemberId") Long currentMemberId, @Param("otherMemberId") Long otherMemberId);
 }
