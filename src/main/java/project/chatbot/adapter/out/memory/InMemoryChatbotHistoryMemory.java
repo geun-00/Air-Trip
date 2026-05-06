@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class InMemoryChatbotHistoryMemory implements SaveChatbotHistoryPort, LoadChatbotHistoryPort {
 
@@ -17,8 +18,7 @@ public class InMemoryChatbotHistoryMemory implements SaveChatbotHistoryPort, Loa
 
     @Override
     public void save(String conversationId, Message message, Map<String, Object> metadata) {
-        chatbotHistoryStore.putIfAbsent(conversationId, new ArrayList<>());
-        chatbotHistoryStore.get(conversationId)
+        chatbotHistoryStore.computeIfAbsent(conversationId, key -> new CopyOnWriteArrayList<>())
                            .add(new ChatbotMessageView(
                                    message.getMessageType(),
                                    message.getText(),
