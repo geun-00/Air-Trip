@@ -3,8 +3,9 @@ package project.chatbot.adapter.out.persistence;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Component;
-import project.chatbot.adapter.in.web.response.ChatbotHistoryDto;
-import project.chatbot.application.memory.ChatbotHistoryMemory;
+import project.chatbot.application.in.query.model.ChatbotMessageView;
+import project.chatbot.application.out.command.SaveChatbotHistoryPort;
+import project.chatbot.application.out.query.LoadChatbotHistoryPort;
 import project.chatbot.domain.ChatbotHistory;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class JpaChatbotHistoryMemory implements ChatbotHistoryMemory {
+public class JpaChatbotHistoryMemory implements SaveChatbotHistoryPort, LoadChatbotHistoryPort {
 
     private final ChatbotHistoryRepository chatbotHistoryRepository;
 
@@ -22,10 +23,15 @@ public class JpaChatbotHistoryMemory implements ChatbotHistoryMemory {
     }
 
     @Override
-    public List<ChatbotHistoryDto> getMessages(String conversationId) {
+    public List<ChatbotMessageView> getMessages(String conversationId) {
         return chatbotHistoryRepository.findAllByConversationId(conversationId)
                                        .stream()
-                                       .map(ChatbotHistoryDto::of)
+                                       .map(history -> new ChatbotMessageView(
+                                               history.getType(),
+                                               history.getText(),
+                                               null,
+                                               history.getCreatedAt()
+                                       ))
                                        .toList();
     }
 }

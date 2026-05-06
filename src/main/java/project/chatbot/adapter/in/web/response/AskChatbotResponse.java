@@ -2,7 +2,7 @@ package project.chatbot.adapter.in.web.response;
 
 import java.util.Map;
 
-public record ChatbotResponseDto(
+public record AskChatbotResponse(
         String textResponse,
         Map<String, Object> metadata
 ) {
