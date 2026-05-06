@@ -1,9 +1,10 @@
 package project.accommodation.adapter.out.persistence;
 
+import project.common.adapter.out.persistence.repository.JpaPersistenceRepository;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 import project.accommodation.adapter.out.persistence.model.AmenityDataRow;
 import project.accommodation.adapter.out.persistence.model.ImageDataRow;
@@ -16,13 +17,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface AccommodationRepository extends Repository<Accommodation, Long> {
-
-    List<Accommodation> saveAll(Iterable<Accommodation> accommodations);
-
-    Optional<Accommodation> findById(Long accommodationId);
-
-    boolean existsById(Long accommodationId);
+@JpaPersistenceRepository
+public interface AccommodationRepository extends JpaRepository<Accommodation, Long> {
 
     @Query("select a.contentId as contentId, a.modifiedTime as modifiedTime from Accommodation a where a.contentId in :contentIds")
     List<AccommodationModifiedTimeRow> findModifiedTimesByContentIdIn(@Param("contentIds") List<String> contentIds);
@@ -78,9 +74,5 @@ public interface AccommodationRepository extends Repository<Accommodation, Long>
               and ap.season = :season
               and ap.dayType = :dayType
             """)
-    Integer findPrice(
-            @Param("accommodationId") Long accommodationId,
-            @Param("season") Season season,
-            @Param("dayType") DayType dayType
-    );
+    Integer findPrice(@Param("accommodationId") Long accommodationId, @Param("season") Season season, @Param("dayType") DayType dayType);
 }
