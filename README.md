@@ -108,11 +108,11 @@
 
 ### 🌐 인프라
 
-<img width="2304" height="1070" alt="Web App Reference Architecture" src="https://github.com/user-attachments/assets/165e33c0-02a4-4c54-90fc-3c31d4a5f920" />
+<img width="100%" alt="Web App Reference Architecture" src="https://github.com/user-attachments/assets/165e33c0-02a4-4c54-90fc-3c31d4a5f920" />
 
 ### 🔄 CI/CD
 
-<img width="1853" height="773" alt="CICD Architecture" src="https://github.com/user-attachments/assets/c8b78e89-eec1-40f4-bf71-b6db840bc24c" />
+<img width="100%" alt="CI/CD Architecture" src="https://github.com/user-attachments/assets/c8b78e89-eec1-40f4-bf71-b6db840bc24c" />
 
 ### 💼 주요 비즈니스 로직
 
