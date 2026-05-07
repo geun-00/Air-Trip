@@ -8,5 +8,5 @@ import java.util.List;
 
 @JpaPersistenceRepository
 public interface ChatbotHistoryRepository extends JpaRepository<ChatbotHistory, Long> {
-    List<ChatbotHistory> findAllByConversationId(String conversationId);
+    List<ChatbotHistory> findAllByConversationIdOrderByCreatedAtAsc(String conversationId);
 }

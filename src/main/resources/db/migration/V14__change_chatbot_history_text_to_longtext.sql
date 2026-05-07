@@ -1,0 +1,2 @@
+ALTER TABLE chatbot_histories
+    MODIFY COLUMN text LONGTEXT NOT NULL;
