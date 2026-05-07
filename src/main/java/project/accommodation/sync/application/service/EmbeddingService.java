@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import project.accommodation.adapter.out.persistence.model.AmenityDataRow;
 import project.accommodation.sync.application.model.AccommodationEmbeddingDocument;
 import project.accommodation.sync.application.model.AccommodationEmbeddingRow;
@@ -28,7 +27,6 @@ import static java.util.stream.Collectors.toMap;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class EmbeddingService {
 
     private final SaveAccommodationEmbeddingPort saveAccommodationEmbeddingPort;
@@ -57,7 +55,11 @@ public class EmbeddingService {
         for (Long id : ids) {
             try {
                 AccommodationEmbeddingRow row = baseInfoMapping.get(id);
-                if (row == null) continue;
+                if (row == null) {
+                    failedIds.add(id);
+                    log.warn("임베딩 대상 숙소 조회 결과가 없습니다. accommodationId={}", id);
+                    continue;
+                }
 
                 documents.add(createDocument(
                         id,
@@ -181,8 +183,8 @@ public class EmbeddingService {
     }
 
     private String summarizePriceRange(Map<String, Object> metadata) {
-        int min = Integer.parseInt(metadata.get("minPrice").toString());
-        int max = Integer.parseInt(metadata.get("maxPrice").toString());
+        int min = (int) metadata.get("minPrice");
+        int max = (int) metadata.get("maxPrice");
 
         if (min == 0 || max == 0) {
             return "가격 정보 없음";
