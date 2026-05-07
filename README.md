@@ -10,7 +10,7 @@
 </div>
 
 <img src="https://img.shields.io/badge/프로젝트 기간-2025.07~2025.12-green?style=flat&logo=&logoColor=white" />
-<img src="https://img.shields.io/badge/마지막 리드미 수정-2026.05.03-gold?style=flat&logo=&logoColor=white" />
+<img src="https://img.shields.io/badge/마지막 리드미 수정-2026.05.07-gold?style=flat&logo=&logoColor=white" />
 
 <div>
 </div>
@@ -46,7 +46,6 @@
 <div>
   <img src="https://img.shields.io/badge/Redis-FF4438?style=flat&logo=redis&logoColor=white" />
   <img src="https://img.shields.io/badge/Mariadb-003545?style=flat&logo=mariadb&logoColor=white" />
-  <img src="https://img.shields.io/badge/MongoDB-47A248?style=flat&logo=mongodb&logoColor=white" />
 </div>
 
 ### 📚 Test & Docs
@@ -109,11 +108,11 @@
 
 ### 🌐 인프라
 
-<img width="3952" height="2441" alt="Web App Reference Architecture (17)" src="https://github.com/user-attachments/assets/28505540-caec-4f71-9611-878e7f8b7003" />
+<img width="100%" alt="Web App Reference Architecture" src="https://github.com/user-attachments/assets/165e33c0-02a4-4c54-90fc-3c31d4a5f920" />
 
 ### 🔄 CI/CD
 
-<img width="2642" height="1694" alt="CICD Architecture (4)" src="https://github.com/user-attachments/assets/929a16da-e97b-4b06-a043-e0f65e0bde50" />
+<img width="100%" alt="CI/CD Architecture" src="https://github.com/user-attachments/assets/c8b78e89-eec1-40f4-bf71-b6db840bc24c" />
 
 ### 💼 주요 비즈니스 로직
 
