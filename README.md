@@ -43,7 +43,7 @@
 
 ```bash
 git clone https://github.com/geun-00/Air-Trip.git
-cd project
+cd Air-Trip
 ```
 
 `spring-boot-docker-compose` 의존성이 설정되어 있어, 개발 환경에서 `bootRun`으로 애플리케이션을 실행할 때 `compose.yml`을 함께 사용할 수 있습니다.
