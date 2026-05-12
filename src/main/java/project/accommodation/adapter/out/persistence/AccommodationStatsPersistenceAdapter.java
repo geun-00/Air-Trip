@@ -32,6 +32,7 @@ public class AccommodationStatsPersistenceAdapter implements RefreshAccommodatio
                         a.title,
                         a.average_rating,
                         a.reservation_count,
+                        a.review_count,
                         child_area.parent_code AS area_code,
                         ROW_NUMBER() OVER (
                             PARTITION BY child_area.parent_code
@@ -62,6 +63,12 @@ public class AccommodationStatsPersistenceAdapter implements RefreshAccommodatio
                         WHERE r.accommodation_id = a.accommodation_id
                           AND r.status != 'CANCELED'
                     ),
+                    a.review_count = COALESCE((
+                        SELECT COUNT(*)
+                        FROM reviews rv
+                        JOIN reservations rs ON rv.reservation_id = rs.reservation_id
+                        WHERE rs.accommodation_id = a.accommodation_id
+                    ), 0),
                     a.average_rating = COALESCE((
                         SELECT ROUND(AVG(rv.rating), 2)
                         FROM reviews rv
@@ -93,6 +100,12 @@ public class AccommodationStatsPersistenceAdapter implements RefreshAccommodatio
                         FROM reservations r
                         WHERE r.accommodation_id = a.accommodation_id
                           AND r.status != 'CANCELED'
+                    ), 0),
+                    a.review_count = COALESCE((
+                        SELECT COUNT(*)
+                        FROM reviews rv
+                        JOIN reservations rs ON rv.reservation_id = rs.reservation_id
+                        WHERE rs.accommodation_id = a.accommodation_id
                     ), 0),
                     a.average_rating = COALESCE((
                         SELECT ROUND(AVG(rv.rating), 2)
