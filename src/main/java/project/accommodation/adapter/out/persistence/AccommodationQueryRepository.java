@@ -171,7 +171,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
 
         if (condition.memberId() == null) {
             List<FilteredAccommodationRow> content = fetched.stream()
-                    .map(row -> toFilteredRow(row, imagesMap))
+                    .map(row -> toFilteredRow(row, imagesMap.getOrDefault(row.accommodationId(), List.of())))
                     .toList();
 
             return PageableExecutionUtils.getPage(content, pageable, countQuery(condition)::fetchOne);
@@ -183,9 +183,11 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                 .map(row -> {
                     List<String> imageUrls = imagesMap.getOrDefault(row.accommodationId(), List.of());
                     WishlistRow info = wishlistMap.get(row.accommodationId());
+
                     if (info == null) {
-                        return toFilteredRow(row, imagesMap);
+                        return toFilteredRow(row, imageUrls);
                     }
+
                     return new FilteredAccommodationRow(
                             row.accommodationId(),
                             row.title(),
@@ -205,7 +207,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
 
     private FilteredAccommodationRow toFilteredRow(
             GuestFilteredAccommodationRow row,
-            Map<Long, List<String>> imagesMap
+            List<String> imageUrls
     ) {
         return new FilteredAccommodationRow(
                 row.accommodationId(),
@@ -213,7 +215,7 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                 row.price(),
                 row.avgRate(),
                 row.reviewCount(),
-                imagesMap.getOrDefault(row.accommodationId(), List.of()),
+                imageUrls,
                 false,
                 null,
                 null
