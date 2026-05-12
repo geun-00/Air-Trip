@@ -146,13 +146,11 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                         accommodationPrice.accommodation.eq(accommodation)
                                 .and(accommodationPrice.season.eq(condition.stayDatePolicy().season()))
                                 .and(accommodationPrice.dayType.eq(condition.stayDatePolicy().dayType())))
-                .join(accommodationImage).on(accommodationImage.accommodation.eq(accommodation))
                 .where(
                         goePrice(condition.priceGoe()),
                         loePrice(condition.priceLoe()),
                         hasAllAmenities(condition.amenities())
-                )
-                .distinct();
+                );
 
         if (hasAreaFilter) {
             query.join(childAreaCode).on(childAreaCode.code.eq(accommodation.areaCode))
@@ -245,13 +243,12 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
     private JPAQuery<Long> countQuery(SearchAccommodationsCondition condition) {
         boolean hasAreaFilter = hasText(condition.areaCode());
 
-        JPAQuery<Long> query = select(accommodation.countDistinct())
+        JPAQuery<Long> query = select(accommodation.count())
                 .from(accommodation)
                 .join(accommodationPrice).on(
                         accommodationPrice.accommodation.eq(accommodation)
                                 .and(accommodationPrice.season.eq(condition.stayDatePolicy().season()))
                                 .and(accommodationPrice.dayType.eq(condition.stayDatePolicy().dayType())))
-                .join(accommodationImage).on(accommodationImage.accommodation.eq(accommodation))
                 .where(
                         goePrice(condition.priceGoe()),
                         loePrice(condition.priceLoe()),
@@ -401,6 +398,8 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
         return (price != null) ? accommodationPrice.price.loe(price) : null;
     }
 
+    // amenity별 EXISTS 서브쿼리를 AND로 연결
+    // amenity가 없으면 null 반환 → where 조건 미적용
     private BooleanExpression hasAllAmenities(List<String> amenities) {
         if (amenities == null || amenities.isEmpty()) {
             return null;
