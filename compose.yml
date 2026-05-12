@@ -1,5 +1,45 @@
 services:
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: app
+    env_file:
+      - .env.docker
+    environment:
+      JAVA_TOOL_OPTIONS: >-
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:ActiveProcessorCount=2
+        -Dspring.profiles.active=local
+        -Dcom.sun.management.jmxremote
+        -Dcom.sun.management.jmxremote.port=9010
+        -Dcom.sun.management.jmxremote.rmi.port=9010
+        -Dcom.sun.management.jmxremote.local.only=false
+        -Dcom.sun.management.jmxremote.authenticate=false
+        -Dcom.sun.management.jmxremote.ssl=false
+        -Djava.rmi.server.hostname=localhost
+    ports:
+      - "8081:8081"
+      - "9010:9010"
+    mem_limit: 1g
+    memswap_limit: 5g
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1g
+        reservations:
+          memory: 256m
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - air
+
   mariadb:
     image: mariadb
     container_name: mariadb

@@ -65,6 +65,9 @@ public class Accommodation extends BaseEntity {
     @Column(name = "reservation_count")
     private ReservationCount reservationCount = ReservationCount.ZERO;
 
+    @Column(name = "review_count")
+    private ReviewCount reviewCount = ReviewCount.ZERO;
+
     @Column(name = "average_rating")
     private Rating averageRating = Rating.ZERO;
 

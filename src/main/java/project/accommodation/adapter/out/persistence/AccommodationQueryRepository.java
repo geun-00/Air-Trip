@@ -20,6 +20,8 @@ import project.accommodation.adapter.out.persistence.model.MainAccommodationRow;
 import project.accommodation.adapter.out.persistence.model.WishlistRow;
 import project.accommodation.application.out.query.model.SearchAccommodationsCondition;
 import project.accommodation.domain.Accommodation;
+import project.accommodation.domain.QAccommodationAmenity;
+import project.amenity.domain.QAmenity;
 import project.area.domain.QAreaCode;
 import project.common.adapter.out.persistence.CustomQuerydslRepositorySupport;
 import project.common.domain.StayDatePolicy;
@@ -38,10 +40,8 @@ import static java.util.stream.Collectors.toMap;
 import static org.springframework.util.StringUtils.hasText;
 import static project.accommodation.adapter.out.persistence.QAccommodationStats.accommodationStats;
 import static project.accommodation.domain.QAccommodation.accommodation;
-import static project.accommodation.domain.QAccommodationAmenity.accommodationAmenity;
 import static project.accommodation.domain.QAccommodationImage.accommodationImage;
 import static project.accommodation.domain.QAccommodationPrice.accommodationPrice;
-import static project.amenity.domain.QAmenity.amenity;
 import static project.reservation.domain.QReservation.reservation;
 import static project.review.domain.QReview.review;
 import static project.wishlist.domain.QWishlist.wishlist;
@@ -132,31 +132,33 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
 
     public Page<FilteredAccommodationRow> getFilteredPagingAccommodations(SearchAccommodationsCondition condition) {
         Pageable pageable = condition.pageable();
+        boolean hasAreaFilter = hasText(condition.areaCode());
 
-        List<GuestFilteredAccommodationRow> fetched = select(constructor(GuestFilteredAccommodationRow.class,
+        JPAQuery<GuestFilteredAccommodationRow> query = select(constructor(GuestFilteredAccommodationRow.class,
                 accommodation.id,
                 accommodation.title,
                 accommodationPrice.price,
-                REVIEW_RATING.avg().coalesce(0.0),
-                review.count().intValue().coalesce(0)
+                accommodation.averageRating,
+                accommodation.reviewCount
         ))
                 .from(accommodation)
                 .join(accommodationPrice).on(
                         accommodationPrice.accommodation.eq(accommodation)
                                 .and(accommodationPrice.season.eq(condition.stayDatePolicy().season()))
                                 .and(accommodationPrice.dayType.eq(condition.stayDatePolicy().dayType())))
-                .join(accommodationImage).on(accommodationImage.accommodation.eq(accommodation))
-                .join(childAreaCode).on(childAreaCode.code.eq(accommodation.areaCode))
-                .leftJoin(childAreaCode.parent, parentAreaCode)
-                .leftJoin(reservation).on(reservation.accommodationId.eq(accommodation.id))
-                .leftJoin(review).on(review.reservationId.eq(reservation.id))
                 .where(
-                        eqAreaCode(condition.areaCode()),
                         goePrice(condition.priceGoe()),
                         loePrice(condition.priceLoe()),
                         hasAllAmenities(condition.amenities())
-                )
-                .groupBy(accommodation.id, accommodation.title, accommodationPrice.price)
+                );
+
+        if (hasAreaFilter) {
+            query.join(childAreaCode).on(childAreaCode.code.eq(accommodation.areaCode))
+                 .leftJoin(childAreaCode.parent, parentAreaCode)
+                 .where(parentAreaCode.code.eq(condition.areaCode()));
+        }
+
+        List<GuestFilteredAccommodationRow> fetched = query
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -164,14 +166,12 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
         List<Long> accommodationIds = fetched.stream()
                                              .map(GuestFilteredAccommodationRow::accommodationId)
                                              .toList();
+
         Map<Long, List<String>> imagesMap = fetchImagesMap(accommodationIds);
 
         if (condition.memberId() == null) {
             List<FilteredAccommodationRow> content = fetched.stream()
-                    .map(row -> toFilteredRow(
-                            row,
-                            imagesMap.getOrDefault(row.accommodationId(), List.of())
-                    ))
+                    .map(row -> toFilteredRow(row, imagesMap.getOrDefault(row.accommodationId(), List.of())))
                     .toList();
 
             return PageableExecutionUtils.getPage(content, pageable, countQuery(condition)::fetchOne);
@@ -183,9 +183,11 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                 .map(row -> {
                     List<String> imageUrls = imagesMap.getOrDefault(row.accommodationId(), List.of());
                     WishlistRow info = wishlistMap.get(row.accommodationId());
+
                     if (info == null) {
                         return toFilteredRow(row, imageUrls);
                     }
+
                     return new FilteredAccommodationRow(
                             row.accommodationId(),
                             row.title(),
@@ -241,20 +243,27 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
     }
 
     private JPAQuery<Long> countQuery(SearchAccommodationsCondition condition) {
-        return select(accommodation.count())
+        boolean hasAreaFilter = hasText(condition.areaCode());
+
+        JPAQuery<Long> query = select(accommodation.count())
                 .from(accommodation)
-                .join(accommodationPrice)
-                .on(accommodationPrice.accommodation.eq(accommodation)
-                        .and(accommodationPrice.season.eq(condition.stayDatePolicy().season()))
-                        .and(accommodationPrice.dayType.eq(condition.stayDatePolicy().dayType())))
-                .join(childAreaCode).on(childAreaCode.code.eq(accommodation.areaCode))
-                .leftJoin(childAreaCode.parent, parentAreaCode)
+                .join(accommodationPrice).on(
+                        accommodationPrice.accommodation.eq(accommodation)
+                                .and(accommodationPrice.season.eq(condition.stayDatePolicy().season()))
+                                .and(accommodationPrice.dayType.eq(condition.stayDatePolicy().dayType())))
                 .where(
-                        eqAreaCode(condition.areaCode()),
                         goePrice(condition.priceGoe()),
                         loePrice(condition.priceLoe()),
                         hasAllAmenities(condition.amenities())
                 );
+
+        if (hasAreaFilter) {
+            query.join(childAreaCode).on(childAreaCode.code.eq(accommodation.areaCode))
+                 .leftJoin(childAreaCode.parent, parentAreaCode)
+                 .where(parentAreaCode.code.eq(condition.areaCode()));
+        }
+
+        return query;
     }
 
     public List<DetailAccommodationRow> findAccommodations(
@@ -383,10 +392,6 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
                    ));
     }
 
-    private BooleanExpression eqAreaCode(String code) {
-        return hasText(code) ? parentAreaCode.code.eq(code) : null;
-    }
-
     private BooleanExpression goePrice(Integer price) {
         return (price != null) ? accommodationPrice.price.goe(price) : null;
     }
@@ -395,17 +400,31 @@ public class AccommodationQueryRepository extends CustomQuerydslRepositorySuppor
         return (price != null) ? accommodationPrice.price.loe(price) : null;
     }
 
+    // amenity별 EXISTS 서브쿼리를 AND로 연결
+    // amenity가 없으면 null 반환 → where 조건 미적용
     private BooleanExpression hasAllAmenities(List<String> amenities) {
         if (amenities == null || amenities.isEmpty()) {
             return null;
         }
 
-        return JPAExpressions
-                .select(accommodationAmenity.amenityId.countDistinct())
-                .from(accommodationAmenity)
-                .join(amenity).on(amenity.id.eq(accommodationAmenity.amenityId))
-                .where(accommodationAmenity.accommodation.eq(accommodation),
-                        amenity.name.in(amenities))
-                .eq((long) amenities.size());
+        BooleanExpression result = null;
+        for (int i = 0; i < amenities.size(); i++) {
+            QAccommodationAmenity subAmenity = new QAccommodationAmenity("subAmenity" + i);
+            QAmenity subAmenityName = new QAmenity("subAmenityName" + i);
+
+            BooleanExpression condition = JPAExpressions
+                    .selectOne()
+                    .from(subAmenity)
+                    .join(subAmenityName).on(subAmenityName.id.eq(subAmenity.amenityId))
+                    .where(
+                            subAmenity.accommodation.eq(accommodation),
+                            subAmenityName.name.eq(amenities.get(i))
+                    )
+                    .exists();
+
+            result = (result == null) ? condition : result.and(condition);
+        }
+
+        return result;
     }
 }

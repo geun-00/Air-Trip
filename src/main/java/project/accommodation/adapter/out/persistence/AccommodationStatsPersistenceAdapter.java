@@ -55,29 +55,35 @@ public class AccommodationStatsPersistenceAdapter implements RefreshAccommodatio
     public void refreshRecentStats() {
         String sql = """
                 UPDATE accommodations a
-                SET
-                    a.reservation_count = (
-                        SELECT COUNT(*)
-                        FROM reservations r
-                        WHERE r.accommodation_id = a.accommodation_id
-                          AND r.status != 'CANCELED'
-                    ),
-                    a.average_rating = COALESCE((
-                        SELECT ROUND(AVG(rv.rating), 2)
-                        FROM reviews rv
-                        JOIN reservations rs ON rv.reservation_id = rs.reservation_id
-                        WHERE rs.accommodation_id = a.accommodation_id
-                    ), 0.0)
-                WHERE a.accommodation_id IN (
-                    SELECT DISTINCT accommodation_id
+                JOIN (
+                    SELECT accommodation_id
                     FROM reservations
                     WHERE updated_at >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
                     UNION
-                    SELECT DISTINCT rs.accommodation_id
+                    SELECT rs.accommodation_id
                     FROM reviews rv
                     JOIN reservations rs ON rv.reservation_id = rs.reservation_id
                     WHERE rv.updated_at >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
-                )
+                ) changed ON changed.accommodation_id = a.accommodation_id
+                JOIN (
+                    SELECT rs.accommodation_id,
+                           COUNT(*)                    AS reservation_count
+                    FROM reservations rs
+                    WHERE rs.status != 'CANCELED'
+                    GROUP BY rs.accommodation_id
+                ) res_stats ON res_stats.accommodation_id = a.accommodation_id
+                LEFT JOIN (
+                    SELECT rs.accommodation_id,
+                           COUNT(*)                    AS review_count,
+                           ROUND(AVG(rv.rating), 2)   AS average_rating
+                    FROM reviews rv
+                    JOIN reservations rs ON rv.reservation_id = rs.reservation_id
+                    GROUP BY rs.accommodation_id
+                ) rv_stats ON rv_stats.accommodation_id = a.accommodation_id
+                SET
+                    a.reservation_count = res_stats.reservation_count,
+                    a.review_count      = COALESCE(rv_stats.review_count, 0),
+                    a.average_rating    = COALESCE(rv_stats.average_rating, 0.0)
                 """;
         em.createNativeQuery(sql)
           .executeUpdate();
@@ -87,19 +93,25 @@ public class AccommodationStatsPersistenceAdapter implements RefreshAccommodatio
     public void refreshAllStats() {
         String sql = """
                 UPDATE accommodations a
+                JOIN (
+                    SELECT rs.accommodation_id,
+                           COUNT(*)                    AS reservation_count
+                    FROM reservations rs
+                    WHERE rs.status != 'CANCELED'
+                    GROUP BY rs.accommodation_id
+                ) res_stats ON res_stats.accommodation_id = a.accommodation_id
+                LEFT JOIN (
+                    SELECT rs.accommodation_id,
+                           COUNT(*)                    AS review_count,
+                           ROUND(AVG(rv.rating), 2)   AS average_rating
+                    FROM reviews rv
+                    JOIN reservations rs ON rv.reservation_id = rs.reservation_id
+                    GROUP BY rs.accommodation_id
+                ) rv_stats ON rv_stats.accommodation_id = a.accommodation_id
                 SET
-                    a.reservation_count = COALESCE((
-                        SELECT COUNT(*)
-                        FROM reservations r
-                        WHERE r.accommodation_id = a.accommodation_id
-                          AND r.status != 'CANCELED'
-                    ), 0),
-                    a.average_rating = COALESCE((
-                        SELECT ROUND(AVG(rv.rating), 2)
-                        FROM reviews rv
-                        JOIN reservations rs ON rv.reservation_id = rs.reservation_id
-                        WHERE rs.accommodation_id = a.accommodation_id
-                    ), 0.0)
+                    a.reservation_count = res_stats.reservation_count,
+                    a.review_count      = COALESCE(rv_stats.review_count, 0),
+                    a.average_rating    = COALESCE(rv_stats.average_rating, 0.0)
                 """;
         em.createNativeQuery(sql)
           .executeUpdate();
