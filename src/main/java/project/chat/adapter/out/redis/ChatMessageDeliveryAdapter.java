@@ -1,7 +1,10 @@
 package project.chat.adapter.out.redis;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Component;
 import project.chat.adapter.in.websocket.response.ChatMessageResponse;
@@ -24,9 +27,18 @@ public class ChatMessageDeliveryAdapter implements ChatMessageDeliveryPort {
     public void deliver(ChatMessagePayload message) {
         ChatMessageResponse response = toResponse(message);
 
-        redisTemplate.opsForList().rightPush(ChatRedisKey.MESSAGE_QUEUE.getTemplate(), response);
-        redisTemplate.opsForList().leftPush(ChatRedisKey.MESSAGE_CACHE.format(message.roomId()), response);
-        redisTemplate.opsForList().trim(ChatRedisKey.MESSAGE_CACHE.format(message.roomId()), 0L, MESSAGE_CACHE_LIMIT - 1);
+        String queueKey = ChatRedisKey.MESSAGE_QUEUE.getTemplate();
+        String cacheKey = ChatRedisKey.MESSAGE_CACHE.format(message.roomId());
+
+        redisTemplate.executePipelined(new SessionCallback<>() {
+            @Override
+            public Object execute(RedisOperations operations) throws DataAccessException {
+                operations.opsForList().rightPush(queueKey, response);
+                operations.opsForList().leftPush(cacheKey, response);
+                operations.opsForList().trim(cacheKey, 0L, MESSAGE_CACHE_LIMIT - 1);
+                return null;
+            }
+        });
 
         redisMessagePublisher.publish(chatTopic.getTopic(), response);
     }

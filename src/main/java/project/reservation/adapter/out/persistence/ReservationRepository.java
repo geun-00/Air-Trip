@@ -16,4 +16,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from Reservation r where r.id = :id")
     Optional<Reservation> findByIdWithPessimisticLock(@Param("id") Long id);
+
+    @Lock(LockModeType.OPTIMISTIC)
+    @Query("select r from Reservation r where r.id = :id")
+    Optional<Reservation> findByIdWithOptimisticLock(@Param("id") Long id);
 }

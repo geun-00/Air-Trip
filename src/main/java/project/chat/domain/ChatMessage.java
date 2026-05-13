@@ -13,7 +13,8 @@ import project.common.adapter.out.persistence.BaseEntity;
 public class ChatMessage extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "chat_message_seq")
+    @SequenceGenerator(name = "chat_message_seq", sequenceName = "chat_message_seq")
     @Column(name = "chat_message_id")
     private Long id;
 
