@@ -35,7 +35,7 @@ public class ChatMessageDeliveryAdapter implements ChatMessageDeliveryPort {
             public Object execute(RedisOperations operations) throws DataAccessException {
                 operations.opsForList().rightPush(queueKey, response);
                 operations.opsForList().leftPush(cacheKey, response);
-                operations.opsForList().trim(cacheKey, 0, MESSAGE_CACHE_LIMIT - 1);
+                operations.opsForList().trim(cacheKey, 0L, MESSAGE_CACHE_LIMIT - 1);
                 return null;
             }
         });

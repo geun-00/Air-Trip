@@ -22,15 +22,13 @@ public class OptimisticLockPaymentProcessor implements PaymentProcessor {
 
     @Override
     public void process(Long reservationId, PaymentResult paymentResult) {
-        int attempt = 0;
-        while (attempt < MAX_RETRY) {
+        for (int attempt = 1; attempt <= MAX_RETRY; attempt++) {
             try {
                 executor.execute(reservationId, paymentResult);
                 return;
             } catch (ObjectOptimisticLockingFailureException e) {
-                attempt++;
                 log.warn("[OptimisticLock] 충돌 감지 — reservationId={}, attempt={}/{}", reservationId, attempt, MAX_RETRY);
-                if (attempt >= MAX_RETRY) {
+                if (attempt == MAX_RETRY) {
                     throw new BusinessException(ErrorCode.ALREADY_RESERVED);
                 }
             }
