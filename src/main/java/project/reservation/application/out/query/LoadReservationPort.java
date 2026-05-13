@@ -12,5 +12,7 @@ public interface LoadReservationPort {
 
     Reservation loadReservationWithLock(Long reservationId);
 
+    Reservation loadReservationWithOptimisticLock(Long reservationId);
+
     boolean existsConfirmedReservation(Long accommodationId, LocalDateTime startDate, LocalDateTime endDate);
 }

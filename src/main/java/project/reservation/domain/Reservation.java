@@ -36,6 +36,10 @@ public class Reservation extends BaseEntity {
     @Column(name = "status", nullable = false)
     private ReservationStatus status;
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     public static Reservation createPending(
             Long memberId,
             Long accommodationId,
